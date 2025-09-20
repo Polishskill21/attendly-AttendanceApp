@@ -8,18 +8,21 @@ import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/widgets/chart_dialog_helper.dart'; 
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 
 class YearStatsPage extends StatefulWidget {
   final Database dbCon;
   final int selectedTab;
   final void Function(int) onTabChange;
+  final bool isTablet;
 
   const YearStatsPage({
     super.key,
     required this.dbCon,
     required this.selectedTab,
     required this.onTabChange,
+    required this.isTablet
   });
 
   @override
@@ -101,21 +104,26 @@ class YearStatsPageState extends State<YearStatsPage> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     return Scaffold(
-      drawer: CustomDrawer(
-        selectedTab: widget.selectedTab,
-        onTabChange: widget.onTabChange,
-      ),
+      drawer: widget.isTablet
+          ? null
+          : CustomDrawer(
+              selectedTab: widget.selectedTab,
+              onTabChange: widget.onTabChange,
+            ),
       appBar: RefreshableAppBar(
         title: localizations.yearlyStats,
         onRefresh: null, 
         isLoading: _isLoading, 
         showRefresh: false,
-        leading: Builder(
-          builder: (context) => IconButton(
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            icon: const Icon(Icons.menu, size: 35),
-          ),
-        ),
+        leading: widget.isTablet
+            ? null
+            : Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  // Bigger drawer icon
+                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                ),
+              ),
       ),
       body: _buildBody(),
     );
@@ -130,13 +138,13 @@ class YearStatsPageState extends State<YearStatsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 60, color: Colors.red),
-            const SizedBox(height: 16),
-            const Text("Error loading data", style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
+            Icon(Icons.error_outline, size: ResponsiveUtils.getIconSize(context, baseSize: 60), color: Colors.red),
+            SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 4),
+            Text("Error loading data", style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+            SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
             ElevatedButton(
               onPressed: fetchYearStats,
-              child: const Text('Retry'),
+              child: Text('Retry', style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
             ),
           ],
         ),
@@ -145,7 +153,7 @@ class YearStatsPageState extends State<YearStatsPage> {
       return Center(
         child: Text(
           localizations.noDataForThisYear,
-          style: TextStyle(fontSize: 20, color: Colors.grey.shade600),
+          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context), color: Colors.grey.shade600),
         ),
       );
     }
@@ -166,7 +174,12 @@ class YearStatsPageState extends State<YearStatsPage> {
 
     return SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveUtils.getListPadding(context).left,
+          ResponsiveUtils.getListPadding(context).top,
+          ResponsiveUtils.getListPadding(context).right,
+          ResponsiveUtils.getListPadding(context).bottom + MediaQuery.of(context).padding.bottom,
+        ),
         child: Column(
           children: [
             _buildSectionCard(
@@ -277,25 +290,25 @@ class YearStatsPageState extends State<YearStatsPage> {
     final localizations = AppLocalizations.of(context);
     return Card(
       color: Theme.of(context).cardTheme.color,
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical * 4),
+      elevation: ResponsiveUtils.getCardElevation(context),
+      shape: RoundedRectangleBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: ResponsiveUtils.getContentPadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 12),
+                Icon(icon, color: Theme.of(context).primaryColor, size: ResponsiveUtils.getIconSize(context)),
+                SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal),
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.getTitleFontSize(context),
+                      fontWeight: FontWeight.bold,
+                    ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
@@ -346,25 +359,24 @@ class YearStatsPageState extends State<YearStatsPage> {
           children: [
             Expanded(
               flex: 4,
-              child: Text(gender,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                gender,
+                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context), fontWeight: FontWeight.bold),
+              ),
             ),
             Expanded(
               flex: 4,
               child: Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  icon: const Icon(Icons.pie_chart),
+                  icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
                   onPressed: (withCount + withoutCount > 0)
                       ? () => ChartDialogHelper.showChartDialog(
                             context,
-                            title:
-                                '${localizations.migrationBackground}: $gender',
+                            title: '${localizations.migrationBackground}: $gender',
                             data: {
                               localizations.withAbbreviation: withCount,
-                              localizations.withoutAbbreviation:
-                                  withoutCount,
+                              localizations.withoutAbbreviation: withoutCount,
                             },
                           )
                       : null,
@@ -373,14 +385,8 @@ class YearStatsPageState extends State<YearStatsPage> {
             ),
           ],
         ),
-        _buildDataRow(
-            '${localizations.withAbbreviation} ${localizations.migration}',
-            withCount,
-            weekCount),
-        _buildDataRow(
-            '${localizations.withoutAbbreviation} ${localizations.migration}',
-            withoutCount,
-            weekCount),
+        _buildDataRow('${localizations.withAbbreviation} ${localizations.migration}', withCount, weekCount),
+        _buildDataRow('${localizations.withoutAbbreviation} ${localizations.migration}', withoutCount, weekCount),
       ],
     );
   }
@@ -388,14 +394,14 @@ class YearStatsPageState extends State<YearStatsPage> {
   Widget _buildHeaderRow() {
     final localizations = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical / 2),
       child: Row(
         children: [
           Expanded(
             flex: 4,
             child: Text(
               localizations.categoryAbbreviation,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context)),
             ),
           ),
           Expanded(
@@ -403,8 +409,12 @@ class YearStatsPageState extends State<YearStatsPage> {
             child: Tooltip(
               message: AppLocalizations.of(context).total,
               child: Center(
-                  child: Icon(Icons.groups_2_outlined,
-                      size: 35, color: Theme.of(context).primaryColor)),
+                child: Icon(
+                  Icons.groups_2_outlined,
+                  size: ResponsiveUtils.getIconSize(context, baseSize: 35),
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
             ),
           ),
           Expanded(
@@ -412,8 +422,12 @@ class YearStatsPageState extends State<YearStatsPage> {
             child: Tooltip(
               message: AppLocalizations.of(context).average,
               child: Center(
-                  child: Icon(Icons.show_chart,
-                      color: Theme.of(context).colorScheme.secondary)),
+                child: Icon(
+                  Icons.show_chart,
+                  size: ResponsiveUtils.getIconSize(context),
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              ),
             ),
           ),
         ],
@@ -432,34 +446,33 @@ class YearStatsPageState extends State<YearStatsPage> {
     final localizations = AppLocalizations.of(context);
     return Card(
       color: Theme.of(context).cardTheme.color,
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical * 3),
+      elevation: ResponsiveUtils.getCardElevation(context),
+      shape: RoundedRectangleBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: ResponsiveUtils.getContentPadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 12),
+                Icon(icon, color: Theme.of(context).primaryColor, size: ResponsiveUtils.getIconSize(context)),
+                SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal),
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.getTitleFontSize(context),
+                      fontWeight: FontWeight.bold,
+                    ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
                 ),
                 if (showChart && data.isNotEmpty)
                   IconButton(
-                    icon: const Icon(Icons.pie_chart),
-                    onPressed: () => ChartDialogHelper.showChartDialog(context,
-                        title: title, data: data),
+                    icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
+                    onPressed: () => ChartDialogHelper.showChartDialog(context, title: title, data: data),
                   )
               ],
             ),
@@ -483,23 +496,21 @@ class YearStatsPageState extends State<YearStatsPage> {
   Widget _buildDataRow(String label, dynamic value, int weekCount) {
     final total = value ?? 0;
     final avg = weekCount > 0 ? total / weekCount : 0.0;
+    final body = ResponsiveUtils.getBodyFontSize(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getListPadding(context).vertical / 2),
       child: Row(
         children: [
           Expanded(
             flex: 4,
-            child: Text(label, style: const TextStyle(fontSize: 16)),
+            child: Text(label, style: TextStyle(fontSize: body)),
           ),
           Expanded(
             flex: 2,
             child: Text(
               total.toString(),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).primaryColor),
+              style: TextStyle(fontSize: body, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
             ),
           ),
           Expanded(
@@ -507,10 +518,7 @@ class YearStatsPageState extends State<YearStatsPage> {
             child: Text(
               avg.toStringAsFixed(2),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.secondary),
+              style: TextStyle(fontSize: body, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.secondary),
             ),
           ),
         ],
