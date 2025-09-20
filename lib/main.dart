@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_provider.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_service.dart';
-import 'package:attendly/frontend/l10n/app_localizations_delegate.dart';
+import 'package:attendly/localization/app_localizations_delegate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 
