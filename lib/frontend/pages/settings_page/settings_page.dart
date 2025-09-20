@@ -7,9 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:attendly/backend/manager/connection_manager.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_provider.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/pages/settings_page/debug_menu.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -19,12 +20,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // late DbUpdater updater;
-  // late DbInsertion inserter;
-  // late DbSelection reader;
-  // Database? db;
-  // late HelperAllPerson _helper;
-
   @override
   void initState() {
     super.initState();
@@ -37,8 +32,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _openHelpPage() {
+    final isTablet = ResponsiveUtils.isTablet(context);
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const HelpPage()),
+      MaterialPageRoute(builder: (context) => HelpPage(isTablet: isTablet)),
     );
   }
 
@@ -67,18 +63,35 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(localizations.confirmAction),
-          content: Text(localizations.recalibrateConfirm),
+          title: Text(
+            localizations.confirmAction,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            localizations.recalibrateConfirm,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getBodyFontSize(context),
+            ),
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text(localizations.cancel),
+              child: Text(
+                localizations.cancel,
+                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+              ),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             TextButton(
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.error,
               ),
-              child: Text(localizations.proceed),
+              child: Text(
+                localizations.proceed,
+                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+              ),
               onPressed: () => Navigator.of(context).pop(true),
             ),
           ],
@@ -110,6 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -117,44 +131,58 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(localizations.settings),
+          title: Text(
+            localizations.settings,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, size: iconSize),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
         body: Consumer<SettingsProvider>(
           builder: (context, settings, child) {
             return ListView(
-              padding: EdgeInsets.only(
-                top: 16,
-                bottom: 16 + MediaQuery.of(context).padding.bottom,
-              ),
               children: [
-                SwitchListTile(
-                  title: Text(localizations.darkMode),
-                  subtitle: Text(localizations.enableDisableDarkTheme),
-                  value: settings.themeMode == ThemeMode.dark,
-                  onChanged: (bool value) {
-                    settings
-                        .updateTheme(value ? ThemeMode.dark : ThemeMode.light);
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(value
-                            ? localizations.darkModeOn
-                            : localizations.darkModeOff),
-                      ),
-                    );
-                  },
-                  secondary: const Icon(Icons.dark_mode_outlined),
+                _buildSettingsListTile(
+                  title: localizations.darkMode,
+                  subtitle: localizations.enableDisableDarkTheme,
+                  icon: Icons.dark_mode_outlined,
+                  trailing: Switch(
+                    value: settings.themeMode == ThemeMode.dark,
+                    onChanged: (bool value) {
+                      settings
+                          .updateTheme(value ? ThemeMode.dark : ThemeMode.light);
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            value ? localizations.darkModeOn : localizations.darkModeOff,
+                            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.language_outlined),
-                  title: Text(localizations.language),
-                  subtitle: Text(localizations.selectApplicationLanguage),
+                const Divider(height: 1),
+                _buildSettingsListTile(
+                  title: localizations.language,
+                  subtitle: localizations.selectApplicationLanguage,
+                  icon: Icons.language_outlined,
                   trailing: DropdownButton<String>(
                     value: settings.locale.languageCode == 'de'
                         ? localizations.german
                         : localizations.english,
                     underline: const SizedBox(),
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.getBodyFontSize(context),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                    iconSize: ResponsiveUtils.getIconSize(context),
                     onChanged: (String? newValue) {
                       if (newValue != null) {
                         if (newValue == localizations.german) {
@@ -169,6 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             SnackBar(
                               content: Text(
                                 '${newLocalizations.languageSetTo} $newValue. ${newLocalizations.appRestartRequired}',
+                                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                               ),
                             ),
                           );
@@ -179,37 +208,40 @@ class _SettingsPageState extends State<SettingsPage> {
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
-                        child: Text(value),
+                        child: Text(
+                          value,
+                          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                        ),
                       );
                     }).toList(),
                   ),
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.calculate_outlined),
-                  title: Text(localizations.recalibrateData),
-                  subtitle: Text(localizations.recalibrateDataDesc),
+                const Divider(height: 1),
+                _buildSettingsListTile(
+                  title: localizations.recalibrateData,
+                  subtitle: localizations.recalibrateDataDesc,
+                  icon: Icons.calculate_outlined,
+                  trailing: Icon(Icons.chevron_right, size: ResponsiveUtils.getIconSize(context)),
                   onTap: _showRecalibrationDialog,
-                  trailing: const Icon(Icons.chevron_right),
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.help_outline),
-                  title: Text(localizations.help),
-                  subtitle: Text(localizations.openUserManual),
+                const Divider(height: 1),
+                _buildSettingsListTile(
+                  title: localizations.help,
+                  subtitle: localizations.openUserManual,
+                  icon: Icons.help_outline,
+                  trailing: Icon(Icons.chevron_right, size: ResponsiveUtils.getIconSize(context)),
                   onTap: _openHelpPage,
-                  trailing: const Icon(Icons.chevron_right),
                 ),
-                const Divider(),
+                const Divider(height: 1),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  padding: ResponsiveUtils.getContentPadding(context),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           localizations.debugInformation,
-                          style: const TextStyle(
-                            fontSize: 16,
+                          style: TextStyle(
+                            fontSize: ResponsiveUtils.getBodyFontSize(context),
                             fontWeight: FontWeight.bold,
                             color: Colors.grey,
                           ),
@@ -217,9 +249,30 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       GestureDetector(
                         onLongPress: _openDebugMenu,
-                        child:
-                            const Icon(Icons.info_outline, color: Colors.grey),
+                        child: Icon(
+                          Icons.info_outline, 
+                          color: Colors.grey,
+                          size: ResponsiveUtils.getIconSize(context),
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: ResponsiveUtils.getContentPadding(context),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          localizations.getAppsVerision("1.1.0"),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: ResponsiveUtils.getBodyFontSize(context),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
                     ],
                   ),
                 ),
@@ -230,226 +283,34 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  Widget _buildSettingsListTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Widget trailing,
+    VoidCallback? onTap,
+  }) {
+    
+    return ListTile(
+      contentPadding: ResponsiveUtils.getContentPadding(context),
+      leading: Icon(icon, size: ResponsiveUtils.getIconSize(context)),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: ResponsiveUtils.getBodyFontSize(context),
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 2.0),
+        child: Text(
+          subtitle,
+          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+        ),
+      ),
+      trailing: trailing,
+      onTap: onTap,
+    );
+  }
 }
-
-//import 'package:attendly/backend/dbLogic/db_insert.dart';
-//import 'package:attendly/backend/dbLogic/db_read.dart';
-//import 'package:attendly/backend/dbLogic/db_update.dart';
-//import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
-//import 'package:flutter/material.dart';
-//import 'package:provider/provider.dart';
-//import 'package:attendly/backend/manager/connection_manager.dart';
-//import 'package:attendly/frontend/pages/settings_page/settings_provider.dart';
-//import 'package:attendly/frontend/l10n/app_localizations.dart';
-//import 'package:attendly/frontend/pages/settings_page/debug_menu.dart';
-//import 'package:sqflite/sqflite.dart';
-
-//class SettingsPage extends StatefulWidget {
-  //const SettingsPage({super.key});
-
-  //@override
-  //State<StatefulWidget> createState() => _SettingsPageState();
-//}
-
-//class _SettingsPageState extends State<SettingsPage> {
-  //// late DbUpdater updater;
-  //// late DbInsertion inserter;
-  //// late DbSelection reader;
-  //// Database? db;
-  //// late HelperAllPerson _helper;
-
-  //@override
-  //void initState() {
-    //super.initState();
-
-  //}
-
-  //void _openDebugMenu() {
-    //Navigator.of(context).push(
-      //MaterialPageRoute(builder: (context) => const DebugMenu()),
-    //);
-  //}
-
-  //void _showRecalibrationDialog() async {
-    //final localizations = AppLocalizations.of(context);
-
-    //HelperAllPerson helper = HelperAllPerson();
-    //Database? db = DBConnectionManager.db;
-
-    //late DbSelection reader;
-    //late DbUpdater updater;
-    //late DbInsertion inserter;
-
-    //if (db != null) {
-      //reader = DbSelection(db);
-      //updater = DbUpdater(db, reader);
-      //inserter = DbInsertion(db, reader, updater);
-    //}
-
-    //if (db == null || !db.isOpen) {
-      //helper.showErrorMessage(context, localizations.databaseNotConnected);
-      //return;
-    //}
-
-    //final confirmed = await showDialog<bool>(
-      //context: context,
-      //builder: (BuildContext context) {
-        //return AlertDialog(
-          //title: Text(localizations.confirmAction),
-          //content: Text(localizations.recalibrateConfirm),
-          //actions: <Widget>[
-            //TextButton(
-              //child: Text(localizations.cancel),
-              //onPressed: () => Navigator.of(context).pop(false),
-            //),
-            //TextButton(
-              //style: TextButton.styleFrom(
-                //foregroundColor: Theme.of(context).colorScheme.error,
-              //),
-              //child: Text(localizations.proceed),
-              //onPressed: () => Navigator.of(context).pop(true),
-            //),
-          //],
-        //);
-      //},
-    //);
-
-    //if (mounted && confirmed == true) {
-      //helper.showLoadingDialog(context, localizations.recalibrating);
-
-
-
-      //try {
-        //await updater.recalibrateWeeklyData(inserter);
-
-        //if (mounted) {
-          //helper.hideLoadingDialog(context);
-          //await helper.showSubmitMessage(
-              //context, localizations.recalibrationSuccess);
-        //}
-      //} catch (e) {
-        //if (mounted) {
-          //helper.hideLoadingDialog(context);
-          //helper.showErrorMessage(
-              //context, '${localizations.recalibrationFailed}: $e');
-        //}
-      //}
-    //}
-  //}
-
-  //@override
-  //Widget build(BuildContext context) {
-    //final localizations = AppLocalizations.of(context);
-   
-    //return PopScope(
-      //onPopInvokedWithResult: (didPop, result) {
-        //ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      //},
-      //child: Scaffold(
-        //appBar: AppBar(
-          //title: Text(localizations.settings),
-        //),
-        //body: Consumer<SettingsProvider>(
-          //builder: (context, settings, child) {
-            //return ListView(
-              //padding: const EdgeInsets.symmetric(vertical: 16.0),
-              //children: [
-                //SwitchListTile(
-                  //title: Text(localizations.darkMode),
-                  //subtitle: Text(localizations.enableDisableDarkTheme),
-                  //value: settings.themeMode == ThemeMode.dark,
-                  //onChanged: (bool value) {
-                    //settings.updateTheme(value ? ThemeMode.dark : ThemeMode.light);
-                     //ScaffoldMessenger.of(context).clearSnackBars();
-                     //ScaffoldMessenger.of(context).showSnackBar(
-                       //SnackBar(
-                         //content: Text(value ? localizations.darkModeOn : localizations.darkModeOff),
-                       //),
-                     //);
-                  //},
-                  //secondary: const Icon(Icons.dark_mode_outlined),
-                //),
-                //const Divider(),
-                //ListTile(
-                  //leading: const Icon(Icons.language_outlined),
-                  //title: Text(localizations.language),
-                  //subtitle: Text(localizations.selectApplicationLanguage),
-                  //trailing: DropdownButton<String>(
-                    //value: settings.locale.languageCode == 'de' ? localizations.german : localizations.english,
-                    //underline: const SizedBox(),
-                    //onChanged: (String? newValue) {
-                      //if (newValue != null) {
-                        //if (newValue == localizations.german) {
-                          //settings.updateLocale(const Locale('de'));
-                        //} else {
-                          //settings.updateLocale(const Locale('en'));
-                        //}
-                        //WidgetsBinding.instance.addPostFrameCallback((_) {
-                          //final newLocalizations = AppLocalizations.of(context);
-                          //ScaffoldMessenger.of(context).removeCurrentSnackBar();
-                          //ScaffoldMessenger.of(context).showSnackBar(
-                            //SnackBar(
-                              //content: Text(
-                                //'${newLocalizations.languageSetTo} $newValue. ${newLocalizations.appRestartRequired}',
-                              //),
-                            //),
-                          //);
-                        //});
-                      //}
-                    //},
-                    //items: [localizations.english, localizations.german]
-                        //.map<DropdownMenuItem<String>>((String value) {
-                      //return DropdownMenuItem<String>(
-                        //value: value,
-                        //child: Text(value),
-                      //);
-                    //}).toList(),
-                  //),
-                //),
-                //const Divider(),
-                //ListTile(
-                  //leading: const Icon(Icons.calculate_outlined),
-                  //title: Text(localizations.recalibrateData),
-                  //subtitle: Text(localizations.recalibrateDataDesc),
-                  //onTap: _showRecalibrationDialog,
-                  //trailing: const Icon(Icons.chevron_right),
-                //),
-                //const Divider(),
-                //GestureDetector(
-                  //onLongPress: _openDebugMenu,
-                  //child: Padding(
-                    //padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    //child: Text(
-                      //localizations.debugInformation,
-                      //style: const TextStyle(
-                        //fontSize: 16,
-                        //fontWeight: FontWeight.bold,
-                        //color: Colors.grey,
-                      //),
-                    //),
-                  //),
-                //),
-                //ListTile(
-                  //leading: const Icon(Icons.storage_outlined),
-                  //title: Text(localizations.databasePath),
-                  //subtitle: Text(
-                    //DBConnectionManager.filePath ?? localizations.notAvailable,
-                    //style: const TextStyle(fontSize: 12),
-                  //),
-                //),
-                //ListTile(
-                  //leading: Icon(
-                    //DBConnectionManager.db?.isOpen ?? false ? Icons.check_circle_outline : Icons.error_outline,
-                    //color: DBConnectionManager.db?.isOpen ?? false ? Colors.green : Colors.red,
-                  //),
-                  //title: Text(localizations.connectionStatus),
-                  //subtitle: Text(DBConnectionManager.db?.isOpen ?? false ? localizations.connected : localizations.disconnected),
-                //),
-              //],
-            //);
-          //},
-        //),
-      //),
-    //);
-  //}
-//}
