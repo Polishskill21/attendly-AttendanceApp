@@ -84,7 +84,6 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     }
   }
 
-  // Reusable slide + fade transition like the mobile version
   Widget _switcherTransition(Widget child, Animation<double> animation) {
     final fade = CurvedAnimation(
       parent: animation,
@@ -150,7 +149,6 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
             );
           },
           transitionBuilder: (Widget child, Animation<double> animation) {
-            // Use the shared transition
             return _switcherTransition(child, animation);
           },
           child: _buildPageForTab(_selectedTab),
