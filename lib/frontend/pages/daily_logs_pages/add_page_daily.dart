@@ -1,6 +1,7 @@
 import 'package:attendly/backend/enums/category.dart';
 import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_page.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
@@ -11,14 +12,21 @@ import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/backend/db_connection_validator.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 
 class AddDaily extends StatefulWidget{
   final Database database;
   final DateTime? initialDate;
   final List<Map<String, dynamic>>? preselectedPersons;
+  final bool isTablet;
 
-  const AddDaily({super.key, required this.database, this.initialDate, this.preselectedPersons});
+  const AddDaily({
+    super.key, 
+    required this.database, 
+    this.initialDate, 
+    this.preselectedPersons,
+    this.isTablet = false,
+  });
 
   @override
   State<StatefulWidget> createState() => _AddDailyState();
@@ -177,31 +185,52 @@ class _AddDailyState extends State<AddDaily>{
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
+    
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(localizations.addPersonToDailyTable),
+          title: Text(
+            localizations.addPersonToDailyTable,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, size: iconSize),
             onPressed: () => Navigator.pop(context, false),
           ),
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
-            bottom: 20 + MediaQuery.of(context).padding.bottom,
+            bottom: ResponsiveUtils.getContentPadding(context).bottom + MediaQuery.of(context).padding.bottom,
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            padding: EdgeInsets.fromLTRB(
+              ResponsiveUtils.getContentPadding(context).left + 12,
+              ResponsiveUtils.getContentPadding(context).top + 8,
+              ResponsiveUtils.getContentPadding(context).right + 12,
+              0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Person Selection Card
-                Text(localizations.selectPerson, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(localizations.selectPerson,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  )
+                ),
                 Card(
-                  elevation: 4,
+                  elevation: ResponsiveUtils.getCardElevation(context) + 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  ),
                   child: InkWell(
                     onTap: (widget.preselectedPersons?.isNotEmpty ?? false) ? null : () async {
                       final value = await Navigator.of(context).push(
@@ -213,6 +242,7 @@ class _AddDailyState extends State<AddDaily>{
                               Navigator.of(context).pop(selectedPersonsData);
                             },
                             initiallySelectedPersons: selectedPersons,
+                            isTablet: isTablet,
                           ),
                         )
                       );
@@ -222,37 +252,41 @@ class _AddDailyState extends State<AddDaily>{
                         });
                       }
                     },
+                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: ResponsiveUtils.getContentPadding(context),
                       child: Row(
                         children: [
                           Icon(
                             selectedPersons.isEmpty ? Icons.person_add : Icons.group,
-                            size: 40,
+                            size: ResponsiveUtils.getIconSize(context, baseSize: 40),
                             color: selectedPersons.isEmpty ? Colors.grey : Colors.blue,
                           ),
-                          SizedBox(width: 16),
+                          SizedBox(width: ResponsiveUtils.getContentPadding(context).horizontal / 2),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  selectedPersons.isEmpty 
-                                    ? localizations.tapToSelectPersons 
+                                  selectedPersons.isEmpty
+                                    ? localizations.tapToSelectPersons
                                     : localizations.personsSelected(selectedPersons.length),
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: ResponsiveUtils.getBodyFontSize(context),
                                     fontWeight: FontWeight.bold,
                                     color: selectedPersons.isEmpty ? Colors.grey : Theme.of(context).textTheme.bodyLarge?.color,
                                   ),
                                 ),
                                 if (selectedPersons.isNotEmpty) ...[
-                                  SizedBox(height: 4),
+                                  SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
                                   Text(
                                     selectedPersons.map((p) => p['name']).join(', '),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[600])
+                                    style: TextStyle(
+                                      fontSize: ResponsiveUtils.getBodyFontSize(context) - 2,
+                                      color: Colors.grey[600],
+                                    ),
                                   ),
                                 ],
                               ],
@@ -265,7 +299,7 @@ class _AddDailyState extends State<AddDaily>{
                                   selectedPersons.clear();
                                 });
                               },
-                              icon: Icon(Icons.close, color: Colors.red),
+                              icon: Icon(Icons.close, color: Colors.red, size: iconSize),
                             ),
                         ],
                       ),
@@ -273,35 +307,49 @@ class _AddDailyState extends State<AddDaily>{
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
 
-                // Date Input Field
-                Text(localizations.selectDateTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(localizations.selectDateTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  )
+                ),
                 SizedBox(
                   width: double.infinity,
                   child: TextField(
                     controller: _dateController,
                     readOnly: true,
                     onTap: _selectDate,
+                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                     decoration: InputDecoration(
                       hintText: "YYYY-MM-dd",
+                      hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                      contentPadding: ResponsiveUtils.getContentPadding(context),
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
+                        icon: Icon(Icons.calendar_today, size: iconSize),
                         onPressed: _selectDate,
                       ),
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                      ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
 
-                // Category Dropdown
-                Text(localizations.selectCategoryTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(localizations.selectCategoryTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  )
+                ),
                 DropdownMenu<CategoryItem>(
                   controller: _categoryController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectCategory,
+                  textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                   enableFilter: true,
                   requestFocusOnTap: false,
                   onSelected: (CategoryItem? item) {
@@ -311,18 +359,23 @@ class _AddDailyState extends State<AddDaily>{
                   },
                   dropdownMenuEntries: getCategoryItems(context).map<DropdownMenuEntry<CategoryItem>>((CategoryItem menu) {
                     return DropdownMenuEntry<CategoryItem>(
-                      value: menu, 
-                      label: menu.label, 
-                      leadingIcon: menu.icon != null ? Icon(menu.icon) : null
+                      value: menu,
+                      label: menu.label,
+                      leadingIcon: menu.icon != null ? Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)) : null,
+                      style: MenuItemButton.styleFrom(
+                        textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                      ),
                     );
                   }).toList(),
+                  menuHeight: isTablet ? 300 : 250,
+                  width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
                   inputDecorationTheme: InputDecorationTheme(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+                    contentPadding: ResponsiveUtils.getContentPadding(context),
                   ),
                   trailingIcon: selectedCategory != null
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: Icon(Icons.clear, size: iconSize),
                           onPressed: () {
                             setState(() {
                               selectedCategory = null;
@@ -333,48 +386,57 @@ class _AddDailyState extends State<AddDaily>{
                       : null,
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
 
-                // Description Input Field (Optional)
-                Text(localizations.descriptionOptional, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(localizations.descriptionOptional,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  )
+                ),
                 SizedBox(
                   width: double.infinity,
                   child: TextField(
                     controller: _descriptionController,
                     maxLines: 3,
+                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                     decoration: InputDecoration(
                       hintText: localizations.enterDescriptionOptional,
+                      hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                      contentPadding: ResponsiveUtils.getContentPadding(context),
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.cancel),
+                        icon: Icon(Icons.cancel, size: iconSize),
                         onPressed: () => _descriptionController.clear(),
                       ),
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                      ),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 50),
+                SizedBox(height: ResponsiveUtils.getButtonHeight(context)),
 
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    OutlinedButton.icon( 
-                      onPressed: _resetFields, 
-                      icon: const Icon(Icons.refresh, size: 25),
-                      label: Text(localizations.reset, style: const TextStyle(fontSize: 20)),
+                    OutlinedButton.icon(
+                      onPressed: _resetFields,
+                      icon: Icon(Icons.refresh, size: ResponsiveUtils.getIconSize(context, baseSize: 26)),
+                      label: Text(localizations.reset, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).primaryColor,
                         side: BorderSide(color: Theme.of(context).primaryColor),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 1.5),
                     ElevatedButton.icon(
                       onPressed: () => _submitForm(),
-                      icon: const Icon(Icons.check, size: 25, color: Colors.white),
-                      label: Text(localizations.submit, style: const TextStyle(fontSize: 20)),
+                      icon: Icon(Icons.check, size: ResponsiveUtils.getIconSize(context, baseSize: 28), color: Colors.white),
+                      label: Text(localizations.submit, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
                       ),
                     )
                   ],

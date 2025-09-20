@@ -15,6 +15,7 @@ class DailyPersonController extends ChangeNotifier {
   List<PersonWithCategories> _people = [];
   bool _isEditMode = false;
   final Set<PersonWithCategories> _selectedPeople = {};
+  bool _isTablet = false;
   
   // Filtering properties
   String _searchQuery = '';
@@ -32,6 +33,12 @@ class DailyPersonController extends ChangeNotifier {
   String? get selectedCategory => _selectedCategory;
   bool get isEditMode => _isEditMode;
   Set<PersonWithCategories> get selectedPeople => _selectedPeople;
+  bool get isTablet => _isTablet;
+
+  // Set tablet mode
+  void setTabletMode(bool isTablet) {
+    _isTablet = isTablet;
+  }
 
   // Filtered people getter
   List<PersonWithCategories> get filteredPeople {
