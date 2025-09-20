@@ -2,6 +2,7 @@ import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_add_page.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/backend/dbLogic/db_read.dart';
@@ -13,7 +14,7 @@ import 'package:attendly/frontend/pages/directory_pages/state_manager_dir_page.d
 import 'package:attendly/frontend/widgets/custom_expansion_widget.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 
 class DirectoryPage extends StatefulWidget {
   final Database dbCon;
@@ -22,6 +23,7 @@ class DirectoryPage extends StatefulWidget {
   final List<Map<String, dynamic>>? initiallySelectedPersons;
   final int? selectedTab;
   final void Function(int)? onTabChange;
+  final bool isTablet;
 
   const DirectoryPage({
     super.key,
@@ -31,6 +33,7 @@ class DirectoryPage extends StatefulWidget {
     this.initiallySelectedPersons,
     this.selectedTab,
     this.onTabChange,
+    this.isTablet = false,
   });
 
   @override
@@ -82,7 +85,10 @@ class _DirectoryPageState extends State<DirectoryPage> {
   Future<void> _onFabPressed(BuildContext context) async {
     try {
       bool? res = await Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => AddPage(database: widget.dbCon)));
+          MaterialPageRoute(builder: (context) => AddPage(
+            database: widget.dbCon,
+            isTablet: widget.isTablet,
+          )));
 
       if (res == true) {
         await updateChildrenList();
@@ -103,8 +109,9 @@ class _DirectoryPageState extends State<DirectoryPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
 
-    // The main body of the page, now composed of smaller widgets
     final pageBody = Column(
       children: [
         // NEW: Self-contained search field widget
@@ -115,6 +122,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
             _searchController.clear();
             _runSearchFilter('');
           },
+          isTablet: isTablet,
         ),
         Expanded(
           child: _isLoading
@@ -123,8 +131,10 @@ class _DirectoryPageState extends State<DirectoryPage> {
                   ? Center(
                       child: Text(
                         localizations.noPersonFound,
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: ResponsiveUtils.getBodyFontSize(context),
+                          fontWeight: FontWeight.bold
+                        ),
                       ),
                     )
                   // NEW: Self-contained list view widget
@@ -172,6 +182,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
                       },
                       buildPersonDetails: (index) => helper.buildPersonDetails(
                           _searchResult, index, localizations, context),
+                      isTablet: isTablet,
                     ),
         ),
       ],
@@ -180,7 +191,17 @@ class _DirectoryPageState extends State<DirectoryPage> {
     if (widget.isSelectionMode) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(localizations.selectAPerson),
+          title: Text(
+            localizations.selectAPerson,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, size: iconSize),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
         body: pageBody,
         floatingActionButton: widget.isSelectionMode &&
@@ -195,37 +216,45 @@ class _DirectoryPageState extends State<DirectoryPage> {
                   widget.onPersonsSelected!(selectedPersonsData);
                 },
                 label: Text(
-                    localizations.confirmSelection(_selectedPersonIds.length)),
-                icon: const Icon(Icons.check),
+                  localizations.confirmSelection(_selectedPersonIds.length),
+                  style: TextStyle(fontSize: isTablet ? 18 : 14),
+                ),
+                icon: Icon(Icons.check, size: isTablet ? 28 : 24),
               )
             : null,
       );
     }
 
     return Scaffold(
-      drawer: CustomDrawer(
-        selectedTab: widget.selectedTab!,
-        onTabChange: widget.onTabChange!,
-      ),
+      drawer: widget.isTablet 
+          ? null
+          : CustomDrawer(
+              selectedTab: widget.selectedTab!,
+              onTabChange: widget.onTabChange!,
+            ),
       appBar: RefreshableAppBar(
         title: localizations.directory,
         onRefresh: updateChildrenList,
         isLoading: _isLoading,
         showRefresh: true,
-        leading: Builder(
-          builder: (context) => IconButton(
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            icon: const Icon(Icons.menu, size: 35),
-          ),
-        ),
+        isTablet: isTablet,
+        leading: widget.isTablet
+            ? null
+            : Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  // Bigger drawer icon
+                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                ),
+              ),
       ),
       body: pageBody,
       floatingActionButton: SizedBox(
-          width: 70,
-          height: 70,
+          width: ResponsiveUtils.getButtonHeight(context) + 25,
+          height: ResponsiveUtils.getButtonHeight(context) + 25,
           child: FloatingActionButton(
               onPressed: () => _onFabPressed(context),
-              child: const Icon(Icons.add, size: 35)
+              child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35))
           )
         ),
     );
@@ -319,6 +348,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
         builder: (context) => EditPage(
           childToUpdate: child,
           database: widget.dbCon,
+          isTablet: widget.isTablet,
         ),
       ));
 
@@ -382,25 +412,33 @@ class _SearchField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
+  final bool isTablet;
 
   const _SearchField({
     required this.controller,
     required this.onChanged,
     required this.onClear,
+    this.isTablet = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 15, left: 22, right: 22, bottom: 15),
+      padding: ResponsiveUtils.getListPadding(context),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
+        style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
         decoration: InputDecoration(
           labelText: localizations.searchForName,
+          labelStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+          contentPadding: ResponsiveUtils.getContentPadding(context),
+          border: OutlineInputBorder(
+            borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+          ),
           suffixIcon: IconButton(
-            icon: const Icon(Icons.cancel),
+            icon: Icon(Icons.cancel, size: ResponsiveUtils.getIconSize(context)),
             onPressed: onClear,
           ),
         ),
@@ -420,6 +458,7 @@ class _PersonListView extends StatelessWidget {
   final Function(int) onDeletePress;
   final Function(int) onEditPress;
   final List<Widget> Function(int) buildPersonDetails;
+  final bool isTablet;
 
   const _PersonListView({
     required this.searchResult,
@@ -431,6 +470,7 @@ class _PersonListView extends StatelessWidget {
     required this.onDeletePress,
     required this.onEditPress,
     required this.buildPersonDetails,
+    this.isTablet = false,
   });
 
   @override
@@ -438,7 +478,12 @@ class _PersonListView extends StatelessWidget {
     return ListView.builder(
       shrinkWrap: true,
       itemCount: searchResult.length,
-      padding: const EdgeInsets.only(bottom: 100),
+      padding: EdgeInsets.only(
+        left: ResponsiveUtils.getListPadding(context).left,
+        right: ResponsiveUtils.getListPadding(context).right,
+        top: 0,
+        bottom: ResponsiveUtils.getButtonHeight(context) + 40 + MediaQuery.of(context).padding.bottom,
+      ),
       itemBuilder: (context, index) {
         final person = searchResult[index];
         final isSelected = isSelectionMode && selectedPersonIds.contains(person['id']); // Check based on ID
@@ -453,6 +498,7 @@ class _PersonListView extends StatelessWidget {
           onDeletePress: () => onDeletePress(index),
           onEditPress: () => onEditPress(index),
           buildChildren: buildPersonDetails(index),
+          isTablet: isTablet,
         );
       },
     );

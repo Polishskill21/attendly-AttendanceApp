@@ -1,8 +1,9 @@
 import 'package:attendly/backend/dbLogic/db_read.dart';
 import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/backend/global/global_func.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 
 class WeeksListPage extends StatefulWidget {
@@ -10,6 +11,7 @@ class WeeksListPage extends StatefulWidget {
   final DbUpdater updater;
   final String currentWeekDate;
   final Function(String, bool)? onStatusChanged;
+  final bool isTablet;
 
   const WeeksListPage({
     super.key,
@@ -17,6 +19,7 @@ class WeeksListPage extends StatefulWidget {
     required this.updater,
     required this.currentWeekDate,
     this.onStatusChanged,
+    this.isTablet = false,
   });
 
   @override
@@ -77,9 +80,22 @@ class _WeeksListPageState extends State<WeeksListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).weeksWithData), 
+        title: Text(
+          AppLocalizations.of(context).weeksWithData,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, size: iconSize),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _weeksDataFuture,
@@ -91,12 +107,19 @@ class _WeeksListPageState extends State<WeeksListPage> {
             return Center(
               child: Text(
                 snapshot.hasError ? 'An error occurred.' : 'No weekly entries found.',
-                 style: Theme.of(context).textTheme.bodyLarge,
+                style: TextStyle(
+                  fontSize: isTablet ? 18 : 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             );
           }
 
           return ListView.builder(
+            padding: EdgeInsets.symmetric(
+              vertical: ResponsiveUtils.getListPadding(context).vertical,
+              horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+            ),
             itemCount: _weeksData.length,
             itemBuilder: (context, index) {
               final weekData = _weeksData[index];
@@ -104,18 +127,22 @@ class _WeeksListPageState extends State<WeeksListPage> {
               final endDate = startDate.add(const Duration(days: 4));
               final displayStr = "${dateToString(startDate)} - ${dateToString(endDate)}";
               final bool isCountable = (weekData['countable'] ?? 0) == 1;
+              final isCurrentWeek = weekData['dates'] == widget.currentWeekDate;
 
               return Card(
-                elevation: 2,
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                elevation: ResponsiveUtils.getCardElevation(context),
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.getListPadding(context).horizontal / 2, 
+                  vertical: ResponsiveUtils.getListPadding(context).vertical * 1.3,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: weekData['dates'] == widget.currentWeekDate
-                      ? BorderSide(color: Theme.of(context).primaryColor, width: 1.5)
+                  borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  side: isCurrentWeek
+                      ? BorderSide(color: Theme.of(context).primaryColor, width: isTablet ? 2.0 : 1.5)
                       : BorderSide.none,
                 ),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                   onTap: () {
                     Navigator.of(context).pop({
                       'date': weekData['dates'],
@@ -123,7 +150,7 @@ class _WeeksListPageState extends State<WeeksListPage> {
                     });
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: ResponsiveUtils.getContentPadding(context),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -133,21 +160,27 @@ class _WeeksListPageState extends State<WeeksListPage> {
                             Expanded(
                               child: Text(
                                 displayStr,
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: ResponsiveUtils.getBodyFontSize(context) + 2,
+                                ),
                               ),
                             ),
                             IconButton(
                               icon: Icon(
                                 isCountable ? Icons.check_circle : Icons.cancel_outlined,
                                 color: isCountable ? Colors.green : Colors.red,
-                                size: 30,
+                                size: ResponsiveUtils.getIconSize(context, baseSize: 34),
                               ),
-                              tooltip: isCountable ? AppLocalizations.of(context).excludeFromYearReport : AppLocalizations.of(context).includeInYearReport,
+                              tooltip: isCountable 
+                                  ? AppLocalizations.of(context).excludeFromYearReport 
+                                  : AppLocalizations.of(context).includeInYearReport,
                               onPressed: () => _toggleCountable(index),
+                              padding: EdgeInsets.all(ResponsiveUtils.getContentPadding(context).vertical / 4),
                             ),
                           ],
                         ),
-                        const Divider(height: 16),
+                        Divider(height: ResponsiveUtils.getListPadding(context).vertical * 3),
                         _buildWeekDataDetails(weekData),
                       ],
                     ),
@@ -182,31 +215,46 @@ class _WeeksListPageState extends State<WeeksListPage> {
       children: [
         Row(
           children: [
-            const Icon(Icons.groups, size: 16, color: Colors.blueGrey),
-            const SizedBox(width: 8),
+            Icon(
+              Icons.groups, 
+              size: ResponsiveUtils.getIconSize(context, baseSize: 18), 
+              color: Colors.blueGrey,
+            ),
+            SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal / 2),
             Text(
               '${localizations.totalVisitors}: $totalVisitors',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getBodyFontSize(context), 
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
         if (keyStats.isNotEmpty) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
           Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
+            spacing: ResponsiveUtils.getListPadding(context).horizontal / 2,
+            runSpacing: ResponsiveUtils.getListPadding(context).vertical / 2,
             children: keyStats.entries.map((entry) {
               return Chip(
                 avatar: CircleAvatar(
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.8),
+                  backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.8),
                   child: Text(
                     entry.value.toString(),
-                    style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.getBodyFontSize(context) - 6,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                label: Text(entry.key),
-                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                label: Text(
+                  entry.key,
+                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+                ),
+                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 side: BorderSide.none,
+                padding: EdgeInsets.all(ResponsiveUtils.getContentPadding(context).vertical / 2),
               );
             }).toList(),
           ),

@@ -1,4 +1,5 @@
 import 'package:attendly/backend/enums/category.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/backend/dbLogic/db_read.dart';
@@ -8,17 +9,19 @@ import 'package:attendly/frontend/person_model/category_record.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
 import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/backend/db_connection_validator.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
 class EditCategoryPage extends StatefulWidget {
   final CategoryRecord record;
   final Database database;
+  final bool isTablet;
 
   const EditCategoryPage({
     super.key,
     required this.record,
     required this.database,
+    this.isTablet = false,
   });
 
   @override
@@ -99,25 +102,55 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(localizations.editCategory),
+        title: Text(
+          localizations.editCategory,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, size: iconSize),
+          onPressed: () => Navigator.pop(context, false),
+        ),
       ),
       body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          vertical: ResponsiveUtils.getListPadding(context).vertical,
+          horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: ResponsiveUtils.getContentPadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${localizations.date}: ${widget.record.date}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              Text('${localizations.category}:', style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 5),
+              Text(
+                '${localizations.date}: ${widget.record.date}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                ),
+              ),
+              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+              Text(
+                '${localizations.category}:', 
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                ),
+              ),
+              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
               DropdownMenu<CategoryItem>(
                 controller: _categoryController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectCategory,
-                initialSelection: getCategoryItems(context).firstWhereOrNull((item) => item.category == _selectedCategory),
+                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                initialSelection: getCategoryItems(context)
+                    .firstWhereOrNull((item) => item.category == _selectedCategory),
                 enableFilter: true,
                 requestFocusOnTap: false,
                 onSelected: (CategoryItem? item) {
@@ -129,16 +162,21 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
                   return DropdownMenuEntry<CategoryItem>(
                     value: menu,
                     label: menu.label,
-                    leadingIcon: menu.icon != null ? Icon(menu.icon) : null,
+                    leadingIcon: menu.icon != null ? Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)) : null,
+                    style: MenuItemButton.styleFrom(
+                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    ),
                   );
                 }).toList(),
+                menuHeight: ResponsiveUtils.isTablet(context) ? 300 : 250,
+                width: MediaQuery.of(context).size.width - (ResponsiveUtils.isTablet(context) ? 48 : 32),
                 inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+                  contentPadding: ResponsiveUtils.getContentPadding(context),
                 ),
                 trailingIcon: _selectedCategory != null
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, size: iconSize),
                         onPressed: () {
                           setState(() {
                             _selectedCategory = null;
@@ -148,23 +186,43 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
                       )
                     : null,
               ),
-              const SizedBox(height: 20),
-              Text(localizations.commentOptional, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 5),
+              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+              Text(
+                localizations.commentOptional, 
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                ),
+              ),
+              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
               TextField(
                 controller: _commentController,
                 maxLines: 3,
+                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  ),
+                  contentPadding: ResponsiveUtils.getContentPadding(context),
                   hintText: localizations.enterComment,
+                  hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 ),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 3),
               Center(
                 child: ElevatedButton.icon(
                   onPressed: _saveChanges,
-                  icon: const Icon(Icons.save, color: Colors.white),
-                  label: Text(localizations.saveChanges),
+                  icon: Icon(Icons.save, color: Colors.white, size: ResponsiveUtils.getIconSize(context, baseSize: 28)),
+                  label: Text(
+                    localizations.saveChanges,
+                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.getContentPadding(context).horizontal,
+                      vertical: ResponsiveUtils.getContentPadding(context).vertical / 2,
+                    ),
+                  ),
                 ),
               ),
             ],
