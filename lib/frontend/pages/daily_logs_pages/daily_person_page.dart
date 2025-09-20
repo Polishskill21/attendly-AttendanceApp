@@ -1,4 +1,5 @@
 import 'package:attendly/frontend/person_model/person_categories.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,15 +16,22 @@ import 'package:attendly/frontend/person_model/category_record.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/backend/db_connection_validator.dart';
 
 class DailyPerson extends StatefulWidget{
   final Database dbCon;
   final int selectedTab;
   final void Function(int) onTabChange;
+  final bool isTablet;
 
-  const DailyPerson({super.key, required this.dbCon, required this.selectedTab, required this.onTabChange});
+  const DailyPerson({
+    super.key, 
+    required this.dbCon, 
+    required this.selectedTab, 
+    required this.onTabChange,
+    this.isTablet = false,
+  });
 
   @override
   State<StatefulWidget> createState() => DailyPersonState();
@@ -84,8 +92,25 @@ class DailyPersonState extends State<DailyPerson>{
       initialDate: _controller.selectedDate,
       firstDate: DateTime(2000), 
       lastDate: DateTime(2100),
-      keyboardType: TextInputType.numberWithOptions()
-      );
+      keyboardType: TextInputType.numberWithOptions(),
+      builder: (context, child) {
+        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+
+       final mq = MediaQuery.of(context);
+       final currentScale = mq.textScaler.scale(1.0);
+       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
+       
+       return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(newScale),
+          ),
+          child: Transform.scale(
+            scale: 1.1,
+            child: child,
+          ),
+        );
+      },
+    );
 
     if(picked != null && picked != _controller.selectedDate){
       _controller.setSelectedDate(picked);
@@ -163,7 +188,7 @@ class DailyPersonState extends State<DailyPerson>{
       final personIds = _controller.selectedPeople.map((p) => p.personId).toList();
       await deleter.deleteMultipleDailyEntriesForPeople(personIds, _controller.selectedDate);
       if (mounted) _helper.hideLoadingDialog(context);
-      await _helper.showSubmitMessage(context, '$count people\'s entries deleted.');
+      await _helper.showSubmitMessage(context, localizations.peopleEntriesDeleted(count));
       _controller.toggleEditMode();
       await _controller.refresh();
     } catch (e, stackTrace) {
@@ -261,37 +286,46 @@ class DailyPersonState extends State<DailyPerson>{
           final todayDateOnly = DateTime(now.year, now.month, now.day);
           final selectedDateOnly = DateTime(controller.selectedDate.year, controller.selectedDate.month, controller.selectedDate.day);
           final isTodayOrFuture = !selectedDateOnly.isBefore(todayDateOnly);
+          final isTablet = widget.isTablet;
+          final arrowIconSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
+          final appBarIconSize = ResponsiveUtils.getIconSize(context);
 
           return Scaffold(
-            drawer: CustomDrawer(
-              selectedTab: widget.selectedTab,
-              onTabChange: widget.onTabChange,
-            ),
+            drawer: isTablet
+                ? null
+                : CustomDrawer(
+                    selectedTab: widget.selectedTab,
+                    onTabChange: widget.onTabChange,
+                  ),
             appBar: RefreshableAppBar(
                 title: localizations.dailyLogs,
                 onRefresh: refreshDailyEntries,
                 isLoading: isLoading,
                 showRefresh: !controller.isEditMode,
+                isTablet: isTablet,
                 leading: controller.isEditMode
                     ? IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, size: appBarIconSize),
                         onPressed: controller.toggleEditMode,
                       )
-                    : Builder(
-                        builder: (context) => IconButton(
-                          onPressed: () => Scaffold.of(context).openDrawer(),
-                          icon: const Icon(Icons.menu, size: 35),
-                        ),
-                      ),
+                    : isTablet
+                        ? null
+                        : Builder(
+                            builder: (context) => IconButton(
+                              onPressed: () => Scaffold.of(context).openDrawer(),
+                              // Bigger drawer icon
+                              icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                            ),
+                          ),
                 actions: [
                   if (!controller.isEditMode)
                     IconButton(
-                      icon: const Icon(Icons.edit, size: 32),
+                      icon: Icon(Icons.edit, size: ResponsiveUtils.getIconSize(context, baseSize: 30)),
                       onPressed: controller.people.isEmpty ? null : controller.toggleEditMode,
                     ),
                   if (controller.isEditMode)
                     IconButton(
-                      icon: const Icon(Icons.select_all),
+                      icon: Icon(Icons.select_all, size: ResponsiveUtils.getIconSize(context, baseSize: 28)),
                       onPressed: controller.filteredPeople.isEmpty ? null : controller.selectAll,
                     ),
                 ],
@@ -300,27 +334,39 @@ class DailyPersonState extends State<DailyPerson>{
                 child: Center(
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          IconButton(
-                            onPressed: () => controller.setSelectedDate(controller.selectedDate.subtract(const Duration(days: 1))),
-                            icon: Icon(Icons.arrow_back_ios_sharp, color: theme.iconTheme.color),
-                            iconSize: 30,
-                          ),
-                          GestureDetector(
-                            onTap: _selectDate,
-                            child: Text(
-                              "${controller.selectedDate.year}-${controller.selectedDate.month}-${controller.selectedDate.day}",
-                              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+                          vertical: ResponsiveUtils.getListPadding(context).vertical
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            IconButton(
+                              onPressed: () => controller.setSelectedDate(controller.selectedDate.subtract(const Duration(days: 1))),
+                              icon: Icon(Icons.arrow_back_ios_sharp, color: theme.iconTheme.color),
+                              iconSize: arrowIconSize,
                             ),
-                          ),
-                          IconButton(
-                            onPressed: isTodayOrFuture ? null : () => controller.setSelectedDate(controller.selectedDate.add(const Duration(days: 1))),
-                            icon: Icon(Icons.arrow_forward_ios_sharp, color: isTodayOrFuture ? theme.disabledColor : theme.iconTheme.color),
-                            iconSize: 30,
-                          )
-                        ],
+                            GestureDetector(
+                              onTap: _selectDate,
+                              child: Text(
+                                "${controller.selectedDate.year}-${controller.selectedDate.month}-${controller.selectedDate.day}",
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: ResponsiveUtils.getTitleFontSize(context),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: isTodayOrFuture ? null : () => controller.setSelectedDate(controller.selectedDate.add(const Duration(days: 1))),
+                              icon: Icon(
+                                Icons.arrow_forward_ios_sharp, 
+                                color: isTodayOrFuture ? theme.disabledColor : theme.iconTheme.color
+                              ),
+                              iconSize: arrowIconSize,
+                            )
+                          ],
+                        ),
                       ),
                       _FilterSection(controller: controller),
                       //_buildFilterSection(),
@@ -338,11 +384,11 @@ class DailyPersonState extends State<DailyPerson>{
               floatingActionButton: controller.isEditMode
                 ? null
                 : SizedBox(
-                    width: 70,
-                    height: 70,
+                    width: ResponsiveUtils.getButtonHeight(context) + 25,
+                    height: ResponsiveUtils.getButtonHeight(context) + 25,
                     child: FloatingActionButton(
                       onPressed: () => _onFabPressed(context),
-                      child: const Icon(Icons.add, size: 35),
+                      child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
                     ),
                   ),
             bottomNavigationBar: controller.isEditMode ? _buildEditModeActions() : null,
@@ -435,65 +481,84 @@ class _FilterSectionState extends State<_FilterSection> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final body = ResponsiveUtils.getBodyFontSize(context);
+    final title = ResponsiveUtils.getTitleFontSize(context);
     return Consumer<DailyPersonController>(
-    builder: (context, controller, child) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-      child: ExpansionTile(
-        leading: const Icon(Icons.filter_list),
-        title: Text(localizations.filterOptions),
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        children: [
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              labelText: localizations.searchByName,
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              suffixIcon: controller.searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                      },
-                    )
-                  : null,
+      builder: (context, controller, child) {
+        return Padding(
+          padding: ResponsiveUtils.getListPadding(context),
+          child: ExpansionTile(
+            leading: const Icon(Icons.filter_list),
+            title: Text(
+              localizations.filterOptions,
+              style: TextStyle(fontSize: title, fontWeight: FontWeight.w600),
             ),
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
+            childrenPadding: ResponsiveUtils.getListPadding(context),
+            children: [
+              TextField(
+                controller: _searchController,
+                style: TextStyle(fontSize: body + 2),
+                decoration: InputDecoration(
+                  labelText: localizations.searchByName,
+                  labelStyle: TextStyle(fontSize: body + 2),
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  ),
+                  suffixIcon: controller.searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : null,
+                  contentPadding: ResponsiveUtils.getContentPadding(context),
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownMenu<CategoryItem?>(
+                controller: _categoryController,
+                enableFilter: true,
+                requestFocusOnTap: false,
+                label: Text(
+                  localizations.filterByCategory,
+                  style: TextStyle(fontSize: body + 2, fontWeight: FontWeight.w500),
+                ),
+                initialSelection: null,
+                onSelected: _selectCategory,
+                dropdownMenuEntries: getCategoryItems(context)
+                    .map<DropdownMenuEntry<CategoryItem?>>((CategoryItem item) {
+                  return DropdownMenuEntry<CategoryItem?>(
+                    value: item,
+                    label: item.label,
+                    leadingIcon: item.icon != null ? Icon(item.icon) : null,
+                    style: MenuItemButton.styleFrom(
+                      textStyle: TextStyle(fontSize: body + 2),
+                    ),
+                  );
+                }).toList(),
+                inputDecorationTheme: InputDecorationTheme(
+                  border: OutlineInputBorder(
+                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  ),
+                  contentPadding: ResponsiveUtils.getContentPadding(context),
+                ),
+                trailingIcon: controller.selectedCategory != null
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearCategoryFilter,
+                      )
+                    : null,
+                expandedInsets: EdgeInsets.zero,
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          DropdownMenu<CategoryItem?>(
-            controller: _categoryController,
-            enableFilter: true,
-            requestFocusOnTap: false,
-            label: Text(localizations.filterByCategory),
-            initialSelection: null,
-            onSelected: _selectCategory,
-            dropdownMenuEntries: getCategoryItems(context).map<DropdownMenuEntry<CategoryItem?>>((CategoryItem item) {
-              return DropdownMenuEntry<CategoryItem?>(
-                value: item,
-                label: item.label,
-                leadingIcon: item.icon != null ? Icon(item.icon) : null,
-              );
-            }).toList(),
-            inputDecorationTheme: InputDecorationTheme(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-            ),
-            trailingIcon: controller.selectedCategory != null
-                ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: _clearCategoryFilter,
-                  )
-                : null,
-            expandedInsets: EdgeInsets.zero,
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
-    );
-}
 }
 
 
@@ -514,6 +579,9 @@ class _PersonList extends StatelessWidget {
       builder: (context, controller, child) {
         final localizations = AppLocalizations.of(context);
         final theme = Theme.of(context);
+        final titleSize = ResponsiveUtils.getTitleFontSize(context);
+        final bodySize = ResponsiveUtils.getBodyFontSize(context);
+        final listPad = ResponsiveUtils.getListPadding(context);
 
         if (controller.isRefreshing && controller.filteredPeople.isEmpty) {
           return const Center(child: CircularProgressIndicator());
@@ -528,30 +596,33 @@ class _PersonList extends StatelessWidget {
 
         return ListView.builder(
           padding: EdgeInsets.only(
-            left: 0,
-            right: 0,
+            left: listPad.left,
+            right: listPad.right,
             top: 0,
-            bottom: 80 + MediaQuery.of(context).padding.bottom, // was 80
+            // More space so FAB does not overlap + safe area bottom
+            bottom: ResponsiveUtils.getButtonHeight(context) + 40 + MediaQuery.of(context).padding.bottom,
           ),
           itemCount: controller.filteredPeople.length,
           itemBuilder: (context, index) {
             final person = controller.filteredPeople[index];
             final isSelected = controller.isPersonSelected(person);
             return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              elevation: 2,
+              // External width now controlled by ListView padding; use vertical-only margin
+              margin: EdgeInsets.only(bottom: listPad.vertical * 1.5),
+              elevation: ResponsiveUtils.getCardElevation(context),
               shape: RoundedRectangleBorder(
                 side: isSelected
                     ? BorderSide(color: theme.primaryColor, width: 2)
                     : BorderSide.none,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: ResponsiveUtils.getCardBorderRadius(context),
               ),
               color: isSelected ? theme.primaryColor.withOpacity(0.1) : theme.cardTheme.color,
               child: InkWell(
                 onTap: controller.isEditMode ? () => controller.togglePersonSelection(person) : null,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  // keep internal padding standardized
+                  padding: ResponsiveUtils.getContentPadding(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -563,11 +634,18 @@ class _PersonList extends StatelessWidget {
                               children: [
                                 Text(
                                   person.name,
-                                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: titleSize, // bigger name
+                                    color: theme.textTheme.titleLarge?.color,
+                                  ),
                                 ),
                                 Text(
                                   '${localizations.id}: ${person.personId}',
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withOpacity(0.6)),
+                                  style: TextStyle(
+                                    fontSize: bodySize, // bigger id text
+                                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                                  ),
                                 ),
                               ],
                             ),
@@ -585,20 +663,47 @@ class _PersonList extends StatelessWidget {
                       ...person.records.map((record) {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: Text(record.category, style: const TextStyle(fontWeight: FontWeight.w500)),
-                          subtitle: record.comment != null && record.comment!.isNotEmpty
-                              ? Text(record.comment!)
-                              : null,
-                          trailing: controller.isEditMode ? null : PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'edit') onEditCategory(record);
-                              if (value == 'delete') onDeleteCategory(record);
-                            },
-                            itemBuilder: (context) => [
-                              PopupMenuItem(value: 'edit', child: Text(localizations.edit)),
-                              PopupMenuItem(value: 'delete', child: Text(localizations.delete)),
-                            ],
+                          title: Text(
+                            record.category,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: bodySize, // larger category text
+                            ),
                           ),
+                          subtitle: record.comment != null && record.comment!.isNotEmpty
+                              ? Text(
+                                  record.comment!,
+                                  style: TextStyle(fontSize: bodySize - 2),
+                                )
+                              : null,
+                          trailing: controller.isEditMode
+                              ? null
+                              : PopupMenuButton<String>(
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    size: ResponsiveUtils.getIconSize(context, baseSize: 28),
+                                  ),
+                                  onSelected: (value) {
+                                    if (value == 'edit') onEditCategory(record);
+                                    if (value == 'delete') onDeleteCategory(record);
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text(
+                                        localizations.edit,
+                                        style: TextStyle(fontSize: bodySize),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(
+                                        localizations.delete,
+                                        style: TextStyle(fontSize: bodySize),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         );
                       }),
                       if (!controller.isEditMode) ...[
@@ -607,7 +712,7 @@ class _PersonList extends StatelessWidget {
                           child: IconButton(
                             onPressed: () => onAddCategory(person),
                             icon: Icon(Icons.add_circle_outline, color: theme.primaryColor),
-                            iconSize: 28,
+                            iconSize: ResponsiveUtils.getIconSize(context, baseSize: 28),
                             tooltip: localizations.addCategory,
                           ),
                         ),
@@ -615,11 +720,11 @@ class _PersonList extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
+              )
+              );
+            },
+          );
+        },
     );
   }
 }
