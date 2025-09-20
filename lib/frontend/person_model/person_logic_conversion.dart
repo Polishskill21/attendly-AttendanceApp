@@ -1,5 +1,5 @@
 import 'package:attendly/backend/enums/genders.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 
 Genders stringToGender(String gender){
   switch(gender){

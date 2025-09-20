@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 
 class MigraionItem{
   final int id;
