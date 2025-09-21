@@ -1,4 +1,5 @@
 import 'package:attendly/frontend/person_model/person_categories.dart';
+import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
@@ -245,7 +246,12 @@ class DailyPersonState extends State<DailyPerson>{
     final confirm = await _helper.displayDialog(
       context,
       localizations.deleteRecord,
-      localizations.confirmDeleteCategory(record.category, record.personName ?? localizations.unknown, record.date),
+      // use localized category here
+      localizations.confirmDeleteCategory(
+        localizedCategoryLabel(context, record.category),
+        record.personName ?? localizations.unknown,
+        record.date,
+      ),
       localizations,
     );
 
@@ -599,7 +605,7 @@ class _PersonList extends StatelessWidget {
             left: listPad.left,
             right: listPad.right,
             top: 0,
-            // More space so FAB does not overlap + safe area bottom
+            
             bottom: ResponsiveUtils.getButtonHeight(context) + 40 + MediaQuery.of(context).padding.bottom,
           ),
           itemCount: controller.filteredPeople.length,
@@ -607,7 +613,7 @@ class _PersonList extends StatelessWidget {
             final person = controller.filteredPeople[index];
             final isSelected = controller.isPersonSelected(person);
             return Card(
-              // External width now controlled by ListView padding; use vertical-only margin
+              
               margin: EdgeInsets.only(bottom: listPad.vertical * 1.5),
               elevation: ResponsiveUtils.getCardElevation(context),
               shape: RoundedRectangleBorder(
@@ -621,7 +627,7 @@ class _PersonList extends StatelessWidget {
                 onTap: controller.isEditMode ? () => controller.togglePersonSelection(person) : null,
                 borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                 child: Padding(
-                  // keep internal padding standardized
+                 
                   padding: ResponsiveUtils.getContentPadding(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -636,15 +642,15 @@ class _PersonList extends StatelessWidget {
                                   person.name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: titleSize, // bigger name
+                                    fontSize: titleSize,
                                     color: theme.textTheme.titleLarge?.color,
                                   ),
                                 ),
                                 Text(
                                   '${localizations.id}: ${person.personId}',
                                   style: TextStyle(
-                                    fontSize: bodySize, // bigger id text
-                                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                                    fontSize: bodySize,
+                                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -664,10 +670,11 @@ class _PersonList extends StatelessWidget {
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(
-                            record.category,
+                            // localize category label
+                            localizedCategoryLabel(context, record.category),
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: bodySize, // larger category text
+                              fontSize: bodySize,
                             ),
                           ),
                           subtitle: record.comment != null && record.comment!.isNotEmpty
