@@ -122,7 +122,6 @@ class _AddDailyState extends State<AddDaily>{
           successCount++;
 
         } on custom_db_exceptions.DuplicateDailyEntryException catch (_) {
-          failCount++;
           duplicatePersons.add(person['name']);
           debugPrint("failed to add ${person['name']} since is in the category");
           
@@ -138,7 +137,13 @@ class _AddDailyState extends State<AddDaily>{
 
       if (duplicatePersons.isNotEmpty) {
         String names = duplicatePersons.join(', ');
-        helper.showErrorMessage(context, localizations.personsAlreadyInCategoryOpen(duplicatePersons.length, names));
+        await helper.showInfoMessageDialog(
+          context,
+          localizations.personsAlreadyInCategoryOpen(duplicatePersons.length, names),
+        );
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
       } else if (failCount > 0) {
         String errorDetails = failedPersons.join('\n\n');
         helper.showErrorMessage(context, "${localizations.personsFailedToAdd(failCount, successCount)}\n\nDetails:\n$errorDetails");
