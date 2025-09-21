@@ -548,7 +548,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get withAbbreviation => 'm.';
 
   @override
-  String get withoutAbbreviation => 'o.M.';
+  String get withoutAbbreviation => 'o.';
 
   @override
   String confirmBulkDelete(int count) => 'Möchten Sie wirklich alle Einträge für $count ausgewählte Personen an diesem Tag löschen?';
@@ -615,4 +615,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String getAppsVerision(String version) => "Versionsnummer $version";
+
+  @override
+  String get trueValue => "Wahr";
+
+  @override
+  String get falseValue => "Falsch";
 }

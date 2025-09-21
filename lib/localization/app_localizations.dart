@@ -34,6 +34,9 @@ abstract class AppLocalizations {
   String get pleaseSelectValidDbFile;
   String get databaseSwitchFailed;
   String get attendly;
+
+  String get trueValue;
+  String get falseValue;
   
   // New strings for UI elements
   String get allPeople;

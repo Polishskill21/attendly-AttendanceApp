@@ -621,4 +621,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String getAppsVerision(String version) => "Version number $version";
+
+  @override
+  String get trueValue => "true";
+
+  @override
+  String get falseValue => "false";
 }
