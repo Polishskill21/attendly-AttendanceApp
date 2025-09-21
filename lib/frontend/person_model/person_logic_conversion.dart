@@ -1,5 +1,7 @@
+import 'package:attendly/backend/enums/category.dart';
 import 'package:attendly/backend/enums/genders.dart';
 import 'package:attendly/localization/app_localizations.dart';
+import 'package:flutter/material.dart';
 
 Genders stringToGender(String gender){
   switch(gender){
@@ -41,6 +43,36 @@ bool intToBool(int migrationStatus){
       return false;
     default: 
       throw ArgumentError("Invalid migraton status int: $migrationStatus");
+  }
+}
+
+String intToBoolString(int migrationStatus, AppLocalizations localizations){
+  switch(migrationStatus){
+    case 1:
+      return localizations.trueValue;
+    case 0: 
+      return localizations.falseValue;
+    default: 
+      throw ArgumentError("Invalid migraton status int: $migrationStatus");
+  }
+}
+
+String localizedCategoryLabel(BuildContext context, String rawCategory) {
+  final l = AppLocalizations.of(context);
+  try {
+    final cat = Category.values.byName(rawCategory);
+    switch (cat) {
+      case Category.open:
+        return l.open;
+      case Category.offer:
+        return l.offers;
+      case Category.parent:
+        return l.parent;
+      case Category.other:
+        return l.other;
+    }
+  } catch (_) {
+    return rawCategory;
   }
 }
 
