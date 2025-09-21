@@ -24,6 +24,7 @@ Youth clubs often need to provide specific data and statistics in their annual r
 - Requires **full storage access** for database management and backups.
 - Optimized for tracking attendance in various categories.
 - Supports **German** and **English** languages.
+- The app is supported on Android 11 (API level 30) and above.
 
 ---
 
