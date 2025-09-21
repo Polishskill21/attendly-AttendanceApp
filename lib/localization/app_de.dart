@@ -548,10 +548,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get withAbbreviation => 'm.';
 
   @override
-  String get withoutAbbreviation => 'o.M.';
+  String get withoutAbbreviation => 'o.';
 
   @override
   String confirmBulkDelete(int count) => 'Möchten Sie wirklich alle Einträge für $count ausgewählte Personen an diesem Tag löschen?';
+
+  @override
+  String peopleEntriesDeleted(int count) => 'Einträge für $count Personen gelöscht.';
 
   // For settings page recalibration
   @override
@@ -603,4 +606,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get openUserManual => 'Benutzerhandbuch öffnen';
+
+  @override
+  String get externalPdfAppHint => 'Öffnet mit einer externen PDF-App (z. B. Google PDF Viewer).';
+
+  @override
+  String get failedToOpenPdf => 'PDF konnte nicht geöffnet werden.';
+
+  @override
+  String getAppsVerision(String version) => "Versionsnummer $version";
+
+  @override
+  String get trueValue => "Wahr";
+
+  @override
+  String get falseValue => "Falsch";
 }

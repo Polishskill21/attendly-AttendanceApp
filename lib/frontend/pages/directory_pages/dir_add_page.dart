@@ -1,25 +1,31 @@
 import 'package:attendly/backend/enums/genders.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
+import 'package:attendly/frontend/selection_options/gender_item.dart';
+import 'package:attendly/frontend/selection_options/migration_item.dart';
 import 'package:attendly/backend/helpers/child.dart';
 import 'package:attendly/backend/dbLogic/db_read.dart';
 import 'package:attendly/backend/dbLogic/db_insert.dart';
 import 'package:attendly/backend/dbLogic/db_update.dart';
+import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/backend/db_connection_validator.dart';
-import 'package:attendly/frontend/selection_options/gender_item.dart';
-import 'package:attendly/frontend/selection_options/migration_item.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
-import 'message_helper.dart';
+import 'package:attendly/localization/app_localizations.dart';
 
 class AddPage extends StatefulWidget{
   final Database database;
-  const AddPage({super.key, required this.database});
+  final bool isTablet;
+
+  const AddPage({
+    super.key, 
+    required this.database,
+    this.isTablet = false,
+  });
 
   @override
   State<StatefulWidget> createState() => _AddPageState();
-
 }
 
 class _AddPageState extends State<AddPage>{  
@@ -138,8 +144,26 @@ class _AddPageState extends State<AddPage>{
       lastDate: DateTime.now(),
       initialEntryMode: DatePickerEntryMode.calendar,
       initialDatePickerMode: DatePickerMode.year,
-      keyboardType: TextInputType.numberWithOptions()
+      keyboardType: TextInputType.numberWithOptions(),
+      builder: (context, child) {
+        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+
+       final mq = MediaQuery.of(context);
+       final currentScale = mq.textScaler.scale(1.0);
+       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
+       
+       return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(newScale),
+          ),
+          child: Transform.scale(
+            scale: 1.1,
+            child: child,
+          ),
+        );
+      },
     );
+    
     if (picked != null) {
       String formattedDate = DateFormat('yyyy-MM-dd').format(picked);
       setState(() {
@@ -151,72 +175,100 @@ class _AddPageState extends State<AddPage>{
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
+    
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
-        
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
       },
       child: Scaffold(
       appBar: AppBar(
-        title: Text(localizations.addPersonToTable),
-         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+        title: Text(
+          localizations.addPersonToTable,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, size: iconSize),
           onPressed: () => Navigator.pop(context, false),
         ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
-          bottom: 20 + MediaQuery.of(context).padding.bottom,
+          bottom: (isTablet ? 30 : 20) + MediaQuery.of(context).padding.bottom,
         ),
         child: Padding(
-          // was EdgeInsets.symmetric(...)
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          padding: EdgeInsets.fromLTRB(
+            ResponsiveUtils.getContentPadding(context).left + 12,
+            ResponsiveUtils.getContentPadding(context).top + 8,
+            ResponsiveUtils.getContentPadding(context).right + 12,
+            0,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Name Input Field
-              Text(localizations.childsName, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(localizations.childsName,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+              ),
               SizedBox(
                 width: double.infinity,
                 child: TextField(
                   controller: _nameController,
+                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                   decoration: InputDecoration(
                     hintText: localizations.enterChildsName,
+                    hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    contentPadding: ResponsiveUtils.getContentPadding(context),
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.cancel),
+                      icon: Icon(Icons.cancel, size: ResponsiveUtils.getIconSize(context)),
                       onPressed: () => _nameController.clear(),
                     ),
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                    ),
                   ),
                 ),
               ),
-              
-              SizedBox(height: 20),
+              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
 
-              // Birthday Input Field
-              Text(localizations.childsBirthday, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(localizations.childsBirthday, 
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+              ),
               SizedBox(
                 width: double.infinity,
                 child: TextField(
                   controller: _birthdayController,
                   readOnly: true,
                   onTap: () => _selectBirthday(context),
+                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                   decoration: InputDecoration(
                     hintText: localizations.selectBirthday,
-                    suffixIcon: Icon(Icons.calendar_today),
-                    border: OutlineInputBorder(),
+                    hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                    suffixIcon: Icon(
+                    Icons.calendar_today, 
+                    size: ResponsiveUtils.getIconSize(context),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                    ),
                   ),
                 ),
               ),
 
-              SizedBox(height: 20),
+              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
 
-              // Gender Dropdown
-              Text(localizations.selectGender, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(localizations.selectGender, 
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+              ),
               DropdownMenu<GenderItem>(
                 controller: _genderController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectChildGender,
+                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 enableFilter: true,
                 requestFocusOnTap: false,
                 onSelected: (GenderItem? item) {
@@ -225,15 +277,24 @@ class _AddPageState extends State<AddPage>{
                   });
                 },
                 dropdownMenuEntries: getGenderItems(context).map<DropdownMenuEntry<GenderItem>>((GenderItem menu) {
-                  return DropdownMenuEntry<GenderItem>(value: menu, label: menu.label, leadingIcon: Icon(menu.icon));
+                  return DropdownMenuEntry<GenderItem>(
+                    value: menu,
+                    label: menu.label,
+                    leadingIcon: Icon(menu.icon, size: isTablet ? 24 : 20),
+                    style: MenuItemButton.styleFrom(
+                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    ),
+                  );
                 }).toList(),
+                menuHeight: isTablet ? 300 : 250,
+                width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
                 inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+                  contentPadding: ResponsiveUtils.getContentPadding(context),
                 ),
                 trailingIcon: selectedGender != null
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, size: iconSize),
                         onPressed: () {
                           setState(() {
                             selectedGender = null;
@@ -244,14 +305,16 @@ class _AddPageState extends State<AddPage>{
                     : null,
               ),
 
-              SizedBox(height: 20),
+              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
 
-              // Migration Dropdown
-              Text(localizations.selectMigration, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(localizations.selectMigration, 
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+              ),
               DropdownMenu<MigraionItem>(
                 controller: _migrationController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectChildsMigrationBackground,
+                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 enableFilter: true,
                 requestFocusOnTap: false,
                 onSelected: (MigraionItem? item) {
@@ -260,15 +323,24 @@ class _AddPageState extends State<AddPage>{
                   });
                 },
                 dropdownMenuEntries: getMigrationItems(context).map<DropdownMenuEntry<MigraionItem>>((MigraionItem menu) {
-                  return DropdownMenuEntry<MigraionItem>(value: menu, label: menu.label, leadingIcon: Icon(menu.icon));
+                  return DropdownMenuEntry<MigraionItem>(
+                    value: menu,
+                    label: menu.label,
+                    leadingIcon: Icon(menu.icon, size: isTablet ? 24 : 20),
+                    style: MenuItemButton.styleFrom(
+                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    ),
+                  );
                 }).toList(),
+                menuHeight: isTablet ? 200 : 150,
+                width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
                 inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+                  contentPadding: ResponsiveUtils.getContentPadding(context),
                 ),
                 trailingIcon: selectedMigration != null
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, size: iconSize),
                         onPressed: () {
                           setState(() {
                             selectedMigration = null;
@@ -279,51 +351,57 @@ class _AddPageState extends State<AddPage>{
                     : null,
               ),
 
-              SizedBox(height: 20),
+              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
 
-              // Home Country Input Field
-              Text(localizations.homeCountry, style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(localizations.homeCountry, 
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+              ),
               SizedBox(
                 width: double.infinity,
                 child: TextField(
                   controller: _homeCountryController,
+                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                   decoration: InputDecoration(
                     hintText: localizations.enterChildsHomeCountry,
+                    hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    contentPadding: ResponsiveUtils.getContentPadding(context),
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.cancel),
+                      icon: Icon(Icons.cancel, size: ResponsiveUtils.getIconSize(context)),
                       onPressed: () => _homeCountryController.clear(),
                     ),
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 60),
+              SizedBox(height: isTablet ? 70 : 60),
 
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  OutlinedButton.icon( 
-                    onPressed: _resetFields, 
-                    icon: Icon(Icons.refresh, size: 25),
-                    label: Text(localizations.reset, style: TextStyle(fontSize: 20)),
+                  OutlinedButton.icon(
+                    onPressed: _resetFields,
+                    icon: Icon(Icons.refresh, size: ResponsiveUtils.getIconSize(context, baseSize: 26)),
+                    label: Text(localizations.reset, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Theme.of(context).primaryColor,
                       side: BorderSide(color: Theme.of(context).primaryColor),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),
                   ElevatedButton.icon(
-                    onPressed: () => _submitForm(), 
-                    icon: Icon(Icons.check, size: 25, color: Colors.white),
-                    label: Text(localizations.submit, style: TextStyle(fontSize: 20)),
+                    onPressed: () => _submitForm(),
+                    icon: Icon(Icons.check, size: ResponsiveUtils.getIconSize(context, baseSize: 28), color: Colors.white),
+                    label: Text(localizations.submit, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
                     ),
                   )
                 ],
               ),
-              SizedBox(height: MediaQuery.of(context).padding.bottom), // final safe gap
+              SizedBox(height: MediaQuery.of(context).padding.bottom)
             ],
           ),
         ),

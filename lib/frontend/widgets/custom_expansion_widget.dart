@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 
 class CustomExpansion extends StatefulWidget {
   final List<Map<String, dynamic>> allPeopleList;
@@ -12,6 +13,7 @@ class CustomExpansion extends StatefulWidget {
   final List<Widget> buildChildren;
   final bool isSelected;
   final bool isSelectionMode;
+  final bool isTablet;
 
   const CustomExpansion({
     super.key,
@@ -25,6 +27,7 @@ class CustomExpansion extends StatefulWidget {
     required this.buildChildren,
     this.isSelected = false,
     this.isSelectionMode = false,
+    this.isTablet = false,
   });
 
   @override
@@ -36,6 +39,8 @@ class CustomExpansionState extends State<CustomExpansion> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+
     final cardColor = widget.isSelected
         ? theme.primaryColor.withAlpha(15)
         : Theme.of(context).cardTheme.color;
@@ -43,82 +48,91 @@ class CustomExpansionState extends State<CustomExpansion> {
         ? theme.primaryColor
         : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
+    // Use ResponsiveUtils for sizing
+    final idFontSize = ResponsiveUtils.getTitleFontSize(context);
+    final nameFontSize = ResponsiveUtils.getTitleFontSize(context);
+    final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 34);
+    final smallIconSize = ResponsiveUtils.getIconSize(context, baseSize: 28);
+    final edgeInsets = ResponsiveUtils.getListPadding(context);
+    final innerPad = ResponsiveUtils.getContentPadding(context);
+    final baseElevation = ResponsiveUtils.getCardElevation(context);
+    final cardElevation = widget.isSelected ? baseElevation + 1 : baseElevation;
+    final radius = ResponsiveUtils.getCardBorderRadius(context);
+
     return Padding(
-      padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+      padding: EdgeInsets.symmetric(vertical: edgeInsets.vertical / 2),
       child: Card(
         key: ValueKey(widget.allPeopleList[widget.index]['id']),
         color: cardColor,
-        elevation: widget.isSelected ? 4 : 2,
+        elevation: cardElevation,
         shadowColor: widget.isSelected
-            ? theme.primaryColor.withOpacity(0.4)
+            ? theme.primaryColor.withValues(alpha:0.4)
             : Colors.black26,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: radius,
           side: widget.isSelected
-              ? BorderSide(color: theme.primaryColor, width: 1.5)
-              : BorderSide(color: Colors.grey.shade200, width: 1),
+              ? BorderSide(color: theme.primaryColor, width: isTablet ? 2.0 : 1.5)
+              : BorderSide(color: Colors.grey.shade200, width: isTablet ? 1.5 : 1),
         ),
         child: Column(
           children: [
             InkWell(
               onTap: widget.onTap,
+              borderRadius: radius,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: innerPad,
                 child: Row(
                   children: [
                     Text(
                       widget.allPeopleList[widget.index]["id"].toString(),
                       style: TextStyle(
-                        fontSize: 25,
+                        fontSize: idFontSize,
                         color: textColor,
-                        fontWeight:
-                            widget.isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: innerPad.horizontal / 2),
                     Expanded(
                       child: Text(
                         widget.allPeopleList[widget.index]["name"].toString(),
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: nameFontSize,
                           color: textColor,
-                          fontWeight: widget.isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                          fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(widget.isExpanded
-                          ? Icons.expand_less
-                          : Icons.expand_more),
+                      icon: Icon(
+                        widget.isExpanded ? Icons.expand_less : Icons.expand_more,
+                        size: smallIconSize,
+                      ),
                       onPressed: () {
                         widget.onExpansionChanged?.call(!widget.isExpanded);
                       },
                     ),
                     if (widget.isSelectionMode)
                       widget.isSelected
-                          ? Icon(Icons.check_circle,
-                              color: theme.primaryColor, size: 28)
-                          : const Icon(Icons.radio_button_unchecked,
-                              color: Colors.grey, size: 28)
+                          ? Icon(Icons.check_circle, color: theme.primaryColor, size: iconSize)
+                          : Icon(Icons.radio_button_unchecked, color: Colors.grey, size: iconSize)
                     else ...[
                       IconButton(
                         onPressed: () {
                           debugPrint("Editing ${widget.index}");
                           widget.onEditPress();
                         },
-                        icon: const Icon(
-                          Icons.edit, color: Colors.blueGrey
-                        ),
+                        icon: Icon(Icons.edit, 
+                        color: Colors.blueGrey, size: smallIconSize),
+                        iconSize: smallIconSize,
                       ),
                       IconButton(
                         onPressed: widget.onDeletePress,
-                        icon: const Icon(
-                          Icons.delete, color: Colors.redAccent
-                        ),
+                        icon: Icon(Icons.delete, 
+                        color: Colors.redAccent, 
+                        size: smallIconSize),
+                        iconSize: smallIconSize,
                       ),
                     ]
                   ],
@@ -128,19 +142,25 @@ class CustomExpansionState extends State<CustomExpansion> {
             AnimatedCrossFade(
               firstChild: Container(),
               secondChild: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(innerPad.left, 0, innerPad.right, innerPad.bottom),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 40),
+                        padding: EdgeInsets.zero,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
                           children: widget.buildChildren.isNotEmpty
                               ? widget.buildChildren
-                              : [Text(localizations.noData)],
+                              : [
+                                  Text(
+                                    localizations.noData,
+                                    style: TextStyle(
+                                      fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                    ),
+                                  )
+                                ],
                         ),
                       ),
                     ),

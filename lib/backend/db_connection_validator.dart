@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
 import 'package:attendly/frontend/pages/directory_pages/state_manager_dir_page.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 
 class DbConnectionValidator {
   static Future<bool> isConnectionValid(Database? db) async {

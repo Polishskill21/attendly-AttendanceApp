@@ -1,45 +1,67 @@
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/widgets/error_dialog.dart';
 
 class HelperAllPerson {
-
-  Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async{
+  Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async {
+    final isTablet = ResponsiveUtils.isTablet(context);
+    
     return await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          elevation: 8.0,
-          title: Text(header),
-          content: Text(message, 
-            style: TextStyle(
-              fontSize: 16
-            )
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+        elevation: 8.0,
+        title: Text(
+          header,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontWeight: FontWeight.bold,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(localizations.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true), 
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(localizations.delete),
-            ),
-          ],
         ),
-      );
+        content: Text(
+          message, 
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getBodyFontSize(context),
+          )
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              localizations.cancel,
+              style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true), 
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 20.0 : 16.0,
+                vertical: isTablet ? 12.0 : 8.0,
+              ),
+            ),
+            child: Text(
+              localizations.delete,
+              style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+            ),
+          ),
+        ],
+      ),
+    );
   }
   
   Future<void> showSubmitMessage(BuildContext context, String message) async {
     final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    
     return showDialog<void>(
       context: context,
       barrierDismissible: false, 
@@ -50,19 +72,68 @@ class HelperAllPerson {
           title: Icon(
             Icons.check_circle,
             color: Colors.green,
-            size: 48,
+            size: ResponsiveUtils.getIconSize(context, baseSize: 56),
           ),
           content: Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getBodyFontSize(context),
+            ),
           ),
           actions: <Widget>[
             ElevatedButton(
-              child: Text(localizations.ok),
               onPressed: () {
                 Navigator.of(context).pop();
               },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 24.0 : 16.0,
+                  vertical: isTablet ? 12.0 : 8.0,
+                ),
+              ),
+              child: Text(
+                localizations.ok,
+                style: TextStyle(fontSize: isTablet ? 20.0 * textScale : 16.0),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> showInfoMessageDialog(BuildContext context, String message) async {
+    final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          elevation: 8.0,
+          title: Icon(
+            Icons.info_outline,
+            color: Colors.blue,
+            size: ResponsiveUtils.getIconSize(context, baseSize: 56),
+          ),
+          content: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getBodyFontSize(context),
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                localizations.ok,
+                style: TextStyle(fontSize: isTablet ? 20.0 * textScale : 16.0),
+              ),
             ),
           ],
         );
@@ -71,30 +142,32 @@ class HelperAllPerson {
   }
 
   void showResetMessage(BuildContext context, String message) {
+    final isTablet = ResponsiveUtils.isTablet(context);
+    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Center(
           child: Text(
-          message,
-          textAlign: TextAlign.center,
+            message,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: isTablet ? 24.0 * textScale : 20.0,
             ),
           ),
         ),
         backgroundColor: Colors.grey,
-        //floating means u can move it
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(
-          bottom: 10,
-          left: 25,
-          right: 25
+          bottom: isTablet ? 16.0 : 10.0,
+          left: isTablet ? 40.0 : 25.0,
+          right: isTablet ? 40.0 : 25.0,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10)
+          borderRadius: BorderRadius.circular(isTablet ? 16.0 : 10.0),
         ),
-        elevation: 5.0,
+        elevation: isTablet ? 6.0 : 5.0,
         duration: Duration(milliseconds: 1500),
       ),
     );
@@ -137,7 +210,7 @@ class HelperAllPerson {
             child: SingleChildScrollView(
               child: SelectableText(
                 message ?? localizations.unknownError,
-                style: const TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 2),
               ),
             ),
           ),
@@ -176,25 +249,28 @@ class HelperAllPerson {
     final person = data[index];
     final birthday = person['birthday']?.toString() ?? 'N/A';
     final age = _calculateAge(person['birthday']?.toString());
+    final isTablet = ResponsiveUtils.isTablet(context);
+    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    final fontSize = isTablet ? 22.0 * textScale : 20.0;
 
     try{
       return [
         Text(
-          "${localizations.birthday}: $birthday ($age)",
-          style: const TextStyle(fontSize: 20),
+          "• ${localizations.birthday}: $birthday ($age)",
+          style: TextStyle(fontSize: fontSize),
         ),
         Text(
-          "${localizations.gender}: ${stringToStringGender(person['gender'], localizations)}",
-          style: const TextStyle(fontSize: 20),
+          "• ${localizations.gender}: ${stringToStringGender(person['gender'], localizations)}",
+          style: TextStyle(fontSize: fontSize),
         ),
         Text(
-          "${localizations.migration}: ${intToBool(person['migration'])}",
-          style: TextStyle(fontSize: 20),
+          "• ${localizations.migration}: ${intToBoolString(person['migration'], localizations)}",
+          style: TextStyle(fontSize: fontSize),
         ),
         if (person['migration'] == 1)
           Text(
-            "${localizations.country}: ${person['migration_background'] ?? 'N/A'}",
-            style: TextStyle(fontSize: 20),
+            "• ${localizations.country}: ${person['migration_background'] ?? 'N/A'}",
+            style: TextStyle(fontSize: fontSize),
           ),
       ];
     }
@@ -209,24 +285,26 @@ class HelperAllPerson {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
+        final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
+        final gap = ResponsiveUtils.getListPadding(context).horizontal / 2;
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
           elevation: 8.0,
           title: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.error_outline, color: Colors.red, size: 30),
-              SizedBox(width: 10),
-              Flexible(child: Text(title, style: TextStyle(fontWeight: FontWeight.bold))),
+              Icon(Icons.error_outline, color: Colors.red, size: iconSize),
+              SizedBox(width: gap),
+              Flexible(child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context)))),
             ],
           ),
           content: SelectableText(
             message,
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
           ),
           actions: <Widget>[
             ElevatedButton(
-              child: Text('OK'),
+              child: Text('OK', style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 2)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -240,16 +318,22 @@ class HelperAllPerson {
   Future<void> showLoadingDialog(BuildContext context, String message) async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // User must not close it manually
+      barrierDismissible: false,
       builder: (BuildContext context) {
+        final gap = ResponsiveUtils.getListPadding(context).horizontal / 2;
         return PopScope(
-          canPop: false, // Disable back button
+          canPop: false,
           child: AlertDialog(
             content: Row(
               children: [
                 const CircularProgressIndicator(),
-                const SizedBox(width: 20),
-                Text(message),
+                SizedBox(width: gap),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  ),
+                ),
               ],
             ),
           ),

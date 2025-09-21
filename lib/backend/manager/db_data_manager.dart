@@ -34,7 +34,7 @@ class AnnualDataManager {
 
     try {
       Database db = await DBConnectionManager.getInstance(dbPath);
-      await DbCreation(db).init(); // Ensure tables are created if missing
+      await DbCreation(db).init();
       return db;
     } catch (e) {
       debugPrint("Error opening specific database: $e");
@@ -124,26 +124,22 @@ class AnnualDataManager {
 
     bool needsSave = false;
 
-    // Initialize DB path if not present
     if (!data.containsKey('file_path')) {
       _dbPath = _setDBName(documentsDir.path);
       data['file_path'] = _dbPath;
       needsSave = true;
     }
 
-    // Initialize year if not present
     if (!data.containsKey('current_year')) {
-      data['current_year'] = yearToString(getCurrentYear()); //"2026"; 
+      data['current_year'] = yearToString(getCurrentYear()); //"2026";
       needsSave = true;
     }
 
-    // Initialize theme if not present
     if (!data.containsKey('theme')) {
       data['theme'] = 'light';
       needsSave = true;
     }
 
-    // Initialize language if not present
     if (!data.containsKey('language')) {
       data['language'] = 'en';
       needsSave = true;
@@ -158,7 +154,7 @@ class AnnualDataManager {
 
   String _setDBName(String directoryPath){
 
-      String dbYear = yearToString(getCurrentYear());//"2026"; 
+      String dbYear =  yearToString(getCurrentYear()); //"2026";
 
       String dbName = p.join(directoryPath, "db_$dbYear.db");
       return dbName;
@@ -168,7 +164,7 @@ class AnnualDataManager {
     if(file == null) return;
 
     final Map<String,dynamic> data = await _getFileData(file);
-    data['current_year'] = yearToString(getCurrentYear());//"2026";
+    data['current_year'] = yearToString(getCurrentYear()); //"2026";
     data['file_path'] = dbPath;
 
     await file.writeAsString(jsonEncode(data));

@@ -18,6 +18,7 @@ abstract class AppLocalizations {
   String get languageSetTo;
   String get appRestartRequired;
   String get debugInformation;
+  String getAppsVerision(String verion);
   String get databasePath;
   String get connectionStatus;
   String get connected;
@@ -33,6 +34,9 @@ abstract class AppLocalizations {
   String get pleaseSelectValidDbFile;
   String get databaseSwitchFailed;
   String get attendly;
+
+  String get trueValue;
+  String get falseValue;
   
   // New strings for UI elements
   String get allPeople;
@@ -249,6 +253,7 @@ abstract class AppLocalizations {
   String get withAbbreviation;
   String get withoutAbbreviation;
   String confirmBulkDelete(int count);
+  String peopleEntriesDeleted(int count);
 
   // For settings page recalibration
   String get confirmAction;
@@ -279,4 +284,6 @@ abstract class AppLocalizations {
 
   String get help;
   String get openUserManual;
+  String get externalPdfAppHint;
+  String get failedToOpenPdf;
 }

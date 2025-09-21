@@ -559,6 +559,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String confirmBulkDelete(int count) => 'Are you sure you want to delete all entries for $count selected people on this day?';
 
+  @override
+  String peopleEntriesDeleted(int count) => "$count people's entries deleted.";
+
   // For settings page recalibration
   @override
   String get confirmAction => 'Confirm Action';
@@ -609,4 +612,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openUserManual => 'Open User Manual';
+
+  @override
+  String get externalPdfAppHint => 'Opens with an external PDF app (e.g., Google PDF Viewer).';
+
+  @override
+  String get failedToOpenPdf => 'Failed to open PDF.';
+
+  @override
+  String getAppsVerision(String version) => "Version number $version";
+
+  @override
+  String get trueValue => "true";
+
+  @override
+  String get falseValue => "false";
 }

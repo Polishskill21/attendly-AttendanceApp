@@ -3,10 +3,11 @@ import 'package:attendly/frontend/pages/daily_logs_pages/daily_person_page.dart'
 import 'package:attendly/frontend/pages/directory_pages/dir_page.dart';
 import 'package:attendly/frontend/pages/weekly_report/weekly_report_page.dart';
 import 'package:attendly/frontend/pages/yearly_report/year_stats_page.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
-
 
 class MainApp extends StatefulWidget {
   final Database dbConnection;
@@ -21,13 +22,12 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   late Database _dbConnection;
   int _selectedTab = -1;
 
-
   final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
   final GlobalKey<YearStatsPageState> _yearStatsKey = GlobalKey();
   final GlobalKey<DailyPersonState> _dailyPersonKey = GlobalKey();
 
- @override
-void initState() {
+  @override
+  void initState() {
     super.initState();
     _dbConnection = widget.dbConnection;
     WidgetsBinding.instance.addObserver(this);
@@ -40,27 +40,7 @@ void initState() {
         });
       }
     });
-}
-
-//   void _preloadTransition() async {
-//   await Future.delayed(const Duration(milliseconds: 50));
-  
-//   if (!mounted) return;
-  
-//   final originalTab = _selectedTab;
-  
-//   setState(() {
-//     _selectedTab = (_selectedTab + 1) % 4;
-//   });
-  
-//   await Future.delayed(const Duration(milliseconds: 16));
-  
-//   if (!mounted) return;
-  
-//   setState(() {
-//     _selectedTab = originalTab;
-//   });
-// }
+  }
 
   @override
   void dispose() {
@@ -104,59 +84,125 @@ void initState() {
     }
   }
 
-@override
-Widget build(BuildContext context) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  SystemChrome.setSystemUIOverlayStyle(
-    (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-      systemNavigationBarIconBrightness:
-          isDark ? Brightness.light : Brightness.dark,
-    ),
-  );
-  return Scaffold(
-    body: SafeArea(
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 550), // was 400
-        switchInCurve: Curves.easeInOut,              // gentler symmetric curve
-        switchOutCurve: Curves.easeInOut,
-        layoutBuilder: (currentChild, previousChildren) {
-          return Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
-          );
-        },
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          final fade = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-            reverseCurve: Curves.easeInOut,
-          );
-          final slide = Tween<Offset>(
-            begin: const Offset(0.05, 0), // keep subtle shift, slower due to longer duration
-            end: Offset.zero,
-          ).animate(fade);
-          return ClipRect(
-            child: FadeTransition(
-              opacity: fade,
-              child: SlideTransition(
-                position: slide,
-                child: RepaintBoundary(child: child),
+  Widget _switcherTransition(Widget child, Animation<double> animation) {
+    final fade = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeInOut,
+      reverseCurve: Curves.easeInOut,
+    );
+    final slide = Tween<Offset>(
+      begin: const Offset(0.05, 0),
+      end: Offset.zero,
+    ).animate(fade);
+
+    return ClipRect(
+      child: FadeTransition(
+        opacity: fade,
+        child: SlideTransition(
+          position: slide,
+          child: RepaintBoundary(child: child),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isTablet = ResponsiveUtils.isTablet(context);
+    
+    SystemChrome.setSystemUIOverlayStyle(
+      (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+    );
+    
+    if (isTablet) {
+      return _buildTabletLayout();
+    } else {
+      return _buildPhoneLayout();
+    }
+  }
+
+  Widget _buildPhoneLayout() {
+    return Scaffold(
+      drawer: CustomDrawer(
+        selectedTab: _selectedTab,
+        onTabChange: _onTabChange,
+        isTablet: false,
+      ),
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 550),
+          switchInCurve: Curves.easeInOut,
+          switchOutCurve: Curves.easeInOut,
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return _switcherTransition(child, animation);
+          },
+          child: _buildPageForTab(_selectedTab),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return Scaffold(
+      drawer: CustomDrawer(
+        selectedTab: _selectedTab,
+        onTabChange: _onTabChange,
+        isTablet: true,
+      ),
+      body: SafeArea(
+        child: Row(
+          children: [
+            CustomDrawer(
+              selectedTab: _selectedTab,
+              onTabChange: _onTabChange,
+              isTablet: true,
+              isRailMode: true,
+            ),
+            
+            const VerticalDivider(width: 1, thickness: 1),
+            
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 550),
+                switchInCurve: Curves.easeInOut,
+                switchOutCurve: Curves.easeInOut,
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: <Widget>[
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return _switcherTransition(child, animation);
+                },
+                child: _buildPageForTab(_selectedTab, isTablet: true),
               ),
             ),
-          );
-        },
-        child: _buildPageForTab(_selectedTab),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-  Widget _buildPageForTab(int tabIndex) {
+  Widget _buildPageForTab(int tabIndex, {bool isTablet = false}) {
     switch (tabIndex) {
       case -1: // Add this case
         return Container(key: const ValueKey('initial_empty'));
@@ -167,6 +213,7 @@ Widget build(BuildContext context) {
           isSelectionMode: false,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
+          isTablet: isTablet,
         );
       case 1:
         return DailyPerson(
@@ -174,6 +221,7 @@ Widget build(BuildContext context) {
           dbCon: _dbConnection,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
+          isTablet: isTablet,
         );
       case 2:
         return WeeklyReportPage(
@@ -181,6 +229,7 @@ Widget build(BuildContext context) {
           dbCon: _dbConnection,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
+          isTablet: isTablet,
         );
       case 3:
         return YearStatsPage(
@@ -188,6 +237,7 @@ Widget build(BuildContext context) {
           dbCon: _dbConnection,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
+          isTablet: isTablet,
         );
       default:
         return Container(key: ValueKey('empty_$tabIndex'));

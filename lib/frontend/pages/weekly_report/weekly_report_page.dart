@@ -10,18 +10,22 @@ import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/widgets/chart_dialog_helper.dart'; 
-import 'package:attendly/frontend/l10n/app_localizations.dart';
+import 'package:attendly/localization/app_localizations.dart';
+import 'package:attendly/frontend/utils/responsive_utils.dart';
 
 class WeeklyReportPage extends StatefulWidget {
   final Database dbCon;
   final int selectedTab;
   final void Function(int) onTabChange;
+  final bool isTablet;
 
-  const WeeklyReportPage(
-      {super.key,
-      required this.dbCon,
-      required this.selectedTab,
-      required this.onTabChange});
+  const WeeklyReportPage({
+    super.key,
+    required this.dbCon,
+    required this.selectedTab,
+    required this.onTabChange,
+    this.isTablet = false,
+  });
 
   @override
   State<StatefulWidget> createState() => WeeklyReportPageState();
@@ -92,7 +96,24 @@ class WeeklyReportPageState extends State<WeeklyReportPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
       selectableDayPredicate: (DateTime val) => val.weekday == DateTime.monday,
-      keyboardType: TextInputType.numberWithOptions()
+      keyboardType: TextInputType.numberWithOptions(),
+      builder: (context, child) {
+        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+
+       final mq = MediaQuery.of(context);
+       final currentScale = mq.textScaler.scale(1.0);
+       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
+       
+       return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(newScale),
+          ),
+          child: Transform.scale(
+            scale: 1.1,
+            child: child,
+          ),
+        );
+      },
     );
 
     if (picked != null && picked != selectedWeekDate) {
@@ -126,21 +147,27 @@ class WeeklyReportPageState extends State<WeeklyReportPage> {
     Widget statusWidget = _buildStatusWidget();
 
     return Scaffold(
-      drawer: CustomDrawer(
-        selectedTab: widget.selectedTab,
-        onTabChange: widget.onTabChange,
-      ),
+      drawer: widget.isTablet
+          ? null
+          : CustomDrawer(
+              selectedTab: widget.selectedTab,
+              onTabChange: widget.onTabChange,
+            ),
       appBar: RefreshableAppBar(
         title: localizations.weeklyReport,
         onRefresh: null,
         isLoading: _isFetching,
         showRefresh: false,
-        leading: Builder(
-          builder: (context) => IconButton(
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            icon: const Icon(Icons.menu, size: 35),
-          ),
-        ),
+        isTablet: widget.isTablet,
+        leading: widget.isTablet
+            ? null
+            : Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  // Bigger drawer icon
+                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                ),
+              ),
         actions: [statusWidget],
       ),
       body: Column(
@@ -153,7 +180,7 @@ class WeeklyReportPageState extends State<WeeklyReportPage> {
                     ? Center(
                         child: Text(
                           localizations.noDataForThisWeek,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 20),
+                          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                         )
                       )
                     : _buildReportView(),
@@ -161,12 +188,12 @@ class WeeklyReportPageState extends State<WeeklyReportPage> {
         ],
       ),
       floatingActionButton: SizedBox(
-        width: 70,
-        height: 70,
+        width: ResponsiveUtils.getButtonHeight(context) + 25,
+        height: ResponsiveUtils.getButtonHeight(context) + 25,
         child: FloatingActionButton(
           onPressed: _showWeeksWithData,
           tooltip: localizations.showWeeksWithDataTooltip,
-          child: const Icon(Icons.list_alt, size: 35),
+          child: Icon(Icons.list_alt, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
         ),
       ),
     );
@@ -199,7 +226,7 @@ class WeeklyReportPageState extends State<WeeklyReportPage> {
           key: ValueKey<bool>(isCountable),
           isCountable ? Icons.check_circle : Icons.cancel_outlined,
           color: isCountable ? Colors.green : Colors.red,
-          size: 24,
+          size: ResponsiveUtils.getIconSize(context, baseSize: 24),
         ),
       ),
     );
@@ -245,39 +272,41 @@ Future<void> _showWeeksWithData() async {
     }
   }
 
-Widget _buildWeekSelector(DateTime endDate) {
-  final now = DateTime.now();
-  final todayDateOnly = DateTime(now.year, now.month, now.day);
-  final canGoForward =
-      selectedWeekDate.isBefore(getFirstDateOfWeek(todayDateOnly));
+  Widget _buildWeekSelector(DateTime endDate) {
+    final canGoForward = selectedWeekDate.isBefore(getFirstDateOfWeek(getCurrentDate()));
+    final arrowSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
+    final listPad = ResponsiveUtils.getListPadding(context);
 
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center, // Center the content
-    children: [
-      IconButton(
-        onPressed: () => _changeWeek(-7),
-        icon: const Icon(Icons.arrow_back_ios_sharp),
-        iconSize: 30,
-      ),
-      // Wrap the date and icon in a Row to keep them together
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 15.0),
-        child: GestureDetector(
-          onTap: _selectWeek,
-          child: Text(
-            "${dateToString(selectedWeekDate)} - ${dateToString(endDate)}",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () => _changeWeek(-7),
+          icon: const Icon(Icons.arrow_back_ios_sharp),
+          iconSize: arrowSize,
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: listPad.vertical * 2),
+          child: GestureDetector(
+            onTap: _selectWeek,
+            child: Text(
+              "${dateToString(selectedWeekDate)} - ${dateToString(endDate)}",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getTitleFontSize(context),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
-      ),
-      IconButton(
-        onPressed: canGoForward ? () => _changeWeek(7) : null,
-        icon: const Icon(Icons.arrow_forward_ios_sharp),
-        iconSize: 30,
-      ),
-    ],
-  );
-} 
+        IconButton(
+          onPressed: canGoForward ? () => _changeWeek(7) : null,
+          icon: const Icon(Icons.arrow_forward_ios_sharp),
+          iconSize: arrowSize,
+        ),
+      ],
+    );
+  } 
 
   Widget _buildReportView() {
     final localizations = AppLocalizations.of(context);
@@ -289,7 +318,12 @@ Widget _buildWeekSelector(DateTime endDate) {
     final int diverseWithout = (_weekData!['open_diverse'] ?? 0) - diverseWith;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(12.0, 12.0, 12.0, 80.0),
+      padding: EdgeInsets.fromLTRB(
+        ResponsiveUtils.getListPadding(context).left,
+        ResponsiveUtils.getListPadding(context).top,
+        ResponsiveUtils.getListPadding(context).right,
+        ResponsiveUtils.getButtonHeight(context) + 40 + MediaQuery.of(context).padding.bottom,
+      ),
       child: Column(
         children: [
           _buildSectionCard(
@@ -362,24 +396,25 @@ Widget _buildMigrationSectionCard({
 
   return Card(
     color: cardColor,
-    margin: const EdgeInsets.only(bottom: 16),
-    elevation: theme.cardTheme.elevation ?? 2,
-    shape: theme.cardTheme.shape ??
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical * 4),
+    elevation: ResponsiveUtils.getCardElevation(context),
+    shape: RoundedRectangleBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: ResponsiveUtils.getContentPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor),
-              const SizedBox(width: 12),
+              Icon(icon, color: iconColor, size: ResponsiveUtils.getIconSize(context)),
+              SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal / 2 + 4),
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: ResponsiveUtils.getTitleFontSize(context),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -425,16 +460,18 @@ Widget _buildMigrationGenderRow({
           Expanded(
             child: Text(
               gender,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: ResponsiveUtils.getBodyFontSize(context),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.pie_chart),
+            icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
             onPressed: (withCount + withoutCount > 0)
                 ? () => ChartDialogHelper.showChartDialog(
                       context,
-                      title:
-                          '${localizations.migrationBackground}: $gender',
+                      title: '${localizations.migrationBackground}: $gender',
                       data: {
                         localizations.withAbbreviation: withCount,
                         localizations.withoutAbbreviation: withoutCount,
@@ -444,12 +481,8 @@ Widget _buildMigrationGenderRow({
           ),
         ],
       ),
-      _buildDataRow(
-          '${localizations.withAbbreviation} ${localizations.migration}',
-          withCount),
-      _buildDataRow(
-          '${localizations.withoutAbbreviation} ${localizations.migration}',
-          withoutCount),
+      _buildDataRow('${localizations.withAbbreviation} ${localizations.migration}', withCount),
+      _buildDataRow('${localizations.withoutAbbreviation} ${localizations.migration}', withoutCount),
     ],
   );
 }
@@ -461,32 +494,32 @@ Widget _buildSectionCard({
 }) {
   final theme = Theme.of(context);
   final cardColor = theme.cardTheme.color ?? theme.cardColor;
-  final iconColor = theme.primaryColor;
 
   return Card(
     color: cardColor,
-    margin: const EdgeInsets.only(bottom: 16),
-    elevation: theme.cardTheme.elevation ?? 2,
-    shape: theme.cardTheme.shape ?? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical * 3),
+    elevation: ResponsiveUtils.getCardElevation(context),
+    shape: RoundedRectangleBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: ResponsiveUtils.getContentPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: iconColor),
-              const SizedBox(width: 12),
+              Icon(icon, color: theme.primaryColor, size: ResponsiveUtils.getIconSize(context)),
+              SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal / 2  + 4),
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold
+                  style: TextStyle(
+                    fontSize: ResponsiveUtils.getTitleFontSize(context),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.pie_chart),
+                icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
                 onPressed: () => ChartDialogHelper.showChartDialog(
                   context,
                   title: title,
@@ -496,30 +529,31 @@ Widget _buildSectionCard({
             ],
           ),
           const Divider(height: 24),
-          ...data.entries.map((e) => _buildDataRow(e.key, e.value)).toList(),
+          ...data.entries.map((e) => _buildDataRow(e.key, e.value)),
         ],
       ),
     ),
   );
 }
 
-  
-  Widget _buildDataRow(String label, dynamic value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 16)),
-          Text(
-            value.toString(),
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor),
+Widget _buildDataRow(String label, dynamic value) {
+  return Padding(
+    padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getListPadding(context).vertical / 2),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+        Text(
+          value.toString(),
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getBodyFontSize(context),
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 }
