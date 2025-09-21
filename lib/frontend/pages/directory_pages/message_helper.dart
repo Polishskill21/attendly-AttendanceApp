@@ -103,6 +103,44 @@ class HelperAllPerson {
     );
   }
 
+  Future<void> showInfoMessageDialog(BuildContext context, String message) async {
+    final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          elevation: 8.0,
+          title: Icon(
+            Icons.info_outline,
+            color: Colors.blue,
+            size: ResponsiveUtils.getIconSize(context, baseSize: 56),
+          ),
+          content: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getBodyFontSize(context),
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                localizations.ok,
+                style: TextStyle(fontSize: isTablet ? 20.0 * textScale : 16.0),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void showResetMessage(BuildContext context, String message) {
     final isTablet = ResponsiveUtils.isTablet(context);
     final textScale = ResponsiveUtils.getTextScaleFactor(context);
@@ -226,7 +264,7 @@ class HelperAllPerson {
           style: TextStyle(fontSize: fontSize),
         ),
         Text(
-          "• ${localizations.migration}: ${intToBool(person['migration'])}",
+          "• ${localizations.migration}: ${intToBoolString(person['migration'], localizations)}",
           style: TextStyle(fontSize: fontSize),
         ),
         if (person['migration'] == 1)
