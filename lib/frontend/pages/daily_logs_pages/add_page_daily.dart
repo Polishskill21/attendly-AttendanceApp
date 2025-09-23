@@ -176,9 +176,26 @@ class _AddDailyState extends State<AddDaily>{
       initialDate: selectedDate ?? getCurrentDate(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      keyboardType: TextInputType.numberWithOptions()
-    );
+      keyboardType: TextInputType.numberWithOptions(),
+      builder: (context, child) {
+        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
 
+       final mq = MediaQuery.of(context);
+       final currentScale = mq.textScaler.scale(1.0);
+       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
+       
+       return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(newScale),
+          ),
+          child: Transform.scale(
+            scale: 1.1,
+            child: child,
+          ),
+        );
+      },
+    );
+    
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
