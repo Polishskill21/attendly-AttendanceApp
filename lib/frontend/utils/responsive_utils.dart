@@ -29,6 +29,10 @@ class ResponsiveUtils {
   static double getBodyFontSize(BuildContext context) {
     return isTablet(context) ? 24.0 : 16.0;
   }
+
+  static double getSmallFontSize(BuildContext context){
+    return isTablet(context) ? 17.0 : 12.0;
+  }
   
   static double getButtonHeight(BuildContext context) {
     return isTablet(context) ? 60.0 : 48.0;
