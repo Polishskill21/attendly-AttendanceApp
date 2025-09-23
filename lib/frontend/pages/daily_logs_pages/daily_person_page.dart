@@ -138,6 +138,7 @@ class DailyPersonState extends State<DailyPerson>{
         MaterialPageRoute(builder: (context) => AddDaily(
           database: widget.dbCon,
           initialDate: currentDate,
+          isTablet: widget.isTablet,
         ))
       );
       
@@ -163,6 +164,7 @@ class DailyPersonState extends State<DailyPerson>{
           database: widget.dbCon,
           initialDate: _controller.selectedDate,
           preselectedPersons: selected,
+          isTablet: widget.isTablet,
         ),
       ),
     );
@@ -206,6 +208,7 @@ class DailyPersonState extends State<DailyPerson>{
             database: widget.dbCon,
             initialDate: _controller.selectedDate,
             preselectedPersons: [{'id': person.personId, 'name': person.name}],
+            isTablet: widget.isTablet,
           ),
         ),
       );
@@ -414,13 +417,13 @@ class DailyPersonState extends State<DailyPerson>{
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           TextButton.icon(
-            icon: const Icon(Icons.add_task),
-            label: Text(localizations.addCategory),
+            icon: Icon(Icons.add_task, size: ResponsiveUtils.getIconSize(context)),
+            label: Text(localizations.addCategory, style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context))),
             onPressed: hasSelection ? _onBulkAddCategory : null,
           ),
           TextButton.icon(
-            icon: const Icon(Icons.delete_sweep),
-            label: Text('${localizations.delete} ($selectedCount)'),
+            icon: Icon(Icons.delete_sweep, size: ResponsiveUtils.getIconSize(context)),
+            label: Text('${localizations.delete} ($selectedCount)', style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context))),
             onPressed: hasSelection ? _onBulkDelete : null,
             style: TextButton.styleFrom(
               foregroundColor: hasSelection ? Colors.red : Colors.grey,
@@ -595,7 +598,7 @@ class _PersonList extends StatelessWidget {
           return Center(
             child: Text(
               localizations.noEntriesForThisDay,
-              style: theme.textTheme.bodyLarge,
+              style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))
             ),
           );
         }
@@ -622,7 +625,7 @@ class _PersonList extends StatelessWidget {
                     : BorderSide.none,
                 borderRadius: ResponsiveUtils.getCardBorderRadius(context),
               ),
-              color: isSelected ? theme.primaryColor.withOpacity(0.1) : theme.cardTheme.color,
+              color: isSelected ? theme.primaryColor.withValues(alpha: 0.1) : theme.cardTheme.color,
               child: InkWell(
                 onTap: controller.isEditMode ? () => controller.togglePersonSelection(person) : null,
                 borderRadius: ResponsiveUtils.getCardBorderRadius(context),
