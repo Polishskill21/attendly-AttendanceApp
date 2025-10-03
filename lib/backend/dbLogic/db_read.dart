@@ -130,6 +130,44 @@ class DbSelection extends DbBaseHandler {
     return res;
   }
 
+  Future<List<Map<String, dynamic>>> searchDailyLogs({String? name, String? description, String? category}) async {
+    await ensureConnection();
+
+    String filter = '';
+    List<Object?> params = [];
+
+    if (name != null && name.isNotEmpty) {
+      filter += " AND LOWER(a_p.name) LIKE ?";
+      params.add('%${name.toLowerCase()}%');
+    }
+
+    if (description != null && description.isNotEmpty) {
+      filter += " AND LOWER(d_e.description) LIKE ?";
+      params.add('%${description.toLowerCase()}%');
+    }
+
+    if (category != null && category.isNotEmpty) {
+      filter += " AND d_e.category = ?";
+      params.add(category);
+    }
+
+    String sql = """
+      SELECT 
+        d_e.record_id, 
+        d_e.dates, 
+        d_e.id, 
+        a_p.name, 
+        d_e.category, 
+        d_e.description
+      FROM daily_entry as d_e
+      JOIN all_people as a_p ON d_e.id = a_p.id
+      WHERE 1=1 $filter
+      ORDER BY d_e.dates DESC, a_p.name ASC
+    """;
+
+    return db!.rawQuery(sql, params);
+  }
+
   Future<List<Map<String, dynamic>>> getDataFromCurrentWeek(String weekDate) async{
     await ensureConnection();
     

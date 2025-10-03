@@ -264,7 +264,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          localizations.getAppsVerision("1.1.1"),
+                          localizations.getAppsVerision("1.2.0"),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: ResponsiveUtils.getBodyFontSize(context),

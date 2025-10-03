@@ -424,6 +424,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get filterByCategory => 'Filter by Category';
 
+  // For search_daily_logs_page.dart
+  @override
+  String get searchDailyLog => 'Search Daily Log';
+  @override
+  String get search => 'Search';
+  @override
+  String get noResultsFound => 'No results found for your query.';
+  @override
+  String get searchByDescription => 'Description';
+  @override
+  String get searchByNameAndDescription => 'Name & Description';
+  @override
+  String get searchIn => 'Search in';
+
   // For add_page_daily.dart
   @override
   String get addPersonToDailyTable => 'Add Person to Daily Table';

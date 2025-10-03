@@ -475,6 +475,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get totalVisitors => 'Besucher gesamt';
 
+  @override
+  String get searchDailyLog => 'Tägliche Logs durchsuchen';
+  @override
+  String get search => 'Suchen';
+  @override
+  String get noResultsFound => 'Keine Ergebnisse für Ihre Anfrage gefunden.';
+  @override
+  String get searchByDescription => 'Beschreibung';
+  @override
+  String get searchByNameAndDescription => 'Name & Beschreibung';
+  @override
+  String get searchIn => 'Suchen in';
+
   // For debug menu
   @override
   String get debugSettings => 'Debug-Einstellungen';
