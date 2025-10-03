@@ -84,6 +84,12 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
       if (mounted) {
         Navigator.of(context).pop(true);
       }
+    } on custom_db_exceptions.DuplicateDailyEntryException {
+      debugPrint("Not adding twice to the open cat");
+      await _helper.showInfoMessageDialog(
+          context,
+          localizations.personAlreadyInCategoryOpen(widget.record.personName ?? localizations.unknown),
+        );
     } on custom_db_exceptions.DbConnectionException catch (e) {
       debugPrint('Database connection error: $e');
       if (mounted) {

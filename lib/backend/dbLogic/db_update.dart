@@ -190,6 +190,8 @@ class DbUpdater extends DbBaseHandler {
     
     try{
       var result = await reader.getCategoryAndDescriptionDaily(recordID, date, id);
+
+
       String oldCategoryStr = result.first['category'];
       String? oldDescription = result.first['description'];
 
@@ -203,6 +205,13 @@ class DbUpdater extends DbBaseHandler {
 
       if(oldCategoryStr != newCategory.name){
         //update both
+        if(newCategory == Category.open){
+          var duplicateCategory = await reader.returnCategoryIfExists(date, id, newCategory);
+          if(duplicateCategory.isNotEmpty){
+            throw custom_db_exceptions.DuplicateDailyEntryException();
+          }
+        }
+
         Category oldCategory = Category.values.byName(oldCategoryStr);
         var res = await reader.getGenderAndMigration(id);
         int migrationInt = res.first['migration'];
@@ -229,10 +238,13 @@ class DbUpdater extends DbBaseHandler {
       debugPrint("Error updating daily table: $e");
       debugPrintStack(stackTrace: stackTrace);
       await db!.execute("ROLLBACK");
-      if (e is custom_db_exceptions.DatabaseException) {
+      if(e is custom_db_exceptions.DuplicateDailyEntryException){
         rethrow;
       }
       if(e is custom_db_exceptions.DuplicatePersonException){
+        rethrow;
+      }
+      if (e is custom_db_exceptions.DatabaseException) {
         rethrow;
       }
       throw custom_db_exceptions.DatabaseOperationException("Failed to update daily entry", originalException: e as Exception, stackTrace: stackTrace);
