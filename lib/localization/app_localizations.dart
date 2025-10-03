@@ -179,6 +179,14 @@ abstract class AppLocalizations {
   String get searchByName;
   String get filterByCategory;
 
+  // For search_daily_logs_page.dart
+  String get searchDailyLog;
+  String get search;
+  String get noResultsFound;
+  String get searchByDescription;
+  String get searchByNameAndDescription;
+  String get searchIn;
+
   // For add_page_daily.dart
   String get addPersonToDailyTable;
   String get selectPerson;
