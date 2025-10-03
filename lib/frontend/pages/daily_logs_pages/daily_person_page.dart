@@ -1,3 +1,4 @@
+import 'package:attendly/frontend/pages/search_pages/search_daily_logs_page.dart';
 import 'package:attendly/frontend/person_model/person_categories.dart';
 import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
@@ -150,6 +151,21 @@ class DailyPersonState extends State<DailyPerson>{
       if (mounted) {
         await DbConnectionValidator.handleConnectionError(context);
       }
+    }
+  }
+
+  Future<void> _onSearchFabPressed() async {
+    final selectedDate = await Navigator.of(context).push<DateTime>(
+      MaterialPageRoute(
+        builder: (context) => SearchDailyLogsPage(
+          dbCon: widget.dbCon,
+          isTablet: widget.isTablet,
+        ),
+      ),
+    );
+
+    if (selectedDate != null) {
+      _controller.setSelectedDate(selectedDate);
     }
   }
 
@@ -392,13 +408,29 @@ class DailyPersonState extends State<DailyPerson>{
               ),
               floatingActionButton: controller.isEditMode
                 ? null
-                : SizedBox(
-                    width: ResponsiveUtils.getButtonHeight(context) + 25,
-                    height: ResponsiveUtils.getButtonHeight(context) + 25,
-                    child: FloatingActionButton(
-                      onPressed: () => _onFabPressed(context),
-                      child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
-                    ),
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SizedBox(
+                        width: ResponsiveUtils.getButtonHeight(context) + 10,
+                        height: ResponsiveUtils.getButtonHeight(context) + 10,
+                        child: FloatingActionButton(
+                          heroTag: 'search_fab',
+                          onPressed: _onSearchFabPressed,
+                          child: Icon(Icons.search, size: ResponsiveUtils.getIconSize(context, baseSize: 30)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: ResponsiveUtils.getButtonHeight(context) + 25,
+                        height: ResponsiveUtils.getButtonHeight(context) + 25,
+                        child: FloatingActionButton(
+                          heroTag: 'add_fab',
+                          onPressed: () => _onFabPressed(context),
+                          child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                        ),
+                      ),
+                    ],
                   ),
             bottomNavigationBar: controller.isEditMode ? _buildEditModeActions() : null,
           );
@@ -609,14 +641,13 @@ class _PersonList extends StatelessWidget {
             right: listPad.right,
             top: 0,
             
-            bottom: ResponsiveUtils.getButtonHeight(context) + 40 + MediaQuery.of(context).padding.bottom,
+            bottom: ResponsiveUtils.getButtonHeight(context) + 60 + MediaQuery.of(context).padding.bottom,
           ),
           itemCount: controller.filteredPeople.length,
           itemBuilder: (context, index) {
             final person = controller.filteredPeople[index];
             final isSelected = controller.isPersonSelected(person);
             return Card(
-              
               margin: EdgeInsets.only(bottom: listPad.vertical * 1.5),
               elevation: ResponsiveUtils.getCardElevation(context),
               shape: RoundedRectangleBorder(
