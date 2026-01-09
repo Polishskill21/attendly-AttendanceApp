@@ -2,6 +2,7 @@ import 'package:attendly/backend/enums/category.dart';
 import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_page.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
@@ -33,6 +34,7 @@ class AddDaily extends StatefulWidget{
 }
 
 class _AddDailyState extends State<AddDaily>{
+  DateTime? _persistedDate;
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
@@ -61,7 +63,7 @@ class _AddDailyState extends State<AddDaily>{
     helper = HelperAllPerson();
     
     // Initialize with passed date or current date
-    selectedDate = widget.initialDate ?? getCurrentDate();
+    selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate();
     _dateController.text = dateToString(selectedDate!);
 
     if (widget.preselectedPersons != null && widget.preselectedPersons!.isNotEmpty) {
@@ -76,7 +78,7 @@ class _AddDailyState extends State<AddDaily>{
       _commentController.clear();
       _categoryController.clear();
       selectedCategory = null;
-      selectedDate = widget.initialDate ?? getCurrentDate();
+      selectedDate = widget.initialDate ?? getScopedDate();
       _dateController.text = dateToString(selectedDate!);
     });
 
@@ -173,7 +175,7 @@ class _AddDailyState extends State<AddDaily>{
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? getCurrentDate(),
+      initialDate: selectedDate ?? getScopedDate(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       keyboardType: TextInputType.numberWithOptions(),
@@ -199,7 +201,8 @@ class _AddDailyState extends State<AddDaily>{
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
-        _dateController.text = dateToString(picked);
+        _persistedDate = picked;
+        _dateController.text = DateFormat('dd.MM.yyyy').format(picked);
       });
     }
   }

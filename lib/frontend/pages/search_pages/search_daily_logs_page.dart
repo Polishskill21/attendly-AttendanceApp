@@ -5,6 +5,7 @@ import 'package:attendly/frontend/selection_options/category_item.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
 enum SearchType { name, description, nameAndDescription }
@@ -280,6 +281,10 @@ class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
                         itemBuilder: (context, index) {
                           final date = _groupedResults.keys.elementAt(index);
                           final records = _groupedResults[date]!;
+
+                          DateTime parsedDate = DateTime.parse(date);
+                          String formattedDisplayDate = DateFormat('dd.MM.yyyy').format(parsedDate);
+
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -289,7 +294,7 @@ class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
                                   horizontal: 8.0,
                                 ),
                                 child: Text(
-                                  date,
+                                  formattedDisplayDate,
                                   style: TextStyle(
                                     fontSize: ResponsiveUtils.getTitleFontSize(context),
                                     fontWeight: FontWeight.bold,

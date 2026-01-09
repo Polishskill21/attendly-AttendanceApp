@@ -32,6 +32,7 @@ class EditPage extends StatefulWidget{
 }
 
 class _EditPageState extends State<EditPage>{  
+  DateTime? _lastSelectedDate;
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
@@ -89,8 +90,12 @@ class _EditPageState extends State<EditPage>{
   void _populateControllers() {
     try{
     _nameController.text = widget.childToUpdate['name'];
-    _birthdayController.text = widget.childToUpdate['birthday'];
     _homeCountryController.text = widget.childToUpdate['migration_background'] ?? "";
+    String dbDate = widget.childToUpdate['birthday'];
+    DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(dbDate);
+    _birthdayController.text = DateFormat('dd.MM.yyyy').format(parsedDate);
+
+    _lastSelectedDate = parsedDate;
 
     String gender = widget.childToUpdate['gender'];
     selectedGender = stringToGender(gender);
@@ -128,17 +133,17 @@ class _EditPageState extends State<EditPage>{
   void _submitForm() async {
     final localizations = AppLocalizations.of(context);
     String name = _nameController.text.trim();
-    String birthday = _birthdayController.text.trim();
+    String birthdayUI = _birthdayController.text.trim();
     String homeCountry = _homeCountryController.text.trim();
 
     // Validate empty fields
     if (name.isEmpty ||
-        birthday.isEmpty ||
+        birthdayUI.isEmpty ||
         selectedGender == null ||
         selectedMigration == null) {
       helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
       debugPrint(
-          "$name, $birthday, $selectedGender, $selectedMigration, $homeCountry");
+          "$name, $birthdayUI, $selectedGender, $selectedMigration, $homeCountry");
       return;
     }
 
@@ -149,12 +154,15 @@ class _EditPageState extends State<EditPage>{
     }
 
     // Validate date format (YYYY-MM-dd)
-    if (!_isValidDate(birthday)) {
+    if (!_isValidDate(birthdayUI)) {
       helper.showErrorMessage(context, localizations.invalidDateFormat);
       return;
     }
 
     try {
+      DateTime parsed = DateFormat("dd.MM.yyyy").parse(birthdayUI);
+      String birthday = DateFormat("yyyy-MM-dd").format(parsed);
+
       //create child object and pop page
       final child = Child(
           name: name,
@@ -196,7 +204,7 @@ class _EditPageState extends State<EditPage>{
 
   bool _isValidDate(String date) {
     try {
-      DateFormat("yyyy-MM-dd").parseStrict(date);
+      DateFormat("dd.MM.yyyy").parseStrict(date);
       return true;
     } catch (e) {
       return false;
@@ -204,17 +212,9 @@ class _EditPageState extends State<EditPage>{
   }
 
   Future<void> _selectBirthday(BuildContext context) async {
-    DateTime initialDate;
-    try {
-      initialDate = DateFormat('yyyy-MM-dd').parse(_birthdayController.text);
-    } catch (e) {
-      // Fallback to the current date if parsing fails
-      initialDate = DateTime.now();
-    }
-
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: initialDate,
+      initialDate: _lastSelectedDate,
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       initialEntryMode: DatePickerEntryMode.calendar,
@@ -242,6 +242,7 @@ class _EditPageState extends State<EditPage>{
     if (picked != null) {
       String formattedDate = DateFormat('yyyy-MM-dd').format(picked);
       setState(() {
+        _lastSelectedDate = picked;
         _birthdayController.text = formattedDate;
       });
     }
@@ -463,6 +464,4 @@ class _EditPageState extends State<EditPage>{
       ),
     );
   }
-  
-
 }

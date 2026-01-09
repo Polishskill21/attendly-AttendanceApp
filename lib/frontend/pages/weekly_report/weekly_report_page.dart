@@ -2,6 +2,7 @@ import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/frontend/pages/weekly_report/weekly_list_page.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/backend/db_connection_validator.dart';
@@ -35,7 +36,7 @@ class WeeklyReportPageState extends State<WeeklyReportPage> {
   late DbSelection _reader;
   late DbUpdater _updater;
   late HelperAllPerson _helper;
-  DateTime selectedWeekDate = getFirstDateOfWeek(getCurrentDate());
+  DateTime selectedWeekDate = getFirstDateOfWeek(getScopedDate());
   Map<String, dynamic>? _weekData;
   bool _isLoading = true; 
   bool _isFetching = false;
@@ -273,7 +274,7 @@ Future<void> _showWeeksWithData() async {
   }
 
   Widget _buildWeekSelector(DateTime endDate) {
-    final canGoForward = selectedWeekDate.isBefore(getFirstDateOfWeek(getCurrentDate()));
+    final canGoForward = selectedWeekDate.isBefore(getFirstDateOfWeek(getScopedDate()));
     final arrowSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
     final listPad = ResponsiveUtils.getListPadding(context);
 
@@ -290,7 +291,7 @@ Future<void> _showWeeksWithData() async {
           child: GestureDetector(
             onTap: _selectWeek,
             child: Text(
-              "${dateToString(selectedWeekDate)} - ${dateToString(endDate)}",
+              "${DateFormat('dd.MM.yyyy').format(selectedWeekDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: ResponsiveUtils.getTitleFontSize(context),

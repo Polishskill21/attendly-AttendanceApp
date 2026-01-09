@@ -29,6 +29,8 @@ class AddPage extends StatefulWidget{
 }
 
 class _AddPageState extends State<AddPage>{  
+  DateTime? _lastSelectedDate;
+
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
@@ -79,11 +81,11 @@ class _AddPageState extends State<AddPage>{
   Future<bool> _submitForm() async{
     final localizations = AppLocalizations.of(context);
     String name = _nameController.text.trim();
-    String birthday = _birthdayController.text.trim();
+    String uiDate = _birthdayController.text.trim();
     String homeCountry = _homeCountryController.text.trim();
 
     // Validate empty fields
-    if (name.isEmpty || birthday.isEmpty || selectedGender == null || selectedMigration == null) {
+    if (name.isEmpty || uiDate.isEmpty || selectedGender == null || selectedMigration == null) {
       helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
       return false;
     }
@@ -94,12 +96,17 @@ class _AddPageState extends State<AddPage>{
     }
 
     // Validate date format (YYYY-MM-dd)
-    if (!_isValidDate(birthday)) {
+    if (!_isValidDate(uiDate)) {
       helper.showErrorMessage(context, localizations.invalidDateFormat);
       return false;
     }
 
+
+
     try {
+      DateTime parsed = DateFormat("dd.MM.yyyy").parse(uiDate);
+      String birthday = DateFormat("yyyy-MM-dd").format(parsed);
+
       //create child object and pop page
       final child = Child(name: name, birthday: birthday, gender: selectedGender!, migration: selectedMigration!, migrationBackground: homeCountry);
 
@@ -129,7 +136,7 @@ class _AddPageState extends State<AddPage>{
 
   bool _isValidDate(String date) {
     try {
-      DateFormat("yyyy-MM-dd").parseStrict(date);
+      DateFormat("dd.MM.yyyy").parseStrict(date);
       return true;
     } catch (e) {
       return false;
@@ -139,7 +146,7 @@ class _AddPageState extends State<AddPage>{
   Future<void> _selectBirthday(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _lastSelectedDate ?? DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       initialEntryMode: DatePickerEntryMode.calendar,
@@ -165,8 +172,9 @@ class _AddPageState extends State<AddPage>{
     );
     
     if (picked != null) {
-      String formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+      String formattedDate = DateFormat('dd.MM.yyyy').format(picked);
       setState(() {
+        _lastSelectedDate = picked;
         _birthdayController.text = formattedDate;
       });
     }

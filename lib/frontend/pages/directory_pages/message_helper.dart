@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/widgets/error_dialog.dart';
+import 'package:intl/intl.dart';
 
 class HelperAllPerson {
   Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async {
@@ -247,8 +248,12 @@ class HelperAllPerson {
 
   List<Widget> buildPersonDetails(List<Map<String, dynamic>> data, int index, AppLocalizations localizations, BuildContext context) {
     final person = data[index];
-    final birthday = person['birthday']?.toString() ?? 'N/A';
-    final age = _calculateAge(person['birthday']?.toString());
+    final birthday = person['birthday']?.toString();
+
+    DateTime parsedDate = DateTime.parse(birthday!);
+    final displayBirthday = DateFormat('dd.MM.yyyy').format(parsedDate);
+
+    final age = _calculateAge(birthday);
     final isTablet = ResponsiveUtils.isTablet(context);
     final textScale = ResponsiveUtils.getTextScaleFactor(context);
     final fontSize = isTablet ? 22.0 * textScale : 20.0;
@@ -256,7 +261,7 @@ class HelperAllPerson {
     try{
       return [
         Text(
-          "• ${localizations.birthday}: $birthday ($age)",
+          "• ${localizations.birthday}: $displayBirthday ($age)",
           style: TextStyle(fontSize: fontSize),
         ),
         Text(
