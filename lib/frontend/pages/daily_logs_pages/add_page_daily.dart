@@ -64,7 +64,7 @@ class _AddDailyState extends State<AddDaily>{
     
     // Initialize with passed date or current date
     selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate();
-    _dateController.text = dateToString(selectedDate!);
+    _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
 
     if (widget.preselectedPersons != null && widget.preselectedPersons!.isNotEmpty) {
       selectedPersons.addAll(widget.preselectedPersons!);
@@ -79,7 +79,7 @@ class _AddDailyState extends State<AddDaily>{
       _categoryController.clear();
       selectedCategory = null;
       selectedDate = widget.initialDate ?? getScopedDate();
-      _dateController.text = dateToString(selectedDate!);
+      _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
     });
 
     if (widget.preselectedPersons != null && widget.preselectedPersons!.isNotEmpty) {
