@@ -80,7 +80,7 @@ class DbDeletion extends DbBaseHandler {
     await ensureConnection();
     
     try{
-        final rightDate = date ?? dateToString(getCurrentDate());
+        final rightDate = date ?? dateToString(getScopedDate());
 
         await db!.execute("BEGIN TRANSACTION");
 
