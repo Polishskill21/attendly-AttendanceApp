@@ -1,5 +1,4 @@
 import 'package:attendly/backend/dbLogic/db_read.dart';
-import 'package:attendly/backend/enums/category.dart';
 import 'package:attendly/frontend/person_model/category_record.dart';
 import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';

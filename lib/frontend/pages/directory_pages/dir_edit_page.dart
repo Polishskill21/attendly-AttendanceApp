@@ -165,9 +165,10 @@ class _EditPageState extends State<EditPage>{
 
       //database update database
       await updater.updateAllPeopleTable(widget.childToUpdate['id'], child);
-
+      
       await helper.showSubmitMessage(
           context, localizations.updatedSuccessfully);
+
       if (mounted) {
         Navigator.of(context).pop(true);
       }
@@ -359,6 +360,11 @@ class _EditPageState extends State<EditPage>{
                         },
                       )
                     : null,
+                onSelected: (GenderItem? item) {
+                  setState(() {
+                    selectedGender = item?.value;
+                  });
+                }
               ),
 
               SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
@@ -397,6 +403,15 @@ class _EditPageState extends State<EditPage>{
                         },
                       )
                     : null,
+                onSelected: (MigraionItem? item) {
+                  setState(() {
+                    selectedMigration = item?.value;
+
+                    if (selectedMigration == false) {
+                      _homeCountryController.clear();
+                    }
+                  });
+                }
               ),
 
               SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
