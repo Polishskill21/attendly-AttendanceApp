@@ -214,7 +214,7 @@ class _EditPageState extends State<EditPage>{
   Future<void> _selectBirthday(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _lastSelectedDate,
+      initialDate: _lastSelectedDate ?? DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       initialEntryMode: DatePickerEntryMode.calendar,
@@ -240,7 +240,7 @@ class _EditPageState extends State<EditPage>{
     );
     
     if (picked != null) {
-      String formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+      String formattedDate = DateFormat('dd.MM.yyyy').format(picked);
       setState(() {
         _lastSelectedDate = picked;
         _birthdayController.text = formattedDate;
