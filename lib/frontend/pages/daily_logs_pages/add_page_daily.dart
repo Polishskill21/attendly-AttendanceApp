@@ -33,7 +33,7 @@ class AddDaily extends StatefulWidget{
 }
 
 class _AddDailyState extends State<AddDaily>{
-  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
   Category? selectedCategory;
@@ -46,7 +46,7 @@ class _AddDailyState extends State<AddDaily>{
 
   @override
   void dispose() {
-    _descriptionController.dispose();
+    _commentController.dispose();
     _categoryController.dispose();
     _dateController.dispose();
     super.dispose();
@@ -73,7 +73,7 @@ class _AddDailyState extends State<AddDaily>{
     final localizations = AppLocalizations.of(context);
     setState(() {
       selectedPersons.clear();
-      _descriptionController.clear();
+      _commentController.clear();
       _categoryController.clear();
       selectedCategory = null;
       selectedDate = widget.initialDate ?? getCurrentDate();
@@ -91,7 +91,7 @@ class _AddDailyState extends State<AddDaily>{
 
   Future<bool> _submitForm() async {
     final localizations = AppLocalizations.of(context);
-    String description = _descriptionController.text.trim();
+    String description = _commentController.text.trim();
     String dateStr = _dateController.text.trim();
 
     // Validate required fields
@@ -419,8 +419,8 @@ class _AddDailyState extends State<AddDaily>{
                 SizedBox(
                   width: double.infinity,
                   child: TextField(
-                    controller: _descriptionController,
-                    maxLines: 3,
+                    controller: _commentController,
+                    maxLines: 1,
                     style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                     decoration: InputDecoration(
                       hintText: localizations.enterDescriptionOptional,
@@ -428,7 +428,7 @@ class _AddDailyState extends State<AddDaily>{
                       contentPadding: ResponsiveUtils.getContentPadding(context),
                       suffixIcon: IconButton(
                         icon: Icon(Icons.cancel, size: iconSize),
-                        onPressed: () => _descriptionController.clear(),
+                        onPressed: () => _commentController.clear(),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: ResponsiveUtils.getCardBorderRadius(context),

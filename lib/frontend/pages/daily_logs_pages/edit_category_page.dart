@@ -203,7 +203,7 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
               SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
               TextField(
                 controller: _commentController,
-                maxLines: 3,
+                maxLines: 1,
                 style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
