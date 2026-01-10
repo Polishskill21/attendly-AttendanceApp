@@ -81,11 +81,11 @@ class _AddPageState extends State<AddPage>{
   Future<bool> _submitForm() async{
     final localizations = AppLocalizations.of(context);
     String name = _nameController.text.trim();
-    String uiDate = _birthdayController.text.trim();
+    String uiBirthday = _birthdayController.text.trim();
     String homeCountry = _homeCountryController.text.trim();
 
     // Validate empty fields
-    if (name.isEmpty || uiDate.isEmpty || selectedGender == null || selectedMigration == null) {
+    if (name.isEmpty || uiBirthday.isEmpty || selectedGender == null || selectedMigration == null) {
       helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
       return false;
     }
@@ -96,7 +96,7 @@ class _AddPageState extends State<AddPage>{
     }
 
     // Validate date format (YYYY-MM-dd)
-    if (!_isValidDate(uiDate)) {
+    if (!_isValidDate(uiBirthday)) {
       helper.showErrorMessage(context, localizations.invalidDateFormat);
       return false;
     }
@@ -104,11 +104,8 @@ class _AddPageState extends State<AddPage>{
 
 
     try {
-      DateTime parsed = DateFormat("dd.MM.yyyy").parse(uiDate);
-      String birthday = DateFormat("yyyy-MM-dd").format(parsed);
-
       //create child object and pop page
-      final child = Child(name: name, birthday: birthday, gender: selectedGender!, migration: selectedMigration!, migrationBackground: homeCountry);
+      final child = Child(name: name, birthday: uiBirthday, gender: selectedGender!, migration: selectedMigration!, migrationBackground: homeCountry);
 
       //database insertion
       await inserter.allPeopleTable(child);

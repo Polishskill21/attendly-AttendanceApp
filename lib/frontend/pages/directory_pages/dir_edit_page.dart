@@ -160,13 +160,10 @@ class _EditPageState extends State<EditPage>{
     }
 
     try {
-      DateTime parsed = DateFormat("dd.MM.yyyy").parse(birthdayUI);
-      String birthday = DateFormat("yyyy-MM-dd").format(parsed);
-
       //create child object and pop page
       final child = Child(
           name: name,
-          birthday: birthday,
+          birthday: birthdayUI,
           gender: selectedGender!,
           migration: selectedMigration!,
           migrationBackground: homeCountry);
