@@ -680,13 +680,13 @@ class _PersonList extends StatelessWidget {
                                     color: theme.textTheme.titleLarge?.color,
                                   ),
                                 ),
-                                Text(
-                                  '${localizations.id}: ${person.personId}',
-                                  style: TextStyle(
-                                    fontSize: bodySize,
-                                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                                  ),
-                                ),
+                                // Text(
+                                //   '${localizations.id}: ${person.personId}',
+                                //   style: TextStyle(
+                                //     fontSize: bodySize,
+                                //     color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ),

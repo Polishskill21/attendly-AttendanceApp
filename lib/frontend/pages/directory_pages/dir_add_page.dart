@@ -101,8 +101,6 @@ class _AddPageState extends State<AddPage>{
       return false;
     }
 
-
-
     try {
       //create child object and pop page
       final child = Child(name: name, birthday: uiBirthday, gender: selectedGender!, migration: selectedMigration!, migrationBackground: homeCountry);

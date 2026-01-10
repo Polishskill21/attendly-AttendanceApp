@@ -49,7 +49,7 @@ class CustomExpansionState extends State<CustomExpansion> {
         : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
     // Use ResponsiveUtils for sizing
-    final idFontSize = ResponsiveUtils.getTitleFontSize(context);
+    //final idFontSize = ResponsiveUtils.getTitleFontSize(context);
     final nameFontSize = ResponsiveUtils.getTitleFontSize(context);
     final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 34);
     final smallIconSize = ResponsiveUtils.getIconSize(context, baseSize: 28);
@@ -83,17 +83,17 @@ class CustomExpansionState extends State<CustomExpansion> {
               padding: innerPad,
                 child: Row(
                   children: [
-                    Text(
-                      widget.allPeopleList[widget.index]["id"].toString(),
-                      style: TextStyle(
-                        fontSize: idFontSize,
-                        color: textColor,
-                        fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: false,
-                    ),
-                    SizedBox(width: innerPad.horizontal / 2),
+                    // Text(
+                    //   widget.allPeopleList[widget.index]["id"].toString(),
+                    //   style: TextStyle(
+                    //     fontSize: idFontSize,
+                    //     color: textColor,
+                    //     fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
+                    //   ),
+                    //   overflow: TextOverflow.ellipsis,
+                    //   softWrap: false,
+                    // ),
+                    // SizedBox(width: innerPad.horizontal / 2),
                     Expanded(
                       child: Text(
                         widget.allPeopleList[widget.index]["name"].toString(),
