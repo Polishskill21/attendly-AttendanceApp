@@ -11,7 +11,7 @@ class DailyPersonController extends ChangeNotifier {
   final Database database;
   late DbSelection reader;
   bool _isRefreshing = false;
-  DateTime _selectedDate = getCurrentDate();
+  DateTime _selectedDate = getScopedDate();
   List<PersonWithCategories> _people = [];
   bool _isEditMode = false;
   final Set<PersonWithCategories> _selectedPeople = {};

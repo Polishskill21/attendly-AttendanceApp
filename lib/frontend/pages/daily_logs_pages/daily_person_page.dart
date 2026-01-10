@@ -375,7 +375,7 @@ class DailyPersonState extends State<DailyPerson>{
                             GestureDetector(
                               onTap: _selectDate,
                               child: Text(
-                                "${controller.selectedDate.year}-${controller.selectedDate.month}-${controller.selectedDate.day}",
+                                 "${controller.selectedDate.day}.${controller.selectedDate.month}.${controller.selectedDate.year}",
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   fontSize: ResponsiveUtils.getTitleFontSize(context),

@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:attendly/backend/manager/connection_manager.dart';
 
-DateTime getCurrentDate(){
+DateTime getScopedDate(){
   DateTime now = DateTime.now();
   int? dbYear = DBConnectionManager.dbYear;
 
@@ -16,7 +16,7 @@ DateTime getCurrentDate(){
 }
 
 DateTime getPreviousDate(){
-  DateTime current = getCurrentDate();
+  DateTime current = getScopedDate();
   DateTime previous = current.subtract(const Duration(days: 1));
   return previous;
 }

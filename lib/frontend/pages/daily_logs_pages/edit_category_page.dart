@@ -10,6 +10,7 @@ import 'package:attendly/frontend/selection_options/category_item.dart';
 import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/localization/app_localizations.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
 class EditCategoryPage extends StatefulWidget {
@@ -109,7 +110,9 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final iconSize = ResponsiveUtils.getIconSize(context);
-    
+    DateTime parsedDate = DateTime.parse(widget.record.date);
+    String formattedDisplayDate = DateFormat('dd.MM.yyyy').format(parsedDate);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -135,7 +138,7 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${localizations.date}: ${widget.record.date}',
+                '${localizations.date}: $formattedDisplayDate',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: ResponsiveUtils.getBodyFontSize(context),

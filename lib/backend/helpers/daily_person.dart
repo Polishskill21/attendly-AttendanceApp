@@ -6,5 +6,10 @@ class DailyPerson {
   final Category category;
   final String? description;
 
-  DailyPerson({required this.id, required this.date, required this.category, this.description});
+  DailyPerson({
+    required this.id, 
+    required String date, 
+    required this.category, 
+    this.description
+  }): this.date = date.split('.').reversed.join('-');
 }

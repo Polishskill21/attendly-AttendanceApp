@@ -1,10 +1,10 @@
 import 'package:attendly/backend/dbLogic/db_read.dart';
 import 'package:attendly/backend/dbLogic/db_update.dart';
-import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class WeeksListPage extends StatefulWidget {
   final DbSelection reader;
@@ -125,7 +125,8 @@ class _WeeksListPageState extends State<WeeksListPage> {
               final weekData = _weeksData[index];
               final startDate = DateTime.parse(weekData['dates']);
               final endDate = startDate.add(const Duration(days: 4));
-              final displayStr = "${dateToString(startDate)} - ${dateToString(endDate)}";
+              final displayStr = "${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}";
+              
               final bool isCountable = (weekData['countable'] ?? 0) == 1;
               final isCurrentWeek = weekData['dates'] == widget.currentWeekDate;
 

@@ -10,11 +10,11 @@ class Child{
 
    Child({
     required this.name,
-    required this.birthday,
+    required String birthday,
     required this.gender,
     required this.migration,
     required this.migrationBackground
-  });
+  }) : this.birthday = birthday.split('.').reversed.join('-');
 
   List<Object?> toList(){
     return[

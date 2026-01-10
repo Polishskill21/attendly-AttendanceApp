@@ -3,7 +3,7 @@ import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/backend/dbLogic/db_base.dart';
 
 class DbSelection extends DbBaseHandler {
-  DateTime nowTime = getCurrentDate();
+  DateTime nowTime = getScopedDate();
 
   DbSelection(super.db);
 
