@@ -1,4 +1,5 @@
 import 'package:attendly/backend/helpers/db_result.dart';
+import 'package:attendly/frontend/widgets/changelog_helper.dart';
 import 'package:attendly/main_app.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
@@ -190,7 +191,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           final newDb = await _handleCreateNewYearDatabase(result.oldDbPath!);
 
           if (newDb != null) {
-            return newDb;
+            dbConnection = newDb;
           } else {
             showNewYearBanner = true;
           }
@@ -198,6 +199,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           showNewYearBanner = true;
         }
       }
+    }
+
+    if (dbConnection != null && mounted && !isTemporaryDb) {
+      await ChangelogHelper.presentChangelogIfNew(context);
     }
 
     if (dbConnection == null) {
