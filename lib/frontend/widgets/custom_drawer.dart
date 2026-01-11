@@ -42,7 +42,7 @@ class CustomDrawer extends StatelessWidget {
   Widget _buildNavigationRail(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 28);
+    final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 32);
 
     final int? validSelectedIndex = (selectedTab >= 0 && selectedTab <= 3) ? selectedTab : null;
 
