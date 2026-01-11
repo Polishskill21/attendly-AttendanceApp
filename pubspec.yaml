@@ -1,7 +1,7 @@
 name: attendly
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.2.4+1
+version: 1.3.0+1
 
 environment:
   sdk: ^3.7.0
@@ -23,6 +23,9 @@ dependencies:
   rename: ^3.1.0
   flutter_launcher_icons: ^0.14.4
   open_filex: ^4.5.0
+  package_info_plus: ^9.0.0
+  shared_preferences: ^2.5.4
+  markdown_widget: ^2.3.2+8
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +42,4 @@ flutter:
   assets:
     - assets/logo.png
     - assets/attendly_docs.pdf
+    - assets/changelogs/

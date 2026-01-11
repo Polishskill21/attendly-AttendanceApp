@@ -112,7 +112,80 @@ class _DirectoryPageState extends State<DirectoryPage> {
     final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
     final iconSize = ResponsiveUtils.getIconSize(context);
 
-    final pageBody = Column(
+    if (widget.isSelectionMode) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            localizations.selectAPerson,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, size: iconSize),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: pageBody(context, localizations, isTablet),
+        floatingActionButton: widget.isSelectionMode &&
+                _selectedPersonIds.isNotEmpty &&
+                widget.onPersonsSelected != null
+            ? FloatingActionButton.extended(
+                onPressed: () {
+                  final allChildren = StateManager.getChildrenList();
+                  final selectedPersonsData = allChildren
+                      .where((person) => _selectedPersonIds.contains(person['id']))
+                      .toList();
+                  widget.onPersonsSelected!(selectedPersonsData);
+                },
+                label: Text(
+                  localizations.confirmSelection(_selectedPersonIds.length),
+                  style: TextStyle(fontSize: isTablet ? 18 : 14),
+                ),
+                icon: Icon(Icons.check, size: isTablet ? 28 : 24),
+              )
+            : null,
+      );
+    }
+
+    return Scaffold(
+      drawer: widget.isTablet 
+          ? null
+          : CustomDrawer(
+              selectedTab: widget.selectedTab!,
+              onTabChange: widget.onTabChange!,
+            ),
+      appBar: RefreshableAppBar(
+        title: localizations.directory,
+        onRefresh: updateChildrenList,
+        isLoading: _isLoading,
+        showRefresh: true,
+        isTablet: isTablet,
+        leading: widget.isTablet
+            ? null
+            : Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  // Bigger drawer icon
+                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                ),
+              ),
+      ),
+      body: pageBody(context, localizations, isTablet),
+      floatingActionButton: SizedBox(
+          width: ResponsiveUtils.getButtonHeight(context) + 25,
+          height: ResponsiveUtils.getButtonHeight(context) + 25,
+          child: FloatingActionButton(
+              onPressed: () => _onFabPressed(context),
+              child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35))
+          )
+        ),
+    );
+  }
+
+  Widget pageBody(BuildContext context, AppLocalizations localizations, bool isTablet){
+    return Column(
       children: [
         // NEW: Self-contained search field widget
         _SearchField(
@@ -186,77 +259,6 @@ class _DirectoryPageState extends State<DirectoryPage> {
                     ),
         ),
       ],
-    );
-
-    if (widget.isSelectionMode) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            localizations.selectAPerson,
-            style: TextStyle(
-              fontSize: ResponsiveUtils.getTitleFontSize(context),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, size: iconSize),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: pageBody,
-        floatingActionButton: widget.isSelectionMode &&
-                _selectedPersonIds.isNotEmpty &&
-                widget.onPersonsSelected != null
-            ? FloatingActionButton.extended(
-                onPressed: () {
-                  final allChildren = StateManager.getChildrenList();
-                  final selectedPersonsData = allChildren
-                      .where((person) => _selectedPersonIds.contains(person['id']))
-                      .toList();
-                  widget.onPersonsSelected!(selectedPersonsData);
-                },
-                label: Text(
-                  localizations.confirmSelection(_selectedPersonIds.length),
-                  style: TextStyle(fontSize: isTablet ? 18 : 14),
-                ),
-                icon: Icon(Icons.check, size: isTablet ? 28 : 24),
-              )
-            : null,
-      );
-    }
-
-    return Scaffold(
-      drawer: widget.isTablet 
-          ? null
-          : CustomDrawer(
-              selectedTab: widget.selectedTab!,
-              onTabChange: widget.onTabChange!,
-            ),
-      appBar: RefreshableAppBar(
-        title: localizations.directory,
-        onRefresh: updateChildrenList,
-        isLoading: _isLoading,
-        showRefresh: true,
-        isTablet: isTablet,
-        leading: widget.isTablet
-            ? null
-            : Builder(
-                builder: (context) => IconButton(
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                  // Bigger drawer icon
-                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
-                ),
-              ),
-      ),
-      body: pageBody,
-      floatingActionButton: SizedBox(
-          width: ResponsiveUtils.getButtonHeight(context) + 25,
-          height: ResponsiveUtils.getButtonHeight(context) + 25,
-          child: FloatingActionButton(
-              onPressed: () => _onFabPressed(context),
-              child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35))
-          )
-        ),
     );
   }
 

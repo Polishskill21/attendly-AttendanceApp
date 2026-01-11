@@ -4,6 +4,7 @@ import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/pages/settings_page/help_page.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:attendly/backend/manager/connection_manager.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_provider.dart';
@@ -263,14 +264,24 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          localizations.getAppsVerision("1.2.4"),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: ResponsiveUtils.getBodyFontSize(context),
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
-                          ),
+                        child: FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+
+                            String versionText = snapshot.hasData 
+                                ? snapshot.data!.version 
+                                : "...";
+                                
+                            return Text(
+                              localizations.getAppsVerision(versionText),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
                         ),
                       )
                     ],
