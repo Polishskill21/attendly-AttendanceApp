@@ -111,10 +111,11 @@ class DbSelection extends DbBaseHandler {
     return res;
   }
 
-  Future<List<Map<String, dynamic>>> getAllPeople() async{
+  Future<List<Map<String, dynamic>>> getAllPeople({bool ascending = true}) async{
     await ensureConnection();
-    
-    String sql = "SELECT * FROM all_people";
+    String order = ascending ? 'ASC' : 'DESC';
+
+    String sql = "SELECT * FROM all_people ORDER BY name COLLATE NOCASE $order";
     return db!.rawQuery(sql);
   }
 

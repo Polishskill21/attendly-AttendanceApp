@@ -3,6 +3,7 @@ import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_add_page.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/backend/dbLogic/db_read.dart';
@@ -55,6 +56,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
   // This list holds the filtered results and is the only part that changes during search
   List<Map<String, dynamic>> _searchResult = [];
   bool get isLoading => _isLoading;
+  bool _isAscending = true;
 
   @override
   void dispose() {
@@ -171,6 +173,13 @@ class _DirectoryPageState extends State<DirectoryPage> {
                   icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
                 ),
               ),
+        actions: [
+          IconButton(
+            icon: Icon(_isAscending ? FontAwesomeIcons.arrowDownZA : FontAwesomeIcons.arrowDownAZ),
+            onPressed: _toggleSort,
+            //tooltip: "Sort Alphabetically",
+          ),
+        ],
       ),
       body: pageBody(context, localizations, isTablet),
       floatingActionButton: SizedBox(
@@ -281,6 +290,13 @@ class _DirectoryPageState extends State<DirectoryPage> {
     });
   }
 
+  void _toggleSort() {
+    setState(() {
+      _isAscending = !_isAscending;
+    });
+    updateChildrenList();
+  }
+
   Future<void> updateChildrenList() async {
     await _populateList(forceRefresh: true);
   }
@@ -377,7 +393,7 @@ class _DirectoryPageState extends State<DirectoryPage> {
       });
 
       try {
-        Future<List<Map<String, dynamic>>> dataLoadFuture = reader.getAllPeople();
+        Future<List<Map<String, dynamic>>> dataLoadFuture = reader.getAllPeople(ascending: _isAscending);
 
         Future<void> minWaitFuture = Future.delayed(const Duration(seconds: 1));
 
