@@ -202,7 +202,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     }
 
     if (dbConnection != null && mounted && !isTemporaryDb) {
-      await ChangelogHelper.presentChangelogIfNew(context);
+      ChangelogHelper.presentChangelogIfNew(context);
     }
 
     if (dbConnection == null) {
