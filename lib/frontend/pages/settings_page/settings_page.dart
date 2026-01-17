@@ -3,6 +3,7 @@ import 'package:attendly/backend/dbLogic/db_read.dart';
 import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/pages/settings_page/help_page.dart';
+import 'package:attendly/frontend/widgets/changelog_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -272,14 +273,30 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ? snapshot.data!.version 
                                 : "...";
                                 
-                            return Text(
-                              localizations.getAppsVerision(versionText),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: ResponsiveUtils.getBodyFontSize(context),
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
+                            // return Text(
+                            //   localizations.getAppsVerision(versionText),
+                            //   textAlign: TextAlign.center,
+                            //   style: TextStyle(
+                            //     fontSize: ResponsiveUtils.getBodyFontSize(context),
+                            //     fontWeight: FontWeight.bold,
+                            //     color: Colors.grey,
+                            //   ),
+                            // );
+                            return InkWell(
+                              onTap: () => ChangelogHelper.showDirectly(context),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                child: Text(
+                                  localizations.getAppsVerision(versionText),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              )
                             );
                           },
                         ),
