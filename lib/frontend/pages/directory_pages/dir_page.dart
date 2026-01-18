@@ -42,6 +42,8 @@ class DirectoryPage extends StatefulWidget {
 }
 
 class _DirectoryPageState extends State<DirectoryPage> {
+  static bool _isAscending = true;  
+  
   final TextEditingController _searchController = TextEditingController();
   late DbSelection reader;
   late DbDeletion deleter;
@@ -56,7 +58,6 @@ class _DirectoryPageState extends State<DirectoryPage> {
   // This list holds the filtered results and is the only part that changes during search
   List<Map<String, dynamic>> _searchResult = [];
   bool get isLoading => _isLoading;
-  bool _isAscending = true;
 
   @override
   void dispose() {
