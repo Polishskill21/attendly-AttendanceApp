@@ -1,7 +1,7 @@
 name: attendly
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.4.1+1
+version: 2.0.0+1
 
 environment:
   sdk: ^3.7.0
@@ -20,17 +20,20 @@ dependencies:
   font_awesome_flutter: ^10.8.0
   provider: ^6.1.5
   fl_chart: ^1.0.0
-  rename: ^3.1.0
-  flutter_launcher_icons: ^0.14.4
   open_filex: ^4.5.0
   package_info_plus: ^9.0.0
   shared_preferences: ^2.5.4
   flutter_markdown_plus: ^1.0.7
+  drift: ^2.30.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  drift_dev: ^2.30.1
+  build_runner: ^2.10.5
+  rename: ^3.1.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter_launcher_icons:
   android: true
