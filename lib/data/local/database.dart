@@ -1,7 +1,8 @@
 import 'dart:io';
-
 import 'package:attendly/data/local/tables/dialy_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
+import 'package:attendly/data/local/tables/enums/category.dart';
+import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/data/local/tables/weekly_entry_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
