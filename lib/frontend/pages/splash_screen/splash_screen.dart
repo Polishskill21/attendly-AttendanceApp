@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:attendly/backend/helpers/db_result.dart';
+import 'package:attendly/backend/manager/storage_manager.dart';
+import 'package:attendly/data/local/database.dart';
 import 'package:attendly/frontend/widgets/changelog_helper.dart';
 import 'package:attendly/main_app.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:attendly/backend/manager/db_data_manager.dart';
@@ -48,6 +52,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Future<void> minWaitFuture = Future.delayed(const Duration(milliseconds: 1500));
     
     final results = await Future.wait([dbInitFuture, minWaitFuture]);
+
+    // final dir = await StorageManager.getExternalDirectory();
+    // final filename = File(p.join(dir!.path, "test.db"));
+    // final executor = AppDatabase.createExecutor(filename);
+    // final db = AppDatabase(executor);
+    // await db.forceOpen();
+    // await db.close();
+    // debugPrint("opened new db");
     
     return results[0] as Database?;
   }
