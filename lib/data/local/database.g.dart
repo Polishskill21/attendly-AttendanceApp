@@ -32,17 +32,15 @@ class $DirectoryPeopleTable extends DirectoryPeople
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
-  static const VerificationMeta _birthdayMeta = const VerificationMeta(
-    'birthday',
-  );
   @override
-  late final GeneratedColumn<DateTime> birthday = GeneratedColumn<DateTime>(
-    'birthday',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, String> birthday =
+      GeneratedColumn<String>(
+        'birthday',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($DirectoryPeopleTable.$converterbirthday);
   @override
   late final GeneratedColumnWithTypeConverter<Gender, String> gender =
       GeneratedColumn<String>(
@@ -73,9 +71,9 @@ class $DirectoryPeopleTable extends DirectoryPeople
       GeneratedColumn<String>(
         'migration_background',
         aliasedName,
-        false,
+        true,
         type: DriftSqlType.string,
-        requiredDuringInsert: true,
+        requiredDuringInsert: false,
       );
   @override
   List<GeneratedColumn> get $columns => [
@@ -109,14 +107,6 @@ class $DirectoryPeopleTable extends DirectoryPeople
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
-    if (data.containsKey('birthday')) {
-      context.handle(
-        _birthdayMeta,
-        birthday.isAcceptableOrUnknown(data['birthday']!, _birthdayMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_birthdayMeta);
-    }
     if (data.containsKey('migration')) {
       context.handle(
         _migrationMeta,
@@ -133,8 +123,6 @@ class $DirectoryPeopleTable extends DirectoryPeople
           _migrationBackgroundMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_migrationBackgroundMeta);
     }
     return context;
   }
@@ -155,11 +143,12 @@ class $DirectoryPeopleTable extends DirectoryPeople
             DriftSqlType.string,
             data['${effectivePrefix}name'],
           )!,
-      birthday:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}birthday'],
-          )!,
+      birthday: $DirectoryPeopleTable.$converterbirthday.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}birthday'],
+        )!,
+      ),
       gender: $DirectoryPeopleTable.$convertergender.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
@@ -171,11 +160,10 @@ class $DirectoryPeopleTable extends DirectoryPeople
             DriftSqlType.bool,
             data['${effectivePrefix}migration'],
           )!,
-      migrationBackground:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}migration_background'],
-          )!,
+      migrationBackground: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}migration_background'],
+      ),
     );
   }
 
@@ -184,6 +172,8 @@ class $DirectoryPeopleTable extends DirectoryPeople
     return $DirectoryPeopleTable(attachedDatabase, alias);
   }
 
+  static TypeConverter<DateTime, String> $converterbirthday =
+      const DateOnlyConverter();
   static JsonTypeConverter2<Gender, String, String> $convertergender =
       const EnumNameConverter<Gender>(Gender.values);
 }
@@ -195,28 +185,34 @@ class DirectoryPeopleData extends DataClass
   final DateTime birthday;
   final Gender gender;
   final bool migration;
-  final String migrationBackground;
+  final String? migrationBackground;
   const DirectoryPeopleData({
     required this.id,
     required this.name,
     required this.birthday,
     required this.gender,
     required this.migration,
-    required this.migrationBackground,
+    this.migrationBackground,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
-    map['birthday'] = Variable<DateTime>(birthday);
+    {
+      map['birthday'] = Variable<String>(
+        $DirectoryPeopleTable.$converterbirthday.toSql(birthday),
+      );
+    }
     {
       map['gender'] = Variable<String>(
         $DirectoryPeopleTable.$convertergender.toSql(gender),
       );
     }
     map['migration'] = Variable<bool>(migration);
-    map['migration_background'] = Variable<String>(migrationBackground);
+    if (!nullToAbsent || migrationBackground != null) {
+      map['migration_background'] = Variable<String>(migrationBackground);
+    }
     return map;
   }
 
@@ -227,7 +223,10 @@ class DirectoryPeopleData extends DataClass
       birthday: Value(birthday),
       gender: Value(gender),
       migration: Value(migration),
-      migrationBackground: Value(migrationBackground),
+      migrationBackground:
+          migrationBackground == null && nullToAbsent
+              ? const Value.absent()
+              : Value(migrationBackground),
     );
   }
 
@@ -244,7 +243,7 @@ class DirectoryPeopleData extends DataClass
         serializer.fromJson<String>(json['gender']),
       ),
       migration: serializer.fromJson<bool>(json['migration']),
-      migrationBackground: serializer.fromJson<String>(
+      migrationBackground: serializer.fromJson<String?>(
         json['migrationBackground'],
       ),
     );
@@ -260,7 +259,7 @@ class DirectoryPeopleData extends DataClass
         $DirectoryPeopleTable.$convertergender.toJson(gender),
       ),
       'migration': serializer.toJson<bool>(migration),
-      'migrationBackground': serializer.toJson<String>(migrationBackground),
+      'migrationBackground': serializer.toJson<String?>(migrationBackground),
     };
   }
 
@@ -270,14 +269,17 @@ class DirectoryPeopleData extends DataClass
     DateTime? birthday,
     Gender? gender,
     bool? migration,
-    String? migrationBackground,
+    Value<String?> migrationBackground = const Value.absent(),
   }) => DirectoryPeopleData(
     id: id ?? this.id,
     name: name ?? this.name,
     birthday: birthday ?? this.birthday,
     gender: gender ?? this.gender,
     migration: migration ?? this.migration,
-    migrationBackground: migrationBackground ?? this.migrationBackground,
+    migrationBackground:
+        migrationBackground.present
+            ? migrationBackground.value
+            : this.migrationBackground,
   );
   DirectoryPeopleData copyWithCompanion(DirectoryPeopleCompanion data) {
     return DirectoryPeopleData(
@@ -327,7 +329,7 @@ class DirectoryPeopleCompanion extends UpdateCompanion<DirectoryPeopleData> {
   final Value<DateTime> birthday;
   final Value<Gender> gender;
   final Value<bool> migration;
-  final Value<String> migrationBackground;
+  final Value<String?> migrationBackground;
   const DirectoryPeopleCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -342,16 +344,15 @@ class DirectoryPeopleCompanion extends UpdateCompanion<DirectoryPeopleData> {
     required DateTime birthday,
     required Gender gender,
     required bool migration,
-    required String migrationBackground,
+    this.migrationBackground = const Value.absent(),
   }) : name = Value(name),
        birthday = Value(birthday),
        gender = Value(gender),
-       migration = Value(migration),
-       migrationBackground = Value(migrationBackground);
+       migration = Value(migration);
   static Insertable<DirectoryPeopleData> custom({
     Expression<int>? id,
     Expression<String>? name,
-    Expression<DateTime>? birthday,
+    Expression<String>? birthday,
     Expression<String>? gender,
     Expression<bool>? migration,
     Expression<String>? migrationBackground,
@@ -373,7 +374,7 @@ class DirectoryPeopleCompanion extends UpdateCompanion<DirectoryPeopleData> {
     Value<DateTime>? birthday,
     Value<Gender>? gender,
     Value<bool>? migration,
-    Value<String>? migrationBackground,
+    Value<String?>? migrationBackground,
   }) {
     return DirectoryPeopleCompanion(
       id: id ?? this.id,
@@ -395,7 +396,9 @@ class DirectoryPeopleCompanion extends UpdateCompanion<DirectoryPeopleData> {
       map['name'] = Variable<String>(name.value);
     }
     if (birthday.present) {
-      map['birthday'] = Variable<DateTime>(birthday.value);
+      map['birthday'] = Variable<String>(
+        $DirectoryPeopleTable.$converterbirthday.toSql(birthday.value),
+      );
     }
     if (gender.present) {
       map['gender'] = Variable<String>(
@@ -442,15 +445,15 @@ class $DailyEntryTable extends DailyEntry
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _datesMeta = const VerificationMeta('dates');
   @override
-  late final GeneratedColumn<DateTime> dates = GeneratedColumn<DateTime>(
-    'dates',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, String> dates =
+      GeneratedColumn<String>(
+        'dates',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($DailyEntryTable.$converterdates);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
@@ -464,14 +467,14 @@ class $DailyEntryTable extends DailyEntry
     ),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<Category, String> categroy =
+  late final GeneratedColumnWithTypeConverter<Category, String> category =
       GeneratedColumn<String>(
-        'categroy',
+        'category',
         aliasedName,
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: true,
-      ).withConverter<Category>($DailyEntryTable.$convertercategroy);
+      ).withConverter<Category>($DailyEntryTable.$convertercategory);
   static const VerificationMeta _descriptionMeta = const VerificationMeta(
     'description',
   );
@@ -479,16 +482,16 @@ class $DailyEntryTable extends DailyEntry
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
     'description',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   @override
   List<GeneratedColumn> get $columns => [
     recordID,
     dates,
     id,
-    categroy,
+    category,
     description,
   ];
   @override
@@ -511,14 +514,6 @@ class $DailyEntryTable extends DailyEntry
     } else if (isInserting) {
       context.missing(_recordIDMeta);
     }
-    if (data.containsKey('dates')) {
-      context.handle(
-        _datesMeta,
-        dates.isAcceptableOrUnknown(data['dates']!, _datesMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_datesMeta);
-    }
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
@@ -532,8 +527,6 @@ class $DailyEntryTable extends DailyEntry
           _descriptionMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_descriptionMeta);
     }
     return context;
   }
@@ -549,27 +542,27 @@ class $DailyEntryTable extends DailyEntry
             DriftSqlType.int,
             data['${effectivePrefix}record_id'],
           )!,
-      dates:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}dates'],
-          )!,
+      dates: $DailyEntryTable.$converterdates.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}dates'],
+        )!,
+      ),
       id:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
             data['${effectivePrefix}id'],
           )!,
-      categroy: $DailyEntryTable.$convertercategroy.fromSql(
+      category: $DailyEntryTable.$convertercategory.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
-          data['${effectivePrefix}categroy'],
+          data['${effectivePrefix}category'],
         )!,
       ),
-      description:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}description'],
-          )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
     );
   }
 
@@ -578,7 +571,9 @@ class $DailyEntryTable extends DailyEntry
     return $DailyEntryTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<Category, String, String> $convertercategroy =
+  static TypeConverter<DateTime, String> $converterdates =
+      const DateOnlyConverter();
+  static JsonTypeConverter2<Category, String, String> $convertercategory =
       const EnumNameConverter<Category>(Category.values);
 }
 
@@ -586,27 +581,33 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
   final int recordID;
   final DateTime dates;
   final int id;
-  final Category categroy;
-  final String description;
+  final Category category;
+  final String? description;
   const DailyEntryData({
     required this.recordID,
     required this.dates,
     required this.id,
-    required this.categroy,
-    required this.description,
+    required this.category,
+    this.description,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['record_id'] = Variable<int>(recordID);
-    map['dates'] = Variable<DateTime>(dates);
-    map['id'] = Variable<int>(id);
     {
-      map['categroy'] = Variable<String>(
-        $DailyEntryTable.$convertercategroy.toSql(categroy),
+      map['dates'] = Variable<String>(
+        $DailyEntryTable.$converterdates.toSql(dates),
       );
     }
-    map['description'] = Variable<String>(description);
+    map['id'] = Variable<int>(id);
+    {
+      map['category'] = Variable<String>(
+        $DailyEntryTable.$convertercategory.toSql(category),
+      );
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
     return map;
   }
 
@@ -615,8 +616,11 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
       recordID: Value(recordID),
       dates: Value(dates),
       id: Value(id),
-      categroy: Value(categroy),
-      description: Value(description),
+      category: Value(category),
+      description:
+          description == null && nullToAbsent
+              ? const Value.absent()
+              : Value(description),
     );
   }
 
@@ -629,10 +633,10 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
       recordID: serializer.fromJson<int>(json['recordID']),
       dates: serializer.fromJson<DateTime>(json['dates']),
       id: serializer.fromJson<int>(json['id']),
-      categroy: $DailyEntryTable.$convertercategroy.fromJson(
-        serializer.fromJson<String>(json['categroy']),
+      category: $DailyEntryTable.$convertercategory.fromJson(
+        serializer.fromJson<String>(json['category']),
       ),
-      description: serializer.fromJson<String>(json['description']),
+      description: serializer.fromJson<String?>(json['description']),
     );
   }
   @override
@@ -642,10 +646,10 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
       'recordID': serializer.toJson<int>(recordID),
       'dates': serializer.toJson<DateTime>(dates),
       'id': serializer.toJson<int>(id),
-      'categroy': serializer.toJson<String>(
-        $DailyEntryTable.$convertercategroy.toJson(categroy),
+      'category': serializer.toJson<String>(
+        $DailyEntryTable.$convertercategory.toJson(category),
       ),
-      'description': serializer.toJson<String>(description),
+      'description': serializer.toJson<String?>(description),
     };
   }
 
@@ -653,21 +657,21 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
     int? recordID,
     DateTime? dates,
     int? id,
-    Category? categroy,
-    String? description,
+    Category? category,
+    Value<String?> description = const Value.absent(),
   }) => DailyEntryData(
     recordID: recordID ?? this.recordID,
     dates: dates ?? this.dates,
     id: id ?? this.id,
-    categroy: categroy ?? this.categroy,
-    description: description ?? this.description,
+    category: category ?? this.category,
+    description: description.present ? description.value : this.description,
   );
   DailyEntryData copyWithCompanion(DailyEntryCompanion data) {
     return DailyEntryData(
       recordID: data.recordID.present ? data.recordID.value : this.recordID,
       dates: data.dates.present ? data.dates.value : this.dates,
       id: data.id.present ? data.id.value : this.id,
-      categroy: data.categroy.present ? data.categroy.value : this.categroy,
+      category: data.category.present ? data.category.value : this.category,
       description:
           data.description.present ? data.description.value : this.description,
     );
@@ -679,14 +683,14 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
           ..write('recordID: $recordID, ')
           ..write('dates: $dates, ')
           ..write('id: $id, ')
-          ..write('categroy: $categroy, ')
+          ..write('category: $category, ')
           ..write('description: $description')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(recordID, dates, id, categroy, description);
+  int get hashCode => Object.hash(recordID, dates, id, category, description);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -694,7 +698,7 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
           other.recordID == this.recordID &&
           other.dates == this.dates &&
           other.id == this.id &&
-          other.categroy == this.categroy &&
+          other.category == this.category &&
           other.description == this.description);
 }
 
@@ -702,14 +706,14 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
   final Value<int> recordID;
   final Value<DateTime> dates;
   final Value<int> id;
-  final Value<Category> categroy;
-  final Value<String> description;
+  final Value<Category> category;
+  final Value<String?> description;
   final Value<int> rowid;
   const DailyEntryCompanion({
     this.recordID = const Value.absent(),
     this.dates = const Value.absent(),
     this.id = const Value.absent(),
-    this.categroy = const Value.absent(),
+    this.category = const Value.absent(),
     this.description = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -717,19 +721,18 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
     required int recordID,
     required DateTime dates,
     required int id,
-    required Category categroy,
-    required String description,
+    required Category category,
+    this.description = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : recordID = Value(recordID),
        dates = Value(dates),
        id = Value(id),
-       categroy = Value(categroy),
-       description = Value(description);
+       category = Value(category);
   static Insertable<DailyEntryData> custom({
     Expression<int>? recordID,
-    Expression<DateTime>? dates,
+    Expression<String>? dates,
     Expression<int>? id,
-    Expression<String>? categroy,
+    Expression<String>? category,
     Expression<String>? description,
     Expression<int>? rowid,
   }) {
@@ -737,7 +740,7 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
       if (recordID != null) 'record_id': recordID,
       if (dates != null) 'dates': dates,
       if (id != null) 'id': id,
-      if (categroy != null) 'categroy': categroy,
+      if (category != null) 'category': category,
       if (description != null) 'description': description,
       if (rowid != null) 'rowid': rowid,
     });
@@ -747,15 +750,15 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
     Value<int>? recordID,
     Value<DateTime>? dates,
     Value<int>? id,
-    Value<Category>? categroy,
-    Value<String>? description,
+    Value<Category>? category,
+    Value<String?>? description,
     Value<int>? rowid,
   }) {
     return DailyEntryCompanion(
       recordID: recordID ?? this.recordID,
       dates: dates ?? this.dates,
       id: id ?? this.id,
-      categroy: categroy ?? this.categroy,
+      category: category ?? this.category,
       description: description ?? this.description,
       rowid: rowid ?? this.rowid,
     );
@@ -768,14 +771,16 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
       map['record_id'] = Variable<int>(recordID.value);
     }
     if (dates.present) {
-      map['dates'] = Variable<DateTime>(dates.value);
+      map['dates'] = Variable<String>(
+        $DailyEntryTable.$converterdates.toSql(dates.value),
+      );
     }
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (categroy.present) {
-      map['categroy'] = Variable<String>(
-        $DailyEntryTable.$convertercategroy.toSql(categroy.value),
+    if (category.present) {
+      map['category'] = Variable<String>(
+        $DailyEntryTable.$convertercategory.toSql(category.value),
       );
     }
     if (description.present) {
@@ -793,7 +798,7 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
           ..write('recordID: $recordID, ')
           ..write('dates: $dates, ')
           ..write('id: $id, ')
-          ..write('categroy: $categroy, ')
+          ..write('category: $category, ')
           ..write('description: $description, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -807,15 +812,15 @@ class $WeeklyEntryTable extends WeeklyEntry
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $WeeklyEntryTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _datesMeta = const VerificationMeta('dates');
   @override
-  late final GeneratedColumn<DateTime> dates = GeneratedColumn<DateTime>(
-    'dates',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, String> dates =
+      GeneratedColumn<String>(
+        'dates',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($WeeklyEntryTable.$converterdates);
   static const VerificationMeta _under_10Meta = const VerificationMeta(
     'under_10',
   );
@@ -1045,14 +1050,6 @@ class $WeeklyEntryTable extends WeeklyEntry
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('dates')) {
-      context.handle(
-        _datesMeta,
-        dates.isAcceptableOrUnknown(data['dates']!, _datesMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_datesMeta);
-    }
     if (data.containsKey('under_10')) {
       context.handle(
         _under_10Meta,
@@ -1224,11 +1221,12 @@ class $WeeklyEntryTable extends WeeklyEntry
   WeeklyEntryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return WeeklyEntryData(
-      dates:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}dates'],
-          )!,
+      dates: $WeeklyEntryTable.$converterdates.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}dates'],
+        )!,
+      ),
       under_10:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
@@ -1326,6 +1324,9 @@ class $WeeklyEntryTable extends WeeklyEntry
   $WeeklyEntryTable createAlias(String alias) {
     return $WeeklyEntryTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, String> $converterdates =
+      const DateOnlyConverter();
 }
 
 class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
@@ -1372,7 +1373,11 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['dates'] = Variable<DateTime>(dates);
+    {
+      map['dates'] = Variable<String>(
+        $WeeklyEntryTable.$converterdates.toSql(dates),
+      );
+    }
     map['under_10'] = Variable<int>(under_10);
     map['age_10_13'] = Variable<int>(age_10_13);
     map['age_14_17'] = Variable<int>(age_14_17);
@@ -1711,7 +1716,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
        migrationDiverse = Value(migrationDiverse),
        countable = Value(countable);
   static Insertable<WeeklyEntryData> custom({
-    Expression<DateTime>? dates,
+    Expression<String>? dates,
     Expression<int>? under_10,
     Expression<int>? age_10_13,
     Expression<int>? age_14_17,
@@ -1806,7 +1811,9 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (dates.present) {
-      map['dates'] = Variable<DateTime>(dates.value);
+      map['dates'] = Variable<String>(
+        $WeeklyEntryTable.$converterdates.toSql(dates.value),
+      );
     }
     if (under_10.present) {
       map['under_10'] = Variable<int>(under_10.value);
@@ -1904,6 +1911,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $DailyEntryTable dailyEntry = $DailyEntryTable(this);
   late final $WeeklyEntryTable weeklyEntry = $WeeklyEntryTable(this);
+  late final ReadDao readDao = ReadDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1925,7 +1933,7 @@ typedef $$DirectoryPeopleTableCreateCompanionBuilder =
       required DateTime birthday,
       required Gender gender,
       required bool migration,
-      required String migrationBackground,
+      Value<String?> migrationBackground,
     });
 typedef $$DirectoryPeopleTableUpdateCompanionBuilder =
     DirectoryPeopleCompanion Function({
@@ -1934,7 +1942,7 @@ typedef $$DirectoryPeopleTableUpdateCompanionBuilder =
       Value<DateTime> birthday,
       Value<Gender> gender,
       Value<bool> migration,
-      Value<String> migrationBackground,
+      Value<String?> migrationBackground,
     });
 
 final class $$DirectoryPeopleTableReferences
@@ -1988,10 +1996,11 @@ class $$DirectoryPeopleTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get birthday => $composableBuilder(
-    column: $table.birthday,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get birthday =>
+      $composableBuilder(
+        column: $table.birthday,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnWithTypeConverterFilters<Gender, Gender, String> get gender =>
       $composableBuilder(
@@ -2054,7 +2063,7 @@ class $$DirectoryPeopleTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get birthday => $composableBuilder(
+  ColumnOrderings<String> get birthday => $composableBuilder(
     column: $table.birthday,
     builder: (column) => ColumnOrderings(column),
   );
@@ -2090,7 +2099,7 @@ class $$DirectoryPeopleTableAnnotationComposer
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get birthday =>
+  GeneratedColumnWithTypeConverter<DateTime, String> get birthday =>
       $composableBuilder(column: $table.birthday, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<Gender, String> get gender =>
@@ -2172,7 +2181,7 @@ class $$DirectoryPeopleTableTableManager
                 Value<DateTime> birthday = const Value.absent(),
                 Value<Gender> gender = const Value.absent(),
                 Value<bool> migration = const Value.absent(),
-                Value<String> migrationBackground = const Value.absent(),
+                Value<String?> migrationBackground = const Value.absent(),
               }) => DirectoryPeopleCompanion(
                 id: id,
                 name: name,
@@ -2188,7 +2197,7 @@ class $$DirectoryPeopleTableTableManager
                 required DateTime birthday,
                 required Gender gender,
                 required bool migration,
-                required String migrationBackground,
+                Value<String?> migrationBackground = const Value.absent(),
               }) => DirectoryPeopleCompanion.insert(
                 id: id,
                 name: name,
@@ -2262,8 +2271,8 @@ typedef $$DailyEntryTableCreateCompanionBuilder =
       required int recordID,
       required DateTime dates,
       required int id,
-      required Category categroy,
-      required String description,
+      required Category category,
+      Value<String?> description,
       Value<int> rowid,
     });
 typedef $$DailyEntryTableUpdateCompanionBuilder =
@@ -2271,8 +2280,8 @@ typedef $$DailyEntryTableUpdateCompanionBuilder =
       Value<int> recordID,
       Value<DateTime> dates,
       Value<int> id,
-      Value<Category> categroy,
-      Value<String> description,
+      Value<Category> category,
+      Value<String?> description,
       Value<int> rowid,
     });
 
@@ -2314,14 +2323,15 @@ class $$DailyEntryTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get dates => $composableBuilder(
-    column: $table.dates,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnWithTypeConverterFilters<Category, Category, String> get categroy =>
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get dates =>
       $composableBuilder(
-        column: $table.categroy,
+        column: $table.dates,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<Category, Category, String> get category =>
+      $composableBuilder(
+        column: $table.category,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
@@ -2368,13 +2378,13 @@ class $$DailyEntryTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get dates => $composableBuilder(
+  ColumnOrderings<String> get dates => $composableBuilder(
     column: $table.dates,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get categroy => $composableBuilder(
-    column: $table.categroy,
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2419,11 +2429,11 @@ class $$DailyEntryTableAnnotationComposer
   GeneratedColumn<int> get recordID =>
       $composableBuilder(column: $table.recordID, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get dates =>
+  GeneratedColumnWithTypeConverter<DateTime, String> get dates =>
       $composableBuilder(column: $table.dates, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<Category, String> get categroy =>
-      $composableBuilder(column: $table.categroy, builder: (column) => column);
+  GeneratedColumnWithTypeConverter<Category, String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
@@ -2485,14 +2495,14 @@ class $$DailyEntryTableTableManager
                 Value<int> recordID = const Value.absent(),
                 Value<DateTime> dates = const Value.absent(),
                 Value<int> id = const Value.absent(),
-                Value<Category> categroy = const Value.absent(),
-                Value<String> description = const Value.absent(),
+                Value<Category> category = const Value.absent(),
+                Value<String?> description = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailyEntryCompanion(
                 recordID: recordID,
                 dates: dates,
                 id: id,
-                categroy: categroy,
+                category: category,
                 description: description,
                 rowid: rowid,
               ),
@@ -2501,14 +2511,14 @@ class $$DailyEntryTableTableManager
                 required int recordID,
                 required DateTime dates,
                 required int id,
-                required Category categroy,
-                required String description,
+                required Category category,
+                Value<String?> description = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailyEntryCompanion.insert(
                 recordID: recordID,
                 dates: dates,
                 id: id,
-                categroy: categroy,
+                category: category,
                 description: description,
                 rowid: rowid,
               ),
@@ -2635,10 +2645,11 @@ class $$WeeklyEntryTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<DateTime> get dates => $composableBuilder(
-    column: $table.dates,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get dates =>
+      $composableBuilder(
+        column: $table.dates,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<int> get under_10 => $composableBuilder(
     column: $table.under_10,
@@ -2740,7 +2751,7 @@ class $$WeeklyEntryTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<DateTime> get dates => $composableBuilder(
+  ColumnOrderings<String> get dates => $composableBuilder(
     column: $table.dates,
     builder: (column) => ColumnOrderings(column),
   );
@@ -2845,7 +2856,7 @@ class $$WeeklyEntryTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<DateTime> get dates =>
+  GeneratedColumnWithTypeConverter<DateTime, String> get dates =>
       $composableBuilder(column: $table.dates, builder: (column) => column);
 
   GeneratedColumn<int> get under_10 =>
