@@ -1,8 +1,9 @@
+import 'package:attendly/data/local/tables/date_only_converter.dart';
 import 'package:drift/drift.dart';
 
 class WeeklyEntry extends Table{
   //rename it to weekDates
-  DateTimeColumn get dates => dateTime()();
+  TextColumn get dates => text().map(const DateOnlyConverter())();
   IntColumn get under_10 => integer()();
   IntColumn get age_10_13 => integer()();
   IntColumn get age_14_17 => integer()();
