@@ -33,18 +33,13 @@ void main() {
       );
     }
 
-test('recalibrateWeeklyData rebuilds stats from scratch', () async {
+    test('recalibrateWeeklyData rebuilds stats from scratch', () async {
       final bday = DateTime(2015, 01, 01); // 11 years old in 2026
       final pId = await setupPerson(birthday: bday, gender: Gender.f, migration: true);
       final entryDate = DateTime(2026, 05, 20);
 
       // Create a daily entry manually for recalibration to process
-      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 1,
-        dates: entryDate,
-        id: pId,
-        category: Category.open,
-      ));
+      await db.insertDao.insertDailyEntry(personId: pId, date: entryDate, category: Category.open);
 
       // 1. Clear weekly table to start fresh
       await db.delete(db.weeklyEntry).go();
@@ -70,24 +65,9 @@ test('recalibrateWeeklyData rebuilds stats from scratch', () async {
       final weekDate = DateTime(2026, 01, 05); // Monday
 
       // 1. MUST INSERT DailyEntry: updatePerson needs this to find the week
-      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 2,
-        dates: entryDate,
-        id: pId,
-        category: Category.open,
-      ));
+      await db.insertDao.insertDailyEntry(personId: pId, date: entryDate, category: Category.open);
 
-      // 2. Initialize counters manually (simulating the UI's initial insert)
-      await db.updateDao.updateWeeklyTableCounters(
-        weekDate: weekDate,
-        age: 6,
-        gender: Gender.m,
-        category: Category.open,
-        migration: false,
-        isAddition: true,
-      );
-
-      // 3. Update Person stats (triggers the revert/re-add logic)
+      // 2. Update Person stats (triggers the revert/re-add logic)
       await db.updateDao.updatePerson(
         pId,
         DirectoryPeopleCompanion(
@@ -110,21 +90,11 @@ test('recalibrateWeeklyData rebuilds stats from scratch', () async {
       final pId = await setupPerson(birthday: DateTime(2000, 01, 01), gender: Gender.d);
       final entryDate = DateTime(2026, 02, 10);
       final weekDate = DateTime(2026, 02, 09); // Monday
-      const recordId = 99;
 
-      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: recordId,
-        dates: entryDate,
-        id: pId,
-        category: Category.offer,
-      ));
+      await db.insertDao.insertDailyEntry(personId: pId, date: entryDate, category: Category.offer);
       
-      await db.updateDao.updateWeeklyTableCounters(
-        weekDate: weekDate, age: 26, gender: Gender.d, category: Category.offer, migration: false, isAddition: true,
-      );
-
       await db.updateDao.updateDailyEntry(
-        recordID: recordId,
+        recordID: 1,
         date: entryDate,
         personId: pId,
         newCategory: Category.open,
@@ -163,7 +133,7 @@ test('recalibrateWeeklyData rebuilds stats from scratch', () async {
     test('updatePerson with no changes should not trigger weekly counter logic', () async {
       final pId = await setupPerson(name: 'Static User');
       final entryDate = DateTime(2026, 02, 01);
-      
+
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
         recordID: 50, dates: entryDate, id: pId, category: Category.open,
       ));
@@ -182,12 +152,7 @@ test('recalibrateWeeklyData rebuilds stats from scratch', () async {
       final pId = await setupPerson(name: 'Parent Test', migration: true);
       final entryDate = DateTime(2026, 03, 04);
 
-      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 200,
-        dates: entryDate,
-        id: pId,
-        category: Category.parent,
-      ));
+      await db.insertDao.insertDailyEntry(personId: pId, date: entryDate, category: Category.parent);
 
       await db.updateDao.recalibrateWeeklyData();
 
