@@ -1,5 +1,4 @@
 import 'package:attendly/data/local/database.dart';
-import 'package:attendly/data/local/tables/date_only_converter.dart';
 import 'package:attendly/data/local/tables/dialy_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
@@ -11,8 +10,6 @@ part 'read_dao.g.dart';
 @DriftAccessor(tables: [DirectoryPeople, DailyEntry, WeeklyEntry])
 class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
   ReadDao(super.db);
-
-  static const _converter = DateOnlyConverter();
 
   // --- Directory --- 
 
@@ -36,21 +33,25 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
 
   // --- Daily ---
 
+  Future<List<DailyEntryData>> getDailyEntriesByPersonId(int id) {
+    return (select(dailyEntry)..where((t) => t.id.equals(id))).get();
+  }
+
   Future<DateTime?> getLatestDailyDate() async {
     final query = selectOnly(dailyEntry)..addColumns([dailyEntry.dates.max()]);
     final result = await query.map((row) => row.read(dailyEntry.dates.max())).getSingle();
-    return result != null ? _converter.fromSql(result) : null;
+    return result != null ? db.dateOnlyConverter.fromSql(result) : null;
   }
 
   Future<bool> existsEntryForDate(DateTime date) async {
-    final query = select(dailyEntry)..where((t) => t.dates.equals(_converter.toSql(date)));
+    final query = select(dailyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(date)));
     final result = await query.get();
     return result.isNotEmpty;
   }
 
   Future<Category?> getCategory(int recordId, DateTime date, int personId) async {
     final query = select(dailyEntry)
-      ..where((t) => t.recordID.equals(recordId) & t.dates.equals(_converter.toSql(date)) & t.id.equals(personId));
+      ..where((t) => t.recordID.equals(recordId) & t.dates.equals(db.dateOnlyConverter.toSql(date)) & t.id.equals(personId));
     final entry = await query.getSingleOrNull();
     return entry?.category;
   }
@@ -68,7 +69,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     final query = select(dailyEntry).join([
       innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
     ])
-      ..where(dailyEntry.dates.equals(_converter.toSql(date)));
+      ..where(dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)));
 
     return query.get();
   }
@@ -93,13 +94,50 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     return query.get();
   }
 
+  Future<TypedResult?> getEntryWithPerson(int recordID, int personId, DateTime date) {
+    return (select(dailyEntry).join([
+      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
+    ])..where(
+        dailyEntry.recordID.equals(recordID) & 
+        dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)) & 
+        dailyEntry.id.equals(personId)
+      )).getSingleOrNull();
+  }
+
+  // --- Weekly & Stats Queries ---
+
   Future<WeeklyEntryData?> getWeeklyEntryByDate(DateTime date) {
-    return (select(weeklyEntry)..where((t) => t.dates.equals(_converter.toSql(date)))).getSingleOrNull();
+    return (select(weeklyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(date)))).getSingleOrNull();
   }
 
   Future<List<WeeklyEntryData>> getAllWeeklyEntries() {
     return (select(weeklyEntry)
       ..orderBy([(t) => OrderingTerm.desc(t.dates)]))
       .get();
+  }
+
+  Future<List<TypedResult>> getAllDailyEntriesWithPeople() {
+    return (select(dailyEntry).join([
+      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
+    ])).get();
+  }
+
+  Future<bool> areAllColumnsZero(DateTime weekDate) async {
+    final dateStr = db.dateOnlyConverter.toSql(weekDate);
+
+    final query = customSelect(
+      'SELECT (under_10 + age_10_13 + age_14_17 + age_18_24 + over_24 + '
+      'all_m + all_f + all_d + open_male + open_female + open_diverse + '
+      'offers_male + offers_female + offers_diverse + '
+      'migration_male + migration_female + migration_diverse) AS total '
+      'FROM weekly_entry WHERE dates = ?',
+      variables: [Variable<String>(dateStr)],
+    );
+
+    final row = await query.getSingleOrNull();
+    if (row == null) return false;
+
+    final total = row.read<int>('total');
+    return total == 0;
   }
 }
