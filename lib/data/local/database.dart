@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:attendly/data/local/dao/read_dao.dart';
+import 'package:attendly/data/local/dao/update_dao.dart';
 import 'package:attendly/data/local/tables/date_only_converter.dart';
 import 'package:attendly/data/local/tables/dialy_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
@@ -13,7 +14,7 @@ part 'database.g.dart';
 
 @DriftDatabase(
   tables: [DirectoryPeople, DailyEntry, WeeklyEntry],
-  daos: [ReadDao]
+  daos: [ReadDao, UpdateDao]
 )
 class AppDatabase extends _$AppDatabase{
   AppDatabase(super.executor);
@@ -26,6 +27,8 @@ class AppDatabase extends _$AppDatabase{
 
   @override
   int get schemaVersion => 2;
+
+  final dateOnlyConverter = const DateOnlyConverter();
 
   @override
   MigrationStrategy get migration {
