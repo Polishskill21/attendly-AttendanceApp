@@ -1913,6 +1913,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $WeeklyEntryTable weeklyEntry = $WeeklyEntryTable(this);
   late final ReadDao readDao = ReadDao(this as AppDatabase);
   late final UpdateDao updateDao = UpdateDao(this as AppDatabase);
+  late final InsertDao insertDao = InsertDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
