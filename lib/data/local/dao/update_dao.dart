@@ -52,7 +52,7 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
 
   // --- 2. Update Person (Directory) ---
   /// only do partial updates to a person, so create the companion only with new values that really changed after the ui has submitted
-  Future<void> updatePerson(int id, DirectoryPeopleCompanion companion) async {
+  Future<void> updateDirPerson(int id, DirectoryPeopleCompanion companion) async {
     await transaction(() async {
       final oldData = await db.readDao.getPersonById(id);
       if (oldData == null ) throw PersonNotFoundException(id);
