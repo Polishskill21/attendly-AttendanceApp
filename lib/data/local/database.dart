@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:attendly/data/local/dao/insert_dao.dart';
 import 'package:attendly/data/local/dao/read_dao.dart';
 import 'package:attendly/data/local/dao/update_dao.dart';
 import 'package:attendly/data/local/tables/date_only_converter.dart';
@@ -14,7 +15,7 @@ part 'database.g.dart';
 
 @DriftDatabase(
   tables: [DirectoryPeople, DailyEntry, WeeklyEntry],
-  daos: [ReadDao, UpdateDao]
+  daos: [ReadDao, UpdateDao, InsertDao]
 )
 class AppDatabase extends _$AppDatabase{
   AppDatabase(super.executor);
