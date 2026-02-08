@@ -1,4 +1,5 @@
 import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/db_exceptions.dart';
 import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
@@ -106,6 +107,52 @@ void main() {
       expect(weekly.openDiverse, 1);
       expect(weekly.over_24, 1); 
       expect(weekly.migrationDiverse, 0);
+    });
+
+    test('updateDailyEntry throws DuplicateDailyEntryException when changing to "open" if one already exists', () async {
+      final pId = await setupPerson(birthday: DateTime(2000, 01, 01), gender: Gender.d);
+      final date = DateTime(2024, 1, 1);
+
+      // Setup: Person has one 'open' entry and one 'other' entry
+      await db.insertDao.insertDailyEntry(personId: pId, date: date, category: Category.open);
+      await db.insertDao.insertDailyEntry(personId: pId, date: date, category: Category.other);
+      
+      // Get the recordID of the 'other' entry
+      final entries = await db.select(db.dailyEntry).get();
+      final otherEntryId = entries.firstWhere((e) => e.category == Category.other).recordID;
+
+      // Try to update the 'other' entry to be 'open'
+      expect(
+        () => db.updateDao.updateDailyEntry(
+          recordID: otherEntryId,
+          date: date,
+          personId: pId,
+          newCategory: Category.open,
+        ),
+        throwsA(isA<DuplicateDailyEntryException>()),
+      );
+    });
+
+    test('updatePerson rolls back stats if name update fails (Unique Constraint)', () async {
+      final date = DateTime(2026, 01, 01);
+      final p1 = await setupPerson(name: 'Alice');
+      await setupPerson(name: 'Bob');
+      await db.insertDao.insertDailyEntry(personId: p1, date: date, category: Category.open);
+
+      // Attempt to rename Alice to Bob (will fail unique constraint)
+      // while simultaneously changing Alice's gender
+      expect(
+        () => db.updateDao.updatePerson(p1, const DirectoryPeopleCompanion(
+          name: Value('Bob'),
+          gender: Value(Gender.f), 
+        )),
+        throwsA(isA<DuplicatePersonException>()),
+      );
+
+      // Verify Alice is still Male in stats because transaction rolled back
+      final weekly = await db.readDao.getWeeklyEntryByDate(DateTime(2025, 12, 29)); // Monday
+      expect(weekly!.openMale, 1);
+      expect(weekly.openFemale, 0);
     });
 
     test('updateWeeklyTableCounters handles atomic addition and subtraction', () async {
