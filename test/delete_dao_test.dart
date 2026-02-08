@@ -1,4 +1,5 @@
 import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/db_exceptions.dart';
 import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,6 +108,26 @@ void main() {
       expect(week2.migrationFemale, 0);
     });
 
+    test('deletePerson throws PersonNotFoundException when ID does not exist', () async {
+      const nonExistentId = 9999;
+
+      expect(
+        () => db.deleteDao.deleteDirPerson(nonExistentId),
+        throwsA(isA<PersonNotFoundException>()),
+      );
+    });
+
+    test('deleteDailyEntry throws EntryNotFoundException when record does not exist', () async {
+      final pId = await setupPerson(name: 'Valid User', birthday: DateTime(2000, 1, 1));
+      final date = DateTime(2026, 1, 1);
+
+      // Attempt to delete a recordID (999) that was never inserted
+      expect(
+        () => db.deleteDao.deleteDailyEntry(999, pId, date),
+        throwsA(isA<EntryNotFoundException>()),
+      );
+    });
+
     test('deleteMultipleDailyEntries removes multiple records for a specific date', () async {
       final date = DateTime(2026, 06, 10);
       final p1 = await setupPerson(name: 'User A', birthday: DateTime(2000, 1, 1));
@@ -124,11 +145,6 @@ void main() {
 
       final entriesDate = await db.readDao.existsEntryForDate(date);
       expect(entriesDate, false);
-    });
-
-    test('deletePerson handles non-existent ID gracefully', () async {
-      // Should not throw an error
-      await expectLater(db.deleteDao.deleteDirPerson(9999), completes);
     });
   });
 }
