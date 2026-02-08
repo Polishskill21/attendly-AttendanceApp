@@ -19,7 +19,7 @@ void main() {
     // --- Directory Table Tests ---
     
     test('getAllPeople & getPersonById', () async {
-      await db.into(db.directoryPeople).insert(DirectoryPeopleCompanion.insert(
+      await db.insertDao.insertDirPerson(DirectoryPeopleCompanion.insert(
         name: 'Rafa',
         birthday: DateTime(2000, 02, 21),
         gender: Gender.m,
@@ -39,7 +39,7 @@ void main() {
     });
 
     test('findPeopleByName returns exact matches', () async {
-      await db.into(db.directoryPeople).insert(DirectoryPeopleCompanion.insert(
+      await db.insertDao.insertDirPerson(DirectoryPeopleCompanion.insert(
         name: 'Michelle',
         birthday: DateTime(2005, 09, 14),
         gender: Gender.f,
