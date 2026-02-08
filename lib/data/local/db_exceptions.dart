@@ -24,6 +24,14 @@ class DuplicateDailyEntryException extends DatabaseException {
   DuplicateDailyEntryException() : super("This person already has a daily entry of this type.");
 }
 
+/// Thrown when a specific daily entry record cannot be found for deletion or update.
+class EntryNotFoundException extends DatabaseException {
+  final int recordID;
+  final int personID;
+  final DateTime date;
+  EntryNotFoundException(this.recordID, this.personID, this.date) : super("Daily entry with Record ID: $recordID, Person ID: $personID and date: ${date.toString()} could not found.");
+}
+
 /// Thrown when a general database operation fails.
 class DatabaseOperationException extends DatabaseException {
   final Exception? originalException;
