@@ -1,5 +1,6 @@
 import 'package:attendly/data/local/dao/shared_dao_logic.dart';
 import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/db_exceptions.dart';
 import 'package:drift/drift.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
 import 'package:attendly/data/local/tables/dialy_entry_table.dart';
@@ -21,11 +22,6 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
 
       await delete(weeklyEntry).go();
 
-      // final query = select(dailyEntry).join([
-      //   innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
-      // ]);
-
-      // final rows = await query.get();
       final rows = await db.readDao.getAllDailyEntriesWithPeople();
 
       for (final row in rows) {
@@ -55,12 +51,21 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
   }
 
   // --- 2. Update Person (Directory) ---
-  ///only do partial updates
+  /// only do partial updates to a person, so create the companion only with new values that really changed after the ui has submitted
   Future<void> updatePerson(int id, DirectoryPeopleCompanion companion) async {
     await transaction(() async {
-      //final oldData = await (select(directoryPeople)..where((t) => t.id.equals(id))).getSingle();
       final oldData = await db.readDao.getPersonById(id);
-      if (oldData == null) return;
+      if (oldData == null ) throw PersonNotFoundException(id);
+
+      if (companion.name.present && companion.name.value != oldData.name) {
+        final isNameTaken = await (select(directoryPeople)
+              ..where((t) => t.name.equals(companion.name.value) & t.id.equals(id).not()))
+            .getSingleOrNull();
+
+        if (isNameTaken != null) {
+          throw DuplicatePersonException(companion.name.value);
+        }
+      }
 
       final statsChanged = companion.birthday.present || 
                           companion.gender.present || 
@@ -102,7 +107,7 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
   }
 
   // --- 3. Update Daily Entry ---
-  // Handles category changes (e.g., from 'Offer' to 'Open') which changes weekly counts.
+  /// pass all the information, also old description otherwise it will set it to null
   Future<void> updateDailyEntry({
     required int recordID,
     required DateTime date,
@@ -116,6 +121,13 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
 
       final oldEntry = row.readTable(dailyEntry);
       final person = row.readTable(directoryPeople);
+
+      if (newCategory == Category.open && oldEntry.category != Category.open) {
+        final hasDuplicate = await db.readDao.hasOpenCategoryForDate(personId, date);
+        if (hasDuplicate) {
+          throw DuplicateDailyEntryException();
+        }
+      }
 
       // Only perform logic if the category actually changed
       if (oldEntry.category != newCategory) {

@@ -1,9 +1,11 @@
 import 'package:attendly/data/local/dao/shared_dao_logic.dart';
 import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/db_exceptions.dart';
 import 'package:attendly/data/local/tables/dialy_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 
 part 'insert_dao.g.dart';
 
@@ -16,9 +18,12 @@ class InsertDao extends DatabaseAccessor<AppDatabase> with _$InsertDaoMixin, Sha
   Future<void> insertDirPerson(DirectoryPeopleCompanion person) async {
     try {
       await into(directoryPeople).insert(person);
+    } on SqliteException catch (e) {
+      if (e.extendedResultCode == 2067) {
+        throw DuplicatePersonException(person.name.value);
+      }
+      throw DatabaseOperationException("Database constraint failed", originalException: e);
     } catch (e) {
-      // Drift throws a native exception for Unique constraints (name)
-      // You can wrap this in your custom DuplicatePersonException if needed
       rethrow;
     }
   }
@@ -32,16 +37,15 @@ class InsertDao extends DatabaseAccessor<AppDatabase> with _$InsertDaoMixin, Sha
     String? description,
   }) async {
     await transaction(() async {
-      // 1. Check if person exists
+      // Check if person exists
       final person = await db.readDao.getPersonById(personId);
       if (person == null) {
-        throw Exception("PersonNotFoundException: $personId");
+        throw PersonNotFoundException(personId);
       }
 
       if (category == Category.open) {        
         if (await db.readDao.hasOpenCategoryForDate(personId, date)) {
-          // Equivalent to DuplicateDailyEntryException
-          return; 
+          throw DuplicateDailyEntryException();
         }
       }
 
