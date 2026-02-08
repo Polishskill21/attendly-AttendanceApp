@@ -68,8 +68,8 @@ void main() {
       // 1. MUST INSERT DailyEntry: updatePerson needs this to find the week
       await db.insertDao.insertDailyEntry(personId: pId, date: entryDate, category: Category.open);
 
-      // 2. Update Person stats (triggers the revert/re-add logic)
-      await db.updateDao.updatePerson(
+      // 3. Update Person stats (triggers the revert/re-add logic)
+      await db.updateDao.updateDirPerson(
         pId,
         DirectoryPeopleCompanion(
           gender: const Value(Gender.f),
@@ -142,7 +142,7 @@ void main() {
       // Attempt to rename Alice to Bob (will fail unique constraint)
       // while simultaneously changing Alice's gender
       expect(
-        () => db.updateDao.updatePerson(p1, const DirectoryPeopleCompanion(
+        () => db.updateDao.updateDirPerson(p1, const DirectoryPeopleCompanion(
           name: Value('Bob'),
           gender: Value(Gender.f), 
         )),
@@ -185,7 +185,7 @@ void main() {
         recordID: 50, dates: entryDate, id: pId, category: Category.open,
       ));
 
-      await db.updateDao.updatePerson(
+      await db.updateDao.updateDirPerson(
         pId, 
         const DirectoryPeopleCompanion(name: Value('Updated Name'))
       );
