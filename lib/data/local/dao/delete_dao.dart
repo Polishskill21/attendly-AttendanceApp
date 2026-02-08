@@ -1,5 +1,6 @@
 import 'package:attendly/data/local/dao/shared_dao_logic.dart';
 import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/db_exceptions.dart';
 import 'package:attendly/data/local/tables/dialy_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
 import 'package:attendly/data/local/tables/weekly_entry_table.dart';
@@ -18,7 +19,7 @@ class DeleteDao extends DatabaseAccessor<AppDatabase> with _$DeleteDaoMixin, Sha
       final dailyEntries = await (select(dailyEntry)..where((t) => t.id.equals(id))).get();
       final person = await (select(directoryPeople)..where((t) => t.id.equals(id))).getSingleOrNull();
 
-      if (person == null) return;
+      if (person == null) throw PersonNotFoundException(id);
 
       for (final entry in dailyEntries) {
         final weekDate = getFirstDateOfWeek(entry.dates);
@@ -44,16 +45,8 @@ class DeleteDao extends DatabaseAccessor<AppDatabase> with _$DeleteDaoMixin, Sha
   // --- 2. Delete Single Daily Entry ---
   Future<void> deleteDailyEntry(int recordID, int personId, DateTime date) async {
     await transaction(() async {
-      final query = select(dailyEntry).join([
-        innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
-      ])..where(
-          dailyEntry.recordID.equals(recordID) & 
-          dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)) & 
-          dailyEntry.id.equals(personId)
-        );
-
-      final row = await query.getSingleOrNull();
-      if (row == null) return;
+      final row = await db.readDao.getEntryWithPerson(recordID, personId, date);
+      if (row == null) throw EntryNotFoundException(recordID, personId, date);
 
       final entry = row.readTable(dailyEntry);
       final person = row.readTable(directoryPeople);
