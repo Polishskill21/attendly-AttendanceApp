@@ -28,7 +28,7 @@ void main() {
         migrationBackground: const Value('Polnisch'),
       ));
 
-      final all = await db.readDao.getAllPeople();
+      final all = await db.readDao.getAllPerson(true);
       expect(all.length, 1);
       
       final person = await db.readDao.getPersonById(all.first.id);
