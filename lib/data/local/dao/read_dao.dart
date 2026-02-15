@@ -17,7 +17,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     return (select(directoryPeople)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  Future<List<DirectoryPeopleData>> getAllPeople({bool ascending = true}) {
+  Future<List<DirectoryPeopleData>> getAllPerson(bool ascending) {
     return (select(directoryPeople)
           ..orderBy([
             (t) => OrderingTerm(
