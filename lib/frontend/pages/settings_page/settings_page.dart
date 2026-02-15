@@ -347,7 +347,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await testDb.forceOpen();
 
       // 4. Verify data can be read
-      final people = await testDb.readDao.getAllPeople();
+      final people = await testDb.readDao.getAllPerson(true);
       final dailyResults = await testDb.readDao.getPeopleFromCurrentDay(DateTime(2025, 09, 25));
       debugPrint("Daily Entries for 2025-09-25: ${dailyResults.length}");
 
