@@ -142,5 +142,76 @@ void main() {
       expect(entry?.under_10, 5);
       expect(all.length, 1);
     });
+
+    test('getYearStats aggregates correctly and respects countable filter', () async {
+      // 1. Insert a countable week (should be included in SUM)
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        dates: DateTime(2026, 01, 01), 
+        under_10: 10, age_10_13: 5, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 8, allF: 7, allD: 0, openMale: 5, openFemale: 5, openDiverse: 0,
+        offersMale: 3, offersFemale: 2, offersDiverse: 0, migrationMale: 2, 
+        migrationFemale: 2, migrationDiverse: 0, countable: true
+      ));
+
+      // 2. Insert another countable week (should be added to SUM)
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        dates: DateTime(2026, 01, 08), 
+        under_10: 5, age_10_13: 5, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 2, allF: 3, allD: 0, openMale: 1, openFemale: 1, openDiverse: 0,
+        offersMale: 1, offersFemale: 2, offersDiverse: 0, migrationMale: 1, 
+        migrationFemale: 1, migrationDiverse: 0, countable: true
+      ));
+
+      // 3. Insert a non-countable week (should be IGNORED by SUM)
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        dates: DateTime(2026, 01, 15), 
+        under_10: 100, age_10_13: 100, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: false
+      ));
+
+      final statsResult = await db.readDao.getYearStats();
+      
+      expect(statsResult.length, 1);
+      final stats = statsResult.first;
+
+      // Verify aggregation (10 + 5 = 15)
+      expect(stats['under_10'], 15);
+      // Verify second column (5 + 5 = 10)
+      expect(stats['age_10_13'], 10);
+      // Verify migration summing (2 + 1 = 3)
+      expect(stats['migration_male'], 3);
+    });
+
+    test('getWeekCount returns only countable rows', () async {
+      // Insert 2 countable and 1 non-countable
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        dates: DateTime(2026, 02, 01), 
+        under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: true
+      ));
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        dates: DateTime(2026, 02, 08), 
+        under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: true
+      ));
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        dates: DateTime(2026, 02, 15), 
+        under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: false
+      ));
+
+      final count = await db.readDao.getWeekCount();
+      
+      // Should be 2 because the third entry is countable: false
+      expect(count, 2);
+    });
   });
 }
