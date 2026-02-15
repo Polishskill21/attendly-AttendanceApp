@@ -75,7 +75,7 @@ class DirectoryRepository {
       rethrow;
     } catch (e, stack) {
       throw DatabaseOperationException(
-        "Deletion failed", 
+        "Deletion failed dir person", 
         originalException: e is Exception ? e : null, 
         stackTrace: stack
       );
