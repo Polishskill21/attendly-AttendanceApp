@@ -151,4 +151,43 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     final total = row.read<int>('total');
     return total == 0;
   }
+
+  Future<List<Map<String, dynamic>>> getYearStats() async {
+    const sql = '''
+      SELECT 
+        SUM(under_10) AS under_10, 
+        SUM(age_10_13) AS age_10_13, 
+        SUM(age_14_17) AS age_14_17, 
+        SUM(age_18_24) AS age_18_24,
+        SUM(over_24) AS over_24, 
+        SUM(all_m) AS all_m, 
+        SUM(all_f) AS all_f,
+        SUM(all_d) AS all_d, 
+        SUM(open_male) AS open_male, 
+        SUM(open_female) AS open_female,
+        SUM(open_diverse) AS open_diverse, 
+        SUM(offers_male) AS offers_male, 
+        SUM(offers_female) AS offers_female, 
+        SUM(offers_diverse) AS offers_diverse,    
+        SUM(migration_male) as migration_male,
+        SUM(migration_female) as migration_female,
+        SUM(migration_diverse) as migration_diverse
+      FROM weekly_entry
+      WHERE countable != 0;
+    ''';
+
+    final result = await customSelect(sql).get();
+    return result.map((row) => row.data).toList();
+  }
+
+  /// Counts recorded weeks where countable is not 0
+  Future<int> getWeekCount() async {
+    final countExp = weeklyEntry.dates.count();
+    final query = selectOnly(weeklyEntry)
+      ..addColumns([countExp])
+      ..where(weeklyEntry.countable.equals(true));
+
+    final result = await query.map((row) => row.read(countExp)).getSingle();
+    return result ?? 0;
+  }
 }
