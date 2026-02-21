@@ -51,12 +51,13 @@ class DbInsertion extends DbBaseHandler {
    
    
   ///Inserting into the daily table, giva a list with (id,date,category,description), it is a transaction
-    Future<void> dailyTable(DailyPerson person) async{
+  Future<void> dailyTable(DailyPerson person, {int multiplier = 1}) async{
     await ensureConnection();
     
     try{
       await db!.execute("BEGIN TRANSACTION"); 
                     
+      // 1. Validate only once per person
       List<Map<String, dynamic>> exists = await reader.getPersonFromAllPeople(person.id);
       if(exists.isEmpty) {
         throw custom_db_exceptions.PersonNotFoundException(person.id);
@@ -72,18 +73,20 @@ class DbInsertion extends DbBaseHandler {
       String sql = """
                     INSERT INTO daily_entry(record_id ,dates, id, category, description) VALUES (?,?,?,?,?)
                     """;
-      //prepare the data 
-      List<Object?> personList = [
-      await _getLatestRecordID(person.date), 
-      person.date, 
-      person.id, 
-      person.category.name, 
-      person.description
-      ];
-        
-      await db!.execute(sql,personList);
 
-      await _weeklyTable(person.id, person.category, person.date);
+      // 2. Loop the insertion within the single transaction
+      for (int i = 0; i < multiplier; i++) {
+        List<Object?> personList = [
+          await _getLatestRecordID(person.date), 
+          person.date, 
+          person.id, 
+          person.category.name, 
+          person.description
+        ];
+          
+        await db!.execute(sql, personList);
+        await _weeklyTable(person.id, person.category, person.date);
+      }
 
       await db!.execute("COMMIT");
     }
@@ -98,6 +101,53 @@ class DbInsertion extends DbBaseHandler {
       throw custom_db_exceptions.DatabaseOperationException("Failed to insert daily entry", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
+  //   Future<void> dailyTable(DailyPerson person) async{
+  //   await ensureConnection();
+    
+  //   try{
+  //     await db!.execute("BEGIN TRANSACTION"); 
+                    
+  //     List<Map<String, dynamic>> exists = await reader.getPersonFromAllPeople(person.id);
+  //     if(exists.isEmpty) {
+  //       throw custom_db_exceptions.PersonNotFoundException(person.id);
+  //     }
+
+  //     List<Map<String, dynamic>> existsDaily = await reader.returnCategoryIfExists(person.date, person.id, person.category);
+      
+  //     if(existsDaily.isNotEmpty && existsDaily.first['category'] == "open"){
+  //       debugPrint("skipped inserting the open cat twice");
+  //       throw custom_db_exceptions.DuplicateDailyEntryException();
+  //     }
+
+  //     String sql = """
+  //                   INSERT INTO daily_entry(record_id ,dates, id, category, description) VALUES (?,?,?,?,?)
+  //                   """;
+  //     //prepare the data 
+  //     List<Object?> personList = [
+  //     await _getLatestRecordID(person.date), 
+  //     person.date, 
+  //     person.id, 
+  //     person.category.name, 
+  //     person.description
+  //     ];
+        
+  //     await db!.execute(sql,personList);
+
+  //     await _weeklyTable(person.id, person.category, person.date);
+
+  //     await db!.execute("COMMIT");
+  //   }
+  //   catch (e, stackTrace){
+  //     debugPrint("daily");
+  //     debugPrint(e.toString());
+  //     debugPrint(stackTrace.toString());
+  //     await db!.execute("ROLLBACK;");
+  //     if (e is custom_db_exceptions.DatabaseException) {
+  //       rethrow;
+  //     }
+  //     throw custom_db_exceptions.DatabaseOperationException("Failed to insert daily entry", originalException: e as Exception, stackTrace: stackTrace);
+  //   }
+  // }
 
   Future<int> _getLatestRecordID(String date) async{
     await ensureConnection();
