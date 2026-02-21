@@ -414,6 +414,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchByName => 'Nach Name suchen';
   @override
   String get filterByCategory => 'Nach Kategorie filtern';
+  @override
+  String get numberOfEntries => 'Anzahl der Einträge';
 
   // For add_page_daily.dart
   @override

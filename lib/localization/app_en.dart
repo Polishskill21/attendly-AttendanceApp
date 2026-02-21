@@ -465,6 +465,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String personAlreadyInCategoryOpen(String name) => '$name is already in the "Open" category for this day and cannot be added again.';
   @override
   String personsAlreadyInCategoryOpen(int count, String names) => '$count person(s) could not be added because they are already in the "Open" category for this day:\n\n$names';
+  @override
+  String get numberOfEntries => 'Number of Entries';
 
   // For year_stats_page.dart
   @override
