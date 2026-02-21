@@ -126,7 +126,8 @@ class DbSelection extends DbBaseHandler {
     String sql = """SELECT d_e.record_id as record_id, d_e.dates as dates, d_e.id as id, a_p.name as name, d_e.category as category, d_e.description as description 
                     FROM daily_entry as d_e 
                     INNER JOIN all_people as a_p on d_e.id = a_p.id 
-                    WHERE d_e.dates = ?""";
+                    WHERE d_e.dates = ?
+                    ORDER BY a_p.name ASC""";
     final res = db!.rawQuery(sql, [date]);
     return res;
   }
