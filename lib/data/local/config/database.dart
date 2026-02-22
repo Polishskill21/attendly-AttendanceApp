@@ -39,11 +39,14 @@ class AppDatabase extends _$AppDatabase{
       onUpgrade: (m, from, to) async {
         await transaction(() async {
           if (from < 2) {
-            debugPrint("Migrating table");
+            debugPrint("Migrating table to v2");
             // Appends 'T00:00:00.000' to any string that doesn't have a 'T' yet 
             await customStatement("UPDATE all_people SET birthday = birthday || 'T00:00:00.000' WHERE birthday NOT LIKE '%T%'");
             await customStatement("UPDATE daily_entry SET dates = dates || 'T00:00:00.000' WHERE dates NOT LIKE '%T%'");
             await customStatement("UPDATE weekly_entry SET dates = dates || 'T00:00:00.000' WHERE dates NOT LIKE '%T%'");
+
+            // Rebuilding all_people for new name constraints unique, case-insensitve
+            await m.alterTable(TableMigration(directoryPeople));
           }
         });
       },
