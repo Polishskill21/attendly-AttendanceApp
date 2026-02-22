@@ -46,12 +46,14 @@ class _AddDailyState extends State<AddDaily>{
   late DbUpdater updater;
   late HelperAllPerson helper;
   int _multiplier = 1;
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void dispose() {
     _commentController.dispose();
     _categoryController.dispose();
     _dateController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -66,6 +68,7 @@ class _AddDailyState extends State<AddDaily>{
     // Initialize with passed date or current date
     selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate();
     _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
+    _controller.text = _multiplier.toString();
 
     if (widget.preselectedPersons != null && widget.preselectedPersons!.isNotEmpty) {
       selectedPersons.addAll(widget.preselectedPersons!);
@@ -417,15 +420,14 @@ class _AddDailyState extends State<AddDaily>{
 
                 if (selectedCategory == Category.parent || selectedCategory == Category.other) ...[
                   SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
-                  
                   Text(
-                    localizations.numberOfEntries, // You can replace this with localizations.numberOfEntries if added
+                    localizations.numberOfEntries,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: ResponsiveUtils.getBodyFontSize(context),
-                    )
+                    ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Container(
@@ -437,24 +439,47 @@ class _AddDailyState extends State<AddDaily>{
                           children: [
                             IconButton(
                               icon: Icon(Icons.remove, size: iconSize),
-                              onPressed: _multiplier > 1 ? () {
-                                setState(() => _multiplier--);
-                              } : null,
+                              onPressed: _multiplier > 1
+                                  ? () {
+                                      setState(() {
+                                        _multiplier--;
+                                        _controller.text = _multiplier.toString();
+                                      });
+                                    }
+                                  : null,
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                _multiplier.toString(),
+                            SizedBox(
+                              width: 60,
+                              child: TextField(
+                                controller: _controller,
+                                textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
                                 style: TextStyle(
                                   fontSize: ResponsiveUtils.getBodyFontSize(context),
                                   fontWeight: FontWeight.bold,
                                 ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onChanged: (value) {
+                                  final int? newValue = int.tryParse(value);
+                                  if (newValue != null) {
+                                    setState(() {
+                                      _multiplier = newValue;
+                                    });
+                                  }
+                                },
                               ),
                             ),
                             IconButton(
                               icon: Icon(Icons.add, size: iconSize),
                               onPressed: () {
-                                setState(() => _multiplier++);
+                                setState(() {
+                                  _multiplier++;
+                                  _controller.text = _multiplier.toString();
+                                });
                               },
                             ),
                           ],
