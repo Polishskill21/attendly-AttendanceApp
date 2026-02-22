@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/config/database.dart';
 
 abstract interface class IDatabaseManager {
   AppDatabase get databaseConnection;

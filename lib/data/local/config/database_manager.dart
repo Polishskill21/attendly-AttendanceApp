@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:attendly/data/local/db_exceptions.dart';
-import 'package:attendly/data/local/i_database_manger.dart';
-import 'package:attendly/data/local/storage_manager.dart';
+import 'package:attendly/data/local/config/db_exceptions.dart';
+import 'package:attendly/data/local/config/i_database_manager.dart';
+import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:attendly/backend/global/global_func.dart'; 
-import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/config/database.dart';
 
 class DatabaseManager implements IDatabaseManager {
   final String _fileName = "settings.json";

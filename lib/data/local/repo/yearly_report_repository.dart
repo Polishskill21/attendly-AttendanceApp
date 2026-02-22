@@ -1,5 +1,5 @@
-import 'package:attendly/data/local/database.dart';
-import 'package:attendly/data/local/db_exceptions.dart';
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/config/db_exceptions.dart';
 
 class YearlyStatsRepository {
   final AppDatabase db;
