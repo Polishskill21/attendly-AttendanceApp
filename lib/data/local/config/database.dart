@@ -31,6 +31,8 @@ class AppDatabase extends _$AppDatabase{
   @override
   int get schemaVersion => 2;
 
+  //PRAGMA user_version; to check which db schema version currently is, need to added it to the settings page to display
+
   final dateOnlyConverter = const DateOnlyConverter();
 
   @override
@@ -51,7 +53,6 @@ class AppDatabase extends _$AppDatabase{
         });
       },
       beforeOpen: (details) async {
-        // This runs every time the database is opened 
         await customStatement('PRAGMA foreign_keys = ON');
       },
     );
