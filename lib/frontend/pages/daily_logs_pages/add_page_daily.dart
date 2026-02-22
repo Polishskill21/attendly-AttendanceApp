@@ -45,12 +45,15 @@ class _AddDailyState extends State<AddDaily>{
   late DbSelection reader;
   late DbUpdater updater;
   late HelperAllPerson helper;
+  int _multiplier = 1;
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void dispose() {
     _commentController.dispose();
     _categoryController.dispose();
     _dateController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -65,6 +68,7 @@ class _AddDailyState extends State<AddDaily>{
     // Initialize with passed date or current date
     selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate();
     _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
+    _controller.text = _multiplier.toString();
 
     if (widget.preselectedPersons != null && widget.preselectedPersons!.isNotEmpty) {
       selectedPersons.addAll(widget.preselectedPersons!);
@@ -107,6 +111,8 @@ class _AddDailyState extends State<AddDaily>{
     List<String> failedPersons = [];
     List<String> duplicatePersons = [];
 
+    int currentMultiplier = (selectedCategory == Category.parent || selectedCategory == Category.other) ? _multiplier : 1;
+
     try {
       helper.showLoadingDialog(context, localizations.save);
       for (var person in selectedPersons) {
@@ -120,7 +126,7 @@ class _AddDailyState extends State<AddDaily>{
           );
 
           // Database insertion
-          await inserter.dailyTable(dailyPerson);
+          await inserter.dailyTable(dailyPerson, multiplier: currentMultiplier);
           successCount++;
 
         } on custom_db_exceptions.DuplicateDailyEntryException catch (_) {
@@ -380,6 +386,7 @@ class _AddDailyState extends State<AddDaily>{
                   onSelected: (CategoryItem? item) {
                     setState(() {
                       selectedCategory = item?.category;
+                      _multiplier = 1;
                     });
                   },
                   dropdownMenuEntries: getCategoryItems(context).map<DropdownMenuEntry<CategoryItem>>((CategoryItem menu) {
@@ -410,6 +417,77 @@ class _AddDailyState extends State<AddDaily>{
                         )
                       : null,
                 ),
+
+                if (selectedCategory == Category.parent || selectedCategory == Category.other) ...[
+                  SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                  Text(
+                    localizations.numberOfEntries,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: ResponsiveUtils.getBodyFontSize(context),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove, size: iconSize),
+                              onPressed: _multiplier > 1
+                                  ? () {
+                                      setState(() {
+                                        _multiplier--;
+                                        _controller.text = _multiplier.toString();
+                                      });
+                                    }
+                                  : null,
+                            ),
+                            SizedBox(
+                              width: 60,
+                              child: TextField(
+                                controller: _controller,
+                                textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
+                                style: TextStyle(
+                                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onChanged: (value) {
+                                  final int? newValue = int.tryParse(value);
+                                  if (newValue != null) {
+                                    setState(() {
+                                      _multiplier = newValue;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.add, size: iconSize),
+                              onPressed: () {
+                                setState(() {
+                                  _multiplier++;
+                                  _controller.text = _multiplier.toString();
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
                 SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
 
