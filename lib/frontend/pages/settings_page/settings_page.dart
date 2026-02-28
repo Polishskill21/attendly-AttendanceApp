@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:attendly/backend/dbLogic/db_insert.dart';
 import 'package:attendly/backend/dbLogic/db_read.dart';
 import 'package:attendly/backend/dbLogic/db_update.dart';
-import 'package:attendly/backend/manager/storage_manager.dart';
-import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/config/database_manager.dart';
+import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/pages/settings_page/help_page.dart';
 import 'package:attendly/frontend/widgets/changelog_helper.dart';
@@ -326,46 +326,63 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _runMigrationTest() async {
-    final helper = HelperAllPerson();
+    // final helper = HelperAllPerson();
     
-    helper.showLoadingDialog(context, "Testing Migration...");
+    // helper.showLoadingDialog(context, "Testing Migration...");
 
-    try {
-      // 1. Get the path to your db_2025.db file
-      final dir = await StorageManager.getExternalDirectory(); 
-      final file = File(p.join(dir!.path, 'db_2025.db'));
+    // try {
+    //   // 1. Get the path to your db_2025.db file
+    //   final dir = await StorageManager.getExternalDocumentsDir(); 
+    //   final file = File(p.join(dir!.path, 'db_2025_jt.db'));
 
-      if (!await file.exists()) {
-        throw Exception("File db_2025.db not found in documents directory.");
-      }
+    //   if (!await file.exists()) {
+    //     throw Exception("File db_2025.db not found in documents directory.");
+    //   }
 
-      // 2. Open a separate connection to run the migration
-      final executor = AppDatabase.createExecutor(file);
-      final testDb = AppDatabase(executor);
+    //   // 2. Open a separate connection to run the migration
+    //   final dbManager = DatabaseManager();
+    //   if(await dbManager.checkForYearRollover()){
+    //     debugPrint("Need to call performYearRolloverAndOpen");
+    //     await dbManager.performYearRolloverAndOpen();
+    //   }
+    //   else{
+    //     debugPrint("Same year");
+    //     try{
+    //       await dbManager.openDatabase(file: file);
+    //     }
+    //     on FileSystemException catch (e) {
+    //       debugPrint("File not found need to create db first. $e");
+    //       rethrow;
+    //       // await dbManager.createDatabase();
+    //     }
+    //     catch (e, stackTrace) {
+    //       debugPrint("Unkown error Error: $e and $stackTrace");
+    //       rethrow;
+    //     }
+    //   }
 
-      // 3. Force open triggers the MigrationStrategy
-      await testDb.forceOpen();
+    //   final testDb = dbManager.databaseConnection;
 
-      // 4. Verify data can be read
-      final people = await testDb.readDao.getAllPerson(true);
-      final dailyResults = await testDb.readDao.getPeopleFromCurrentDay(DateTime(2025, 09, 25));
-      debugPrint("Daily Entries for 2025-09-25: ${dailyResults.length}");
+    //   // 4. Verify data can be read
+    //   final people = await testDb.readDao.getAllPerson(true);
+    //   //final dailyResults = await testDb.readDao.getPeopleFromCurrentDay(DateTime(2026, 01, 22));
+    //   //debugPrint("Daily Entries for 2025-09-25: ${dailyResults.length}");
 
-      final weeklyEntry = await testDb.readDao.getWeeklyEntryByDate(DateTime(2025, 09, 22));
-      debugPrint("Weekly Entry for 2025-09-22 found: ${weeklyEntry?.age_10_13 ?? "null"}");
-      // 5. Clean up
-      await testDb.close();
+    //   // final weeklyEntry = await testDb.readDao.getWeeklyEntryByDate(DateTime(2026, 01, 26));
+    //   // debugPrint("Weekly Entry for 2025-09-22 found: ${weeklyEntry?.age_10_13 ?? "null"}");
+    //   // 5. Clean up
+    //   await dbManager.closeDatabase();
       
-      if (mounted) {
-        helper.hideLoadingDialog(context);
-        helper.showSubmitMessage(context, "Migration Success! Read ${people.length} people.");
-      }
-    } catch (e, stack) {
-      if (mounted) {
-        helper.hideLoadingDialog(context);
-        helper.showErrorMessage(context, "Migration Test Failed", stackTrace: stack);
-      }
-    }
+    //   if (mounted) {
+    //     helper.hideLoadingDialog(context);
+    //     helper.showSubmitMessage(context, "Migration Success! Read ${people.length} people.");
+    //   }
+    // } catch (e, stack) {
+    //   if (mounted) {
+    //     helper.hideLoadingDialog(context);
+    //     helper.showErrorMessage(context, "Migration Test Failed", stackTrace: stack);
+    //   }
+    // }
   }
 
   Widget _buildSettingsListTile({

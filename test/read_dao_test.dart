@@ -1,4 +1,4 @@
-import 'package:attendly/data/local/database.dart';
+import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:drift/drift.dart';
