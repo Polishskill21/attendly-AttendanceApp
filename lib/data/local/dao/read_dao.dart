@@ -1,5 +1,5 @@
-import 'package:attendly/data/local/database.dart';
-import 'package:attendly/data/local/tables/dialy_entry_table.dart';
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/tables/daily_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:attendly/data/local/tables/weekly_entry_table.dart';

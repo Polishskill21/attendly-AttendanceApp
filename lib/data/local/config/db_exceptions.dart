@@ -54,3 +54,10 @@ class DbConnectionException extends DatabaseException {
   @override
   String toString() => 'Database Connection Error: $message';
 }
+
+class DatabaseFailedInit extends DatabaseException {
+  DatabaseFailedInit(super.message);
+
+  @override
+  String toString() => 'Error: $message';
+}
