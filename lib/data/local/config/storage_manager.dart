@@ -42,6 +42,25 @@ class StorageManager {
     }
   }
 
+    /// Lists all files with a '.db' extension from the external directory asynchronously.
+  static Future<List<File>> listDbFiles() async {
+    final Directory? dir = await getExternalDocumentsDir();
+    if (dir == null) return [];
+
+    try {
+      // Use async stream (.list()) instead of listSync() to prevent UI freezing
+      final List<File> dbFiles = await dir.list()
+          .where((entity) => entity is File && p.extension(entity.path).toLowerCase() == '.db')
+          .cast<File>()
+          .toList();
+
+      return dbFiles;
+    } catch (e) {
+      debugPrint("Error listing DB files: $e");
+      return [];
+    }
+  }
+
   /// Handles the complex permission gap between Android 10 and Android 11+
   static Future<bool> _requestStoragePermission() async {
     // Check Android 11+ manageExternalStorage first
@@ -63,24 +82,5 @@ class StorageManager {
     }
     
     return false;
-  }
-
-  /// Lists all files with a '.db' extension from the external directory asynchronously.
-  static Future<List<File>> listDbFiles() async {
-    final Directory? dir = await getExternalDocumentsDir();
-    if (dir == null) return [];
-
-    try {
-      // Use async stream (.list()) instead of listSync() to prevent UI freezing
-      final List<File> dbFiles = await dir.list()
-          .where((entity) => entity is File && p.extension(entity.path).toLowerCase() == '.db')
-          .cast<File>()
-          .toList();
-
-      return dbFiles;
-    } catch (e) {
-      debugPrint("Error listing DB files: $e");
-      return [];
-    }
   }
 }
