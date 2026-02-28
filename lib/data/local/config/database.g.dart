@@ -30,7 +30,7 @@ class $DirectoryPeopleTable extends DirectoryPeople
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+    $customConstraints: 'NOT NULL UNIQUE ON CONFLICT FAIL COLLATE NOCASE',
   );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, String> birthday =
