@@ -80,7 +80,8 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     final query = select(dailyEntry).join([
       innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
     ])
-      ..where(dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)));
+      ..where(dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)))
+      ..orderBy([OrderingTerm.asc(directoryPeople.name)]);
 
     return query.get();
   }
@@ -123,7 +124,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
 
   Future<List<WeeklyEntryData>> getAllWeeklyEntries() {
     return (select(weeklyEntry)
-      ..orderBy([(t) => OrderingTerm.desc(t.dates)]))
+      ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.dates)]))
       .get();
   }
 
