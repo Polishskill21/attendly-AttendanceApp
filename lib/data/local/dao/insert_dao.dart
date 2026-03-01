@@ -35,6 +35,7 @@ class InsertDao extends DatabaseAccessor<AppDatabase> with _$InsertDaoMixin, Sha
     required DateTime date,
     required Category category,
     String? description,
+    int multiplier = 1
   }) async {
     await transaction(() async {
       // Check if person exists
@@ -49,17 +50,20 @@ class InsertDao extends DatabaseAccessor<AppDatabase> with _$InsertDaoMixin, Sha
         }
       }
 
-      final latestId = await _getLatestRecordID(date);
+      for (int i = 0; i < multiplier; i++) {
 
-      await into(dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: latestId,
-        dates: date,
-        id: personId,
-        category: category,
-        description: Value(description),
-      ));
+        final latestId = await _getLatestRecordID(date);
 
-      await _updateWeeklyStats(person, category, date);
+        await into(dailyEntry).insert(DailyEntryCompanion.insert(
+          recordID: latestId,
+          dates: date,
+          id: personId,
+          category: category,
+          description: Value(description),
+        ));
+
+        await _updateWeeklyStats(person, category, date);
+      }
     });
   }
 
