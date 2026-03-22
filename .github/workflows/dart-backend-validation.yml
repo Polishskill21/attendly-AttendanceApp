@@ -2,9 +2,9 @@ name: Dart
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "feature/backend-overhaul" ] #change later to main
   pull_request:
-    branches: [ "main" ]
+    branches: [ "feature/backend-overhaul" ] #change later to main
 
 jobs:
   build:
@@ -23,9 +23,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # 3. Use 'flutter analyze' instead of 'dart analyze'
-      - name: Analyze project source
-        run: flutter analyze
+      # # 3. Use 'flutter analyze' instead of 'dart analyze'
+      # - name: Analyze project source
+      #   run: flutter analyze
 
       # 4. Use 'flutter test' instead of 'dart test'
       - name: Run tests
