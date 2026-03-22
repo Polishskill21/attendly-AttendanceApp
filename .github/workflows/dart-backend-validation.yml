@@ -2,9 +2,9 @@ name: Flutter CI
 
 on:
   push:
-    branches: [ "feature/backend-overhaul", "main" ] #change later to main
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ] #change later to main
+    branches: [ "main" ]
 
 jobs:
   build:
