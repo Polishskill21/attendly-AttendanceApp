@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "feature/backend-overhaul" ] #change later to main
   pull_request:
-    branches: [ "feature/backend-overhaul" ] #change later to main
+    branches: [ "main" ] #change later to main
 
 jobs:
   build:
