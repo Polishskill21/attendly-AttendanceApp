@@ -1,0 +1,32 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Use the official Flutter action instead of Dart
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 2. Use 'flutter pub get' instead of 'dart pub get'
+      - name: Install dependencies
+        run: flutter pub get
+
+      # # 3. Use 'flutter analyze' instead of 'dart analyze'
+      # - name: Analyze project source
+      #   run: flutter analyze
+
+      # 4. Use 'flutter test' instead of 'dart test'
+      - name: Run tests
+        run: flutter test
