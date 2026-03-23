@@ -20,9 +20,11 @@ part 'database.g.dart';
   daos: [ReadDao, UpdateDao, InsertDao, DeleteDao]
 )
 class AppDatabase extends _$AppDatabase{
-  AppDatabase(super.executor);
+  final Future<void> Function()? onMigrationStarted;
 
-  AppDatabase.testInstance() : super(
+  AppDatabase(super.executor, {this.onMigrationStarted});
+
+  AppDatabase.testInstance() : onMigrationStarted = null, super(
     NativeDatabase.memory(setup: (db) {
       db.execute('PRAGMA foreign_keys = ON');
     }),
@@ -39,6 +41,10 @@ class AppDatabase extends _$AppDatabase{
   MigrationStrategy get migration {
     return MigrationStrategy(
       onUpgrade: (m, from, to) async {
+        if (onMigrationStarted != null) {
+          await onMigrationStarted!();
+        }
+
         await transaction(() async {
           if (from < 2) {
             debugPrint("Migrating table to v2");
