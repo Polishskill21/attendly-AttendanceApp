@@ -1,18 +1,18 @@
 import 'package:attendly/backend/enums/category.dart';
-import 'package:attendly/backend/enums/genders.dart';
+import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-Genders stringToGender(String gender){
+Gender stringToGender(String gender){
   switch(gender){
     case "m":
-      return Genders.m;
+      return Gender.m;
 
     case "f":
-      return Genders.f;
+      return Gender.f;
 
     case "d":
-      return Genders.d;
+      return Gender.d;
 
     default:
       throw ArgumentError("Invalid gender string: $gender");
