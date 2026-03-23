@@ -9,171 +9,171 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-class AnnualDataManager {
-  final String _fileName = "settings.json";
-  final String _currentYear = yearToString(getCurrentYear()); //"2026";
-  File? _file;
-  late String _dbPath;
+// class AnnualDataManager {
+//   final String _fileName = "settings.json";
+//   final String _currentYear = yearToString(getCurrentYear()); //"2026";
+//   File? _file;
+//   late String _dbPath;
 
-  AnnualDataManager._();
+//   AnnualDataManager._();
 
-  static Future<AnnualDataManager> create() async{
-    final instance = AnnualDataManager._();
+//   static Future<AnnualDataManager> create() async{
+//     final instance = AnnualDataManager._();
 
-    instance._file = await instance._initJsonFile();
+//     instance._file = await instance._initJsonFile();
 
-    return instance;
-  }
+//     return instance;
+//   }
 
-  Future<Database?> openSpecificDBInstance(String dbPath) async {
-    bool dbExists = await File(dbPath).exists();
-    if (!dbExists) {
-      debugPrint("Selected database file does not exist at path: $dbPath");
-      return null;
-    }
+//   Future<Database?> openSpecificDBInstance(String dbPath) async {
+//     bool dbExists = await File(dbPath).exists();
+//     if (!dbExists) {
+//       debugPrint("Selected database file does not exist at path: $dbPath");
+//       return null;
+//     }
 
-    try {
-      Database db = await DBConnectionManager.getInstance(dbPath);
-      await DbCreation(db).init();
-      return db;
-    } catch (e) {
-      debugPrint("Error opening specific database: $e");
-      return null;
-    }
-  }
+//     try {
+//       Database db = await DBConnectionManager.getInstance(dbPath);
+//       await DbCreation(db).init();
+//       return db;
+//     } catch (e) {
+//       debugPrint("Error opening specific database: $e");
+//       return null;
+//     }
+//   }
 
-  Future<Database?> createDBInstance({String? oldDbPath}) async{
-    if(_file == null) return null;
+//   Future<Database?> createDBInstance({String? oldDbPath}) async{
+//     if(_file == null) return null;
 
-    final dir = await StorageManager.getExternalDirectory();
-    if(dir == null) return null;
+//     final dir = await StorageManager.getExternalDirectory();
+//     if(dir == null) return null;
 
-    _dbPath = _setDBName(dir.path);
+//     _dbPath = _setDBName(dir.path);
     
-    Database db = await DBConnectionManager.getInstance(_dbPath);
-    final creator = DbCreation(db);
-    await creator.init();
+//     Database db = await DBConnectionManager.getInstance(_dbPath);
+//     final creator = DbCreation(db);
+//     await creator.init();
 
-    if (oldDbPath != null) {
-      try{
-        await creator.moveTableContent(oldDbPath, _dbPath);
-      }
-      catch(e){
-        debugPrint("Failed to move table content: $e");
-        rethrow; 
-      }
-    }
+//     if (oldDbPath != null) {
+//       try{
+//         await creator.moveTableContent(oldDbPath, _dbPath);
+//       }
+//       catch(e){
+//         debugPrint("Failed to move table content: $e");
+//         rethrow; 
+//       }
+//     }
     
-    await _updateFile(_file, _dbPath);
+//     await _updateFile(_file, _dbPath);
 
-    return db;
-  }
+//     return db;
+//   }
 
 
-  Future<DbInitResult> returnDBInstance() async{
-    if(_file == null) return DbInitResult(db: null);
+//   Future<DbInitResult> returnDBInstance() async{
+//     if(_file == null) return DbInitResult(db: null);
 
-    final Map<String,dynamic> data = await _getFileData(_file!);
+//     final Map<String,dynamic> data = await _getFileData(_file!);
     
-    String yearFromFile = data['current_year'];
-    String currentDBPath = data['file_path'];
+//     String yearFromFile = data['current_year'];
+//     String currentDBPath = data['file_path'];
 
-    bool dbExists = await File(currentDBPath).exists();
-    if(!dbExists) return DbInitResult(db: null);
+//     bool dbExists = await File(currentDBPath).exists();
+//     if(!dbExists) return DbInitResult(db: null);
    
-    Database db = await DBConnectionManager.getInstance(currentDBPath); 
-    await DbCreation(db).init();
+//     Database db = await DBConnectionManager.getInstance(currentDBPath); 
+//     await DbCreation(db).init();
 
-    if(int.parse(yearFromFile) < int.parse(_currentYear)){
-      return DbInitResult(db: db, yearChangeDetected: true, oldDbPath: currentDBPath);
-    }
+//     if(int.parse(yearFromFile) < int.parse(_currentYear)){
+//       return DbInitResult(db: db, yearChangeDetected: true, oldDbPath: currentDBPath);
+//     }
 
-    return DbInitResult(db: db);
-  }
+//     return DbInitResult(db: db);
+//   }
 
-  Future<String> getSettingsJsonContent() async {
-    if (_file == null || !await _file!.exists()) {
-      return "settings.json not found or not initialized.";
-    }
-    try {
-      final content = await _file!.readAsString();
-      // Pretty print JSON
-      final jsonObject = jsonDecode(content);
-      const encoder = JsonEncoder.withIndent('  ');
-      return encoder.convert(jsonObject);
-    } catch (e) {
-      return "Error reading settings.json: $e";
-    }
-  }
+//   Future<String> getSettingsJsonContent() async {
+//     if (_file == null || !await _file!.exists()) {
+//       return "settings.json not found or not initialized.";
+//     }
+//     try {
+//       final content = await _file!.readAsString();
+//       // Pretty print JSON
+//       final jsonObject = jsonDecode(content);
+//       const encoder = JsonEncoder.withIndent('  ');
+//       return encoder.convert(jsonObject);
+//     } catch (e) {
+//       return "Error reading settings.json: $e";
+//     }
+//   }
 
-  Future<File?> _initJsonFile() async {
-    Directory? documentsDir = await StorageManager.getExternalDirectory();
-    if (documentsDir == null) return null;
+//   Future<File?> _initJsonFile() async {
+//     Directory? documentsDir = await StorageManager.getExternalDirectory();
+//     if (documentsDir == null) return null;
 
-    String settingFilePath = p.join(documentsDir.path, _fileName);
-    File file = File(settingFilePath);
+//     String settingFilePath = p.join(documentsDir.path, _fileName);
+//     File file = File(settingFilePath);
 
-    Map<String, dynamic> data;
+//     Map<String, dynamic> data;
 
-    if (await file.exists()) {
-      String content = await file.readAsString();
-      data = content.isNotEmpty ? jsonDecode(content) : {};
-    } else {
-      data = {};
-    }
+//     if (await file.exists()) {
+//       String content = await file.readAsString();
+//       data = content.isNotEmpty ? jsonDecode(content) : {};
+//     } else {
+//       data = {};
+//     }
 
-    bool needsSave = false;
+//     bool needsSave = false;
 
-    if (!data.containsKey('file_path')) {
-      _dbPath = _setDBName(documentsDir.path);
-      data['file_path'] = _dbPath;
-      needsSave = true;
-    }
+//     if (!data.containsKey('file_path')) {
+//       _dbPath = _setDBName(documentsDir.path);
+//       data['file_path'] = _dbPath;
+//       needsSave = true;
+//     }
 
-    if (!data.containsKey('current_year')) {
-      data['current_year'] = yearToString(getCurrentYear()); //"2026";
-      needsSave = true;
-    }
+//     if (!data.containsKey('current_year')) {
+//       data['current_year'] = yearToString(getCurrentYear()); //"2026";
+//       needsSave = true;
+//     }
 
-    if (!data.containsKey('theme')) {
-      data['theme'] = 'light';
-      needsSave = true;
-    }
+//     if (!data.containsKey('theme')) {
+//       data['theme'] = 'light';
+//       needsSave = true;
+//     }
 
-    if (!data.containsKey('language')) {
-      data['language'] = 'en';
-      needsSave = true;
-    }
+//     if (!data.containsKey('language')) {
+//       data['language'] = 'en';
+//       needsSave = true;
+//     }
 
-    if (needsSave) {
-      await file.writeAsString(jsonEncode(data));
-    }
+//     if (needsSave) {
+//       await file.writeAsString(jsonEncode(data));
+//     }
 
-    return file;
-  }
+//     return file;
+//   }
 
-  String _setDBName(String directoryPath){
+//   String _setDBName(String directoryPath){
 
-      String dbYear =  yearToString(getCurrentYear()); //"2026";
+//       String dbYear =  yearToString(getCurrentYear()); //"2026";
 
-      String dbName = p.join(directoryPath, "db_$dbYear.db");
-      return dbName;
-  }
+//       String dbName = p.join(directoryPath, "db_$dbYear.db");
+//       return dbName;
+//   }
 
-  Future<void> _updateFile(File? file, String dbPath) async{
-    if(file == null) return;
+//   Future<void> _updateFile(File? file, String dbPath) async{
+//     if(file == null) return;
 
-    final Map<String,dynamic> data = await _getFileData(file);
-    data['current_year'] = yearToString(getCurrentYear()); //"2026";
-    data['file_path'] = dbPath;
+//     final Map<String,dynamic> data = await _getFileData(file);
+//     data['current_year'] = yearToString(getCurrentYear()); //"2026";
+//     data['file_path'] = dbPath;
 
-    await file.writeAsString(jsonEncode(data));
-  }
+//     await file.writeAsString(jsonEncode(data));
+//   }
 
-  Future<Map<String, dynamic>> _getFileData(File file) async{
+//   Future<Map<String, dynamic>> _getFileData(File file) async{
 
-      String fileString = await file.readAsString();
-      final Map<String, dynamic> data = jsonDecode(fileString);
-      return data;
-  }
-}
+//       String fileString = await file.readAsString();
+//       final Map<String, dynamic> data = jsonDecode(fileString);
+//       return data;
+//   }
+// }

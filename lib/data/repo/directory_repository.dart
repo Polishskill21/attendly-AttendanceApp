@@ -10,9 +10,9 @@ class DirectoryRepository {
   // --- READ OPERATIONS ---
 
   /// Fetches all people for the main directory list
-  Future<List<DirectoryPeopleData>> getAllPerson({bool ascending = true}) async {
+  Stream<List<DirectoryPeopleData>> watchAllPerson({bool ascending = true}) {
     try {
-      return await db.readDao.getAllPerson(ascending);
+      return db.readDao.watchAllPerson(ascending);
     } catch (e) {
       throw DatabaseOperationException("Failed to fetch directory", originalException: e is Exception ? e : null);
     }

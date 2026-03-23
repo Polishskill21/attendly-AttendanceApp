@@ -1,11 +1,11 @@
-import 'package:attendly/backend/enums/genders.dart';
+import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/localization/app_localizations.dart';
 
 class GenderItem{
   final int id;
   final String label;
-  final Genders value;
+  final Gender value;
   final IconData icon;
 
   GenderItem(this.id, this.label, this.value, this.icon);
@@ -14,16 +14,16 @@ class GenderItem{
 List<GenderItem> getGenderItems(BuildContext context) {
   final localizations = AppLocalizations.of(context);
   return [
-    GenderItem(1, localizations.male, Genders.m, Icons.male),
-    GenderItem(2, localizations.female, Genders.f, Icons.female),
-    GenderItem(3, localizations.diverse, Genders.d, Icons.transgender)
+    GenderItem(1, localizations.male, Gender.m, Icons.male),
+    GenderItem(2, localizations.female, Gender.f, Icons.female),
+    GenderItem(3, localizations.diverse, Gender.d, Icons.transgender)
   ];
 }
 
 // Keep the old list for backward compatibility but deprecate it
 @deprecated
 List<GenderItem> genderItems = [
-  GenderItem(1, "Male", Genders.m, Icons.male),
-  GenderItem(2, "Female", Genders.f, Icons.female),
-  GenderItem(3, "Diverse", Genders.d, Icons.transgender)
+  GenderItem(1, "Male", Gender.m, Icons.male),
+  GenderItem(2, "Female", Gender.f, Icons.female),
+  GenderItem(3, "Diverse", Gender.d, Icons.transgender)
 ];

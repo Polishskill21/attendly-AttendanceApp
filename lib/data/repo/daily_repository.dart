@@ -42,6 +42,7 @@ class DailyRepository {
     required DateTime date,
     required Category category,
     String? description,
+    int multiplier = 1
   }) async {
     try {
       await db.insertDao.insertDailyEntry(
@@ -49,6 +50,7 @@ class DailyRepository {
         date: date,
         category: category,
         description: description,
+        multiplier: multiplier
       );
     } on DuplicateDailyEntryException {
       rethrow;

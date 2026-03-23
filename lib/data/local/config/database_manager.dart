@@ -17,6 +17,20 @@ class DatabaseManager implements IDatabaseManager {
   File? _currentDbFile;
 
   @override
+  String? get currentDbPath => _currentDbFile?.path;
+
+  @override
+  int? get dbYear {
+    final path = currentDbPath;
+    if (path == null) return null;
+    
+    final match = RegExp(r'db_(\d{4})').firstMatch(path);
+    final yearStr = match?.group(1);
+    
+    return yearStr != null ? int.tryParse(yearStr) : null;
+  }
+
+  @override
   AppDatabase get databaseConnection {
     if (_db == null) {
       throw DatabaseFailedInit("Database not initialized!");
@@ -42,8 +56,7 @@ class DatabaseManager implements IDatabaseManager {
   }
 
   @override
-  Future<void> openDatabase({File? file}) async {
-    debugPrint("Trying to open db");
+  Future<void> openDatabase({File? file, Future<void> Function()? onMigrationStarted}) async {
     if (file == null && _currentDbFile == null) {
       _settingsFile ??= await _initJsonFile();
       if (_settingsFile != null) {
@@ -62,8 +75,11 @@ class DatabaseManager implements IDatabaseManager {
       );
     }
 
+    debugPrint("Trying to open ${targetFile.path}");
+
     await closeDatabase();
-    _db = AppDatabase(AppDatabase.openConnection(targetFile));
+    _currentDbFile = targetFile;
+    _db = AppDatabase(AppDatabase.openConnection(targetFile), onMigrationStarted: onMigrationStarted);
     debugPrint("Opened Database");
     await _db!.forceOpen();
   }
@@ -89,7 +105,7 @@ class DatabaseManager implements IDatabaseManager {
   }
 
   @override
-  Future<void> performYearRolloverAndOpen() async {
+  Future<void> performYearRolloverAndOpen({Future<void> Function()? onMigrationStarted}) async {
 
     if (_oldDbFile == null) {
       debugPrint("No old database found to rollover from.");
@@ -98,7 +114,7 @@ class DatabaseManager implements IDatabaseManager {
     }
 
     debugPrint("Pre-migrating old database to ensure schemas match...");
-    final tempOldDb = AppDatabase(AppDatabase.openConnection(_oldDbFile!));
+    final tempOldDb = AppDatabase(AppDatabase.openConnection(_oldDbFile!), onMigrationStarted: onMigrationStarted);
     
     await tempOldDb.forceOpen(); 
     await tempOldDb.close();
@@ -116,6 +132,20 @@ class DatabaseManager implements IDatabaseManager {
       debugPrint("Closing Db");
       await _db!.close();
       _db = null;
+    }
+  }
+
+  @override
+  Future<String> getSettingsJsonContent() async {
+    try {
+      final file = await _initJsonFile();
+      if (file == null || !await file.exists()) return '{}';
+      final content = await file.readAsString();
+      if (content.trim().isEmpty) return '{}';
+      final json = jsonDecode(content);
+      return const JsonEncoder.withIndent('  ').convert(json);
+    } catch (e) {
+      return '{ "error": "${e.toString()}" }';
     }
   }
 
