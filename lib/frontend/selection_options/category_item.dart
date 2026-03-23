@@ -1,4 +1,4 @@
-import 'package:attendly/backend/enums/category.dart';
+import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
