@@ -7,6 +7,12 @@ abstract class DatabaseException implements Exception {
   String toString() => message;
 }
 
+class DatabaseNotReadyException implements Exception {
+  const DatabaseNotReadyException();
+  @override
+  String toString() => "Database is currently transitioning or not open.";
+}
+
 /// Thrown when an operation is attempted on a person that does not exist.
 class PersonNotFoundException extends DatabaseException {
   final int id;
