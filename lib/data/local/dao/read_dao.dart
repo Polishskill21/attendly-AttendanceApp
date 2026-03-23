@@ -17,14 +17,14 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     return (select(directoryPeople)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  Future<List<DirectoryPeopleData>> getAllPerson(bool ascending) {
+  Stream<List<DirectoryPeopleData>> watchAllPerson(bool ascending) {
     return (select(directoryPeople)
           ..orderBy([
             (t) => OrderingTerm(
                 expression: t.name, 
                 mode: ascending ? OrderingMode.asc : OrderingMode.desc)
           ]))
-        .get();
+        .watch();
   }
 
   Future<List<DirectoryPeopleData>> findPeopleByName(String name) {
