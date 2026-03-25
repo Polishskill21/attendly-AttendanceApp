@@ -1,31 +1,35 @@
-import 'package:attendly/backend/helpers/db_result.dart';
+import 'dart:io';
 import 'package:attendly/frontend/widgets/changelog_helper.dart';
+import 'package:attendly/frontend/widgets/migration_dialog.dart';
 import 'package:attendly/main_app.dart';
+import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:attendly/backend/manager/db_data_manager.dart';
 import 'package:attendly/localization/app_localizations.dart';
-import 'package:attendly/backend/global/global_var.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+
 
 enum YearChangeChoice { create, later }
 
-class SplashScreen extends StatefulWidget {
-  final String? selectedDbPath;
-
-  const SplashScreen({super.key, this.selectedDbPath});
-
+class SplashScreen extends ConsumerStatefulWidget {
+  final File? selectedDb;
+  final Object? dbError;
+  
+  const SplashScreen({super.key, this.selectedDb, this.dbError});
+ 
   @override
-  State<StatefulWidget> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late Future<Database?> _dbFuture;
+class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
+  late Future<bool> _dbFuture;
   late AnimationController _animationController;
   late Animation<double> _animation;
   int _longPressCounter = 0;
   bool _isCreatingNewDb = false;
+
+  Future<void> Function()? _closeSchemaMigrationDialog;
 
   @override
   void initState() {
@@ -40,272 +44,429 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _dbFuture = _initializeApp();
   }
 
-  Future<Database?> _initializeApp() async {
-    // Create the database initialization future
-    Future<Database?> dbInitFuture = _initializeDatabase();
-    
-    // Create the minimum wait time future
-    Future<void> minWaitFuture = Future.delayed(const Duration(milliseconds: 1500));
-    
-    final results = await Future.wait([dbInitFuture, minWaitFuture]);
-    
-    return results[0] as Database?;
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
-  void _retryInitialization() {
-    setState(() {
-      _dbFuture = _initializeApp();
-    });
-  }
-
-  void _createNewDatabase() async {
+  Future<void> _onSchemaMigrationStarted() async {
     if (_isCreatingNewDb) return;
+    if (!mounted) return;
+    
+    _closeSchemaMigrationDialog = await MigrationProgressDialog.show(context);
+  }
 
-    setState(() {
-      _isCreatingNewDb = true;
-    });
+  Future<void> _safeCloseSchemaMigrationDialog() async {
+    if (_closeSchemaMigrationDialog != null) {
+      await _closeSchemaMigrationDialog!();
+      _closeSchemaMigrationDialog = null;
+    }
+  }
+
+  Future<bool> _initializeApp() async {
+    final results = await Future.wait([
+      _initializeDatabase(),
+      Future.delayed(const Duration(milliseconds: 1300)),
+    ]);
+    
+    final dbSuccess = results[0] as bool;
+
+    if (!dbSuccess) return false;
+
+    if (mounted && !ref.read(databaseManagerProvider).isTemporaryDb) {
+      await ChangelogHelper.presentChangelogIfNew(context);
+    }
+
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainApp()),
+      );
+    }
+    
+    return true;
+  }
+
+  Future<bool> _initializeDatabase() async {
+    final notifier = ref.read(databaseManagerProvider.notifier);
+
+    if (widget.dbError != null) return false;
 
     try {
-      final localizations = AppLocalizations.of(context);
-      AnnualDataManager dbHandler = await AnnualDataManager.create();
-      Database? database = await dbHandler.createDBInstance();
+      // ── Case A: user picked a specific DB file from the list ───────────────
+      if (widget.selectedDb != null) {
+        await notifier.openDatabase(file: widget.selectedDb, onMigrationStarted: _onSchemaMigrationStarted);
+        return true;
+      }
+ 
+      // ── Case B: normal startup ─────────────────────────────────────────────
+      final rolloverNeeded = await notifier.checkForYearRollover();
+ 
+      if (rolloverNeeded && mounted) {
+        final choice = await _showYearChangeDialog();
+ 
+        if (choice == YearChangeChoice.create) {
+          await _handleYearRollover();
+        } else {
+          // User chose to stay on the old DB for now — open it with banner
+          await notifier.openDatabaseWithBanner(onMigrationStarted: _onSchemaMigrationStarted);
+        }
+      } else {
+        await notifier.openDatabase(onMigrationStarted: _onSchemaMigrationStarted);
+      }
+ 
+      return true;
+    } catch (e) {
+      debugPrint("Database init failed: $e");
+      return false;
+    }
+    finally{
+      await _safeCloseSchemaMigrationDialog();
+    }
+  }
 
-      if (database != null && mounted) {
+  //   if (widget.selectedDb != null) {
+  //     try {
+  //       await notifier.openDatabase(file: widget.selectedDb);
+  //     } catch (e) {
+  //       debugPrint("Could not open specific db: $e");
+  //       return true;
+  //     }
+  //     ref.read(databaseManagerProvider.notifier).setDatabase(
+  //       dbManager,
+  //       isTemporary: true,
+  //       showBanner: false,
+  //     );
+  //     debugPrint("Database successfully opened (specific path).");
+  //     return dbManager;
+  //   }
+
+  //   bool rolloverOccurred = false;
+
+  //   rolloverOccurred = await dbManager.checkForYearRollover();
+  //   if(rolloverOccurred && mounted){
+  //     final choice = await _showYearChangeDialog();
+
+  //     if (choice == YearChangeChoice.create) {
+  //       final success = await _handleCreateNewYearDatabase(dbManager);
+  //       if (success) {
+  //          showNewYearBanner = false;
+  //       }
+  //       else {
+  //         showNewYearBanner = true;
+  //         debugPrint("Failed to create new year db");
+  //       }
+
+  //     } else {
+  //       try {
+  //         await dbManager.openDatabase();
+  //       } catch (e) {
+  //         debugPrint("Could not open old database $e");
+  //         return null;
+  //       }
+  //       showNewYearBanner = true;
+  //     }
+
+  //   } else {
+  //     try {
+  //       await dbManager.openDatabase();
+  //       showNewYearBanner = false;
+  //     } catch (e) {
+  //       debugPrint("Database does not exist, or could not be opened: $e");
+  //       return null;
+  //     }
+  //   }
+
+  //   if (mounted && !isTemporaryDb) {
+  //     ChangelogHelper.presentChangelogIfNew(context);
+  //   }
+
+  //   debugPrint("Opened database successfully");
+  //   return dbManager;
+  // }
+
+
+
+
+  void _retryInitialization() {
+    setState(() => _dbFuture = _initializeApp());
+  }
+
+  
+  void _createNewDatabase() async {
+    if (_isCreatingNewDb) return;
+    setState(() => _isCreatingNewDb = true);
+ 
+    try {
+      await ref.read(databaseManagerProvider.notifier).createDatabase();
+      if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => MainApp(dbConnection: database),
-          ),
+          MaterialPageRoute(builder: (_) => const MainApp()),
         );
-      } else if (mounted) {
-        _showSimpleErrorDialog(localizations.failedToCreateNewDatabase);
       }
     } catch (e) {
       debugPrint("Error creating new DB: $e");
       if (mounted) {
-        _showSimpleErrorDialog(AppLocalizations.of(context).failedToCreateNewDatabase);
+        _showSimpleErrorDialog(
+            AppLocalizations.of(context).failedToCreateNewDatabase);
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isCreatingNewDb = false;
-        });
-      }
+      if (mounted) setState(() => _isCreatingNewDb = false);
     }
   }
 
-  void _showSimpleErrorDialog(String message) {
-    final isTablet = ResponsiveUtils.isTablet(context);
+  // void _createNewDatabase() async {
+  //   if (_isCreatingNewDb) return;
+
+  //   setState(() => _isCreatingNewDb = true);
+
+  //   try {
+  //     final IDatabaseManager dbManager = DatabaseManager();
+  //     await dbManager.createDatabase();
+
+  //     if (mounted) {
+  //       ref.read(databaseManagerNotifierProvider.notifier).setDatabase(
+  //         manager,
+  //         isTemporary: isTemporaryDb,
+  //         showBanner: showNewYearBanner,
+  //       );
+  //       Navigator.of(context).pushReplacement(
+  //         MaterialPageRoute(builder: (_) => const MainApp()),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error creating new DB: $e");
+  //     if (mounted) {
+  //       _showSimpleErrorDialog(
+  //           AppLocalizations.of(context).failedToCreateNewDatabase);
+  //     }
+  //   } finally {
+  //     if (mounted) setState(() => _isCreatingNewDb = false);
+  //   }
+  // }
+
+  // Future<void> _handleYearRollover() async {
+  //   setState(() => _isCreatingNewDb = true);
+  //   final closeDialog = await MigrationProgressDialog.show(context);
+ 
+  //   try {
+  //     await ref
+  //         .read(databaseManagerProvider.notifier)
+  //         .performYearRolloverAndOpen();
+  //     // Success — notifier already set showNewYearBanner=false
+  //   } catch (e) {
+  //     closeDialog();
+  //     if (mounted) {
+  //       final retry = await _showCreateDbErrorDialog(e.toString()) ?? false;
+  //       if (retry) {
+  //         return _handleYearRollover();
+  //       }
+  //       // Rollover failed — fall back to opening old DB with banner
+  //       try {
+  //         await ref.read(databaseManagerProvider.notifier).openDatabaseWithBanner();
+  //       } catch (_) {
+  //         // Even fallback failed — _initializeDatabase will return false
+  //         rethrow;
+  //       }
+  //     }
+  //   } finally {
+  //     closeDialog();
+  //     if (mounted) setState(() => _isCreatingNewDb = false);
+  //   }
+  // }
+
+  Future<void> _handleYearRollover() async {
+    setState(() => _isCreatingNewDb = true);
     
+    final closeDialog = await MigrationProgressDialog.show(context);
+    bool isDialogClosed = false;
+
+    Future<void> safeCloseDialog() async {
+      if (!isDialogClosed) {
+        await closeDialog();
+        isDialogClosed = true;
+      }
+    }
+
+    try {
+      await ref
+          .read(databaseManagerProvider.notifier)
+          .performYearRolloverAndOpen();
+      await safeCloseDialog(); 
+      
+    } catch (e) {
+      await safeCloseDialog(); 
+      
+      if (mounted) {
+        final retry = await _showCreateDbErrorDialog(e.toString()) ?? false;
+        if (retry) {
+          return _handleYearRollover();
+        }
+        try {
+          await ref.read(databaseManagerProvider.notifier).openDatabaseWithBanner();
+        } catch (_) {
+          rethrow;
+        }
+      }
+    } finally {
+      await safeCloseDialog(); 
+      if (mounted) setState(() => _isCreatingNewDb = false);
+    }
+  }
+
+  // Future<bool> _handleCreateNewYearDatabase(IDatabaseManager dbManager) async {
+  //   setState(() => _isCreatingNewDb = true);
+  //   try {
+  //     await dbManager.performYearRolloverAndOpen();
+  //     return true;
+  //   } catch (e) {
+  //     if (mounted) {
+  //       final shouldRetry = await _showCreateDbErrorDialog(e.toString()) ?? false;
+  //       if (shouldRetry) {
+  //         return _handleCreateNewYearDatabase(dbManager);
+  //       }
+  //     }
+  //     return false;
+  //   } finally {
+  //     if (mounted) setState(() => _isCreatingNewDb = false);
+  //   }
+  // }
+
+  Future<void> _showSecretMenu() async {
+    final jsonContent = await ref
+        .read(databaseManagerProvider.notifier)
+        .getSettingsJsonContent();
+    final isTablet = ResponsiveUtils.isTablet(context);
+    if (!mounted) return;
+    final localizations = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: isTablet ? 32 : 24),
-            SizedBox(width: isTablet ? 12 : 8),
-            Text(
-              'Error',
-              style: TextStyle(
+        title: Text('settings.json',
+            style: TextStyle(
                 fontSize: isTablet ? 22.0 : 18.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          message,
-          style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
+                fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Text(jsonContent,
+              style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: isTablet ? 16.0 : 14.0)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              AppLocalizations.of(context).ok,
-              style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
-            ),
+            child: Text(localizations.cancel,
+                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
           ),
         ],
-        contentPadding: EdgeInsets.all(isTablet ? 24.0 : 16.0),
       ),
     );
   }
 
-  Future<void> _showSecretMenu() async {
-    final handler = await AnnualDataManager.create();
-    final jsonContent = await handler.getSettingsJsonContent();
+  void _showSimpleErrorDialog(String message) {
     final isTablet = ResponsiveUtils.isTablet(context);
-
-    if (mounted) {
-      final localizations = AppLocalizations.of(context);
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            'settings.json',
-            style: TextStyle(
-              fontSize: isTablet ? 22.0 : 18.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Text(
-              jsonContent,
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: isTablet ? 16.0 : 14.0,
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                localizations.cancel,
-                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
-              ),
-            ),
-          ],
-          contentPadding: EdgeInsets.all(isTablet ? 24.0 : 16.0),
-        ),
-      );
-    }
-  }
-
-  Future<Database?> _initializeDatabase() async {
-    AnnualDataManager fileHandler = await AnnualDataManager.create();
-    Database? dbConnection;
-
-    if (widget.selectedDbPath != null) {
-      dbConnection = await fileHandler.openSpecificDBInstance(widget.selectedDbPath!);
-      showNewYearBanner = false;
-      isTemporaryDb = true;
-    } else {
-      isTemporaryDb = false;
-      DbInitResult result = await fileHandler.returnDBInstance();
-      dbConnection = result.db;
-
-      if (result.yearChangeDetected && mounted) {
-        final choice = await _showYearChangeDialog();
-
-        if (choice == YearChangeChoice.create) {
-          final newDb = await _handleCreateNewYearDatabase(result.oldDbPath!);
-
-          if (newDb != null) {
-            dbConnection = newDb;
-          } else {
-            showNewYearBanner = true;
-          }
-        } else { 
-          showNewYearBanner = true;
-        }
-      }
-    }
-
-    if (dbConnection != null && mounted && !isTemporaryDb) {
-      ChangelogHelper.presentChangelogIfNew(context);
-    }
-
-    if (dbConnection == null) {
-      debugPrint("Database does not exist, or could not be opened.");
-    } else {
-      debugPrint("Database successfully opened.");
-    }
-
-    return dbConnection;
-  }
-
-  Future<YearChangeChoice?> _showYearChangeDialog() async {
-    final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    
-    return showDialog<YearChangeChoice>(
+    showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            localizations.yearChangeDetected,
-            style: TextStyle(
-              fontSize: isTablet ? 22.0 : 18.0,
-              fontWeight: FontWeight.bold,
-            ),
+      builder: (context) => AlertDialog(
+        title: Row(children: [
+          Icon(Icons.error_outline, color: Colors.red, size: isTablet ? 32 : 24),
+          SizedBox(width: isTablet ? 12 : 8),
+          Text('Error',
+              style: TextStyle(
+                  fontSize: isTablet ? 22.0 : 18.0,
+                  fontWeight: FontWeight.bold)),
+        ]),
+        content: Text(message,
+            style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(AppLocalizations.of(context).cancel,
+                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
           ),
-          content: Text(
-            localizations.yearChangeMessage,
-            style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text(
-                localizations.later,
-                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop(YearChangeChoice.later);
-              },
-            ),
-            const SizedBox(height: 5),
-            ElevatedButton(
-              child: Text(
-                localizations.createNewDatabase,
-                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
-              ),
-              onPressed: () async {
-                Navigator.of(context).pop(YearChangeChoice.create);
-              },
-            ),
-          ],
-          contentPadding: EdgeInsets.all(isTablet ? 24.0 : 16.0),
-        );
-      },
+        ],
+      ),
     );
   }
 
- Future<Database?> _handleCreateNewYearDatabase(String oldDbPath) async {
-    setState(() {
-      _isCreatingNewDb = true;
-    });
-    try {
-      AnnualDataManager dbHandler = await AnnualDataManager.create();
-      Database? database = await dbHandler.createDBInstance(oldDbPath: oldDbPath);
-
-      if (mounted) {
-        if (database != null) {
-          setState(() {
-            showNewYearBanner = false;
-          });
-          // Return the created database instead of navigating
-          return database;
-        } else {
-          _showSimpleErrorDialog(AppLocalizations.of(context).failedToCreateNewDatabase);
-          // Return null on failure
-          return null;
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        // Ask the user if they want to retry
-        final bool shouldRetry = await _showCreateDbErrorDialog(e.toString(), oldDbPath) ?? false;
-        if (shouldRetry) {
-          // If they retry, call this function again and return its result
-          return _handleCreateNewYearDatabase(oldDbPath);
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isCreatingNewDb = false;
-        });
-      }
-    }
-    // Return null if the process fails or is cancelled
-    return null;
-  }
-
-  Future<bool?> _showCreateDbErrorDialog(String error, String oldDbPath) async {
+    Future<YearChangeChoice?> _showYearChangeDialog() {
     final localizations = AppLocalizations.of(context);
     final isTablet = ResponsiveUtils.isTablet(context);
-    
+    return showDialog<YearChangeChoice>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(localizations.yearChangeDetected,
+            style: TextStyle(
+                fontSize: isTablet ? 22.0 : 18.0,
+                fontWeight: FontWeight.bold)),
+        content: Text(localizations.yearChangeMessage,
+            style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(YearChangeChoice.later),
+            child: Text(localizations.later,
+                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(YearChangeChoice.create),
+            child: Text(localizations.createNew,
+                style: TextStyle(fontSize: isTablet ? 24.0 : 16.0)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Future<YearChangeChoice?> _showYearChangeDialog() async {
+  //   final localizations = AppLocalizations.of(context);
+  //   final isTablet = ResponsiveUtils.isTablet(context);
+
+  //   return showDialog<YearChangeChoice>(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: Text(
+  //           localizations.yearChangeDetected,
+  //           style: TextStyle(
+  //             fontSize: isTablet ? 22.0 : 18.0,
+  //             fontWeight: FontWeight.bold,
+  //           ),
+  //         ),
+  //         content: Text(
+  //           localizations.yearChangeMessage,
+  //           style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
+  //         ),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             child: Text(
+  //               localizations.later,
+  //               style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
+  //             ),
+  //             onPressed: () =>
+  //                 Navigator.of(context).pop(YearChangeChoice.later),
+  //           ),
+  //           const SizedBox(height: 5),
+  //           ElevatedButton(
+  //             child: Text(
+  //               localizations.createNewDatabase,
+  //               style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
+  //             ),
+  //             onPressed: () =>
+  //                 Navigator.of(context).pop(YearChangeChoice.create),
+  //           ),
+  //         ],
+  //         contentPadding: EdgeInsets.all(isTablet ? 24.0 : 16.0),
+  //       );
+  //     },
+  //   );
+  // }
+
+  Future<bool?> _showCreateDbErrorDialog(String error) async {
+    final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -331,9 +492,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
+            onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               localizations.retry,
               style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
@@ -346,58 +505,42 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isTablet = ResponsiveUtils.isTablet(context);
     final iconSize = isTablet ? 130.0 : 100.0;
     
-    return FutureBuilder<Database?>(
+    return FutureBuilder<bool>(
       future: _dbFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor, 
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ScaleTransition(
                     scale: _animation,
-                    child: FaIcon(
-                      FontAwesomeIcons.childReaching, 
-                      size: iconSize, 
-                      color: Theme.of(context).primaryColor
-                    ),
+                    child: FaIcon(FontAwesomeIcons.childReaching,
+                        size: iconSize, color: Theme.of(context).primaryColor),
                   ),
                   SizedBox(height: isTablet ? 30 : 20),
-                  Text(
-                    AppLocalizations.of(context).attendly,
-                    style: TextStyle(
-                      fontSize: isTablet ? 34 : 28, 
-                      fontWeight: FontWeight.bold
-                    ),
-                  ),
+                  Text(AppLocalizations.of(context).attendly,
+                      style: TextStyle(
+                          fontSize: isTablet ? 34 : 28,
+                          fontWeight: FontWeight.bold)),
                   SizedBox(height: isTablet ? 40 : 30),
                   SizedBox(
                     width: isTablet ? 40 : 30,
                     height: isTablet ? 40 : 30,
                     child: CircularProgressIndicator(
-                      strokeWidth: isTablet ? 4.0 : 3.0,
-                    ),
+                        strokeWidth: isTablet ? 4.0 : 3.0),
                   ),
                   SizedBox(height: isTablet ? 30 : 20),
-                  Text(
-                    AppLocalizations.of(context).initializing, 
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: isTablet ? 20 : 16,
-                    )
-                  )
+                  Text(AppLocalizations.of(context).initializing,
+                      style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: isTablet ? 20 : 16)),
                 ],
               ),
             ),
@@ -405,7 +548,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         }
 
         // If DB failed to open
-        if (snapshot.data == null) {
+        if (snapshot.data == null || snapshot.data == false) {
           final localizations = AppLocalizations.of(context);
           return Scaffold(
             body: Center(
@@ -419,12 +562,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         _longPressCounter++;
                         if (_longPressCounter >= 2) {
                           _showSecretMenu();
-                          _longPressCounter = 0; 
+                          _longPressCounter = 0;
                         }
                       },
                       child: Icon(
-                        Icons.error_outline, 
-                        size: isTablet ? 100 : 80, 
+                        Icons.error_outline,
+                        size: isTablet ? 100 : 80,
                         color: Colors.red
                       ),
                     ),
@@ -432,7 +575,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     Text(
                       localizations.databaseSwitchFailed,
                       style: TextStyle(
-                        fontSize: isTablet ? 28 : 24, 
+                        fontSize: isTablet ? 28 : 24,
                         fontWeight: FontWeight.bold
                       ),
                       textAlign: TextAlign.center,
@@ -450,7 +593,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               color: Colors.white,
                             ),
                           ),
-                          icon: Icon(Icons.refresh, color: Colors.white, size: isTablet ? 24 : 20),
+                          icon: Icon(Icons.refresh,
+                              color: Colors.white,
+                              size: isTablet ? 24 : 20),
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(
                               horizontal: isTablet ? 24 : 16,
@@ -465,7 +610,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               ? SizedBox(
                                   height: isTablet ? 24 : 20,
                                   width: isTablet ? 24 : 20,
-                                  child: CircularProgressIndicator(
+                                  child: const CircularProgressIndicator(
                                     color: Colors.white,
                                     strokeWidth: 2.0,
                                   ),
@@ -480,8 +625,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           icon: _isCreatingNewDb
                               ? const SizedBox.shrink()
                               : FaIcon(
-                                  FontAwesomeIcons.database, 
-                                  size: isTablet ? 22 : 18, 
+                                  FontAwesomeIcons.database,
+                                  size: isTablet ? 22 : 18,
                                   color: Colors.white
                                 ),
                           style: ElevatedButton.styleFrom(
@@ -499,7 +644,18 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             ),
           );
         }
-        return MainApp(dbConnection: snapshot.data!);
+        
+        // WidgetsBinding.instance.addPostFrameCallback((_) {
+        //   if (!mounted) return;
+        //   Navigator.of(context).pushReplacement(
+        //     MaterialPageRoute(builder: (_) => const MainApp()),
+        //   );
+        // });
+ 
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: const Center(child: CircularProgressIndicator()),
+        );
       },
     );
   }
