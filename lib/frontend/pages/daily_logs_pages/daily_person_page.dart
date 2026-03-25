@@ -425,10 +425,22 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
           const SizedBox(height: 12),
           DropdownMenu<CategoryItem?>(
             controller: _categoryController,
+            expandedInsets: EdgeInsets.zero, 
+            textStyle: TextStyle(fontSize: body + 2), 
             enableFilter: true,
-            label: Text(localizations.filterByCategory),
+            label: Text(
+              localizations.filterByCategory, 
+              style: TextStyle(fontSize: body),
+            ),
             onSelected: (item) => ref.read(dailyCategoryFilterProvider.notifier).state = item?.category.name,
-            dropdownMenuEntries: getCategoryItems(context).map((item) => DropdownMenuEntry(value: item, label: item.label, leadingIcon: item.icon != null ? Icon(item.icon) : null)).toList(),
+            dropdownMenuEntries: getCategoryItems(context).map((item) => DropdownMenuEntry(
+              value: item, 
+              label: item.label, 
+              leadingIcon: item.icon != null ? Icon(item.icon) : null,
+              style: MenuItemButton.styleFrom(
+                textStyle: TextStyle(fontSize: body + 2),
+              ),
+            )).toList(),
             trailingIcon: selectedCat != null
                 ? IconButton(icon: const Icon(Icons.clear), onPressed: () {
                     _categoryController.clear();
@@ -463,7 +475,7 @@ class _PersonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (people.isEmpty) return Center(child: Text(AppLocalizations.of(context).noEntriesForThisDay));
+    if (people.isEmpty) return Center(child: Text(AppLocalizations.of(context).noEntriesForThisDay, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))));
 
     return ListView.builder(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.getButtonHeight(context) + 60),
