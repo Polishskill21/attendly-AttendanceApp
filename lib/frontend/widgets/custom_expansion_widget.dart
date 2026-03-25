@@ -1,9 +1,10 @@
+import 'package:attendly/data/local/config/database.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 
 class CustomExpansion extends StatefulWidget {
-  final List<Map<String, dynamic>> allPeopleList;
+  final List<DirectoryPeopleData> allPeopleList;
   final bool isExpanded;
   final int index;
   final ValueChanged<bool>? onExpansionChanged;
@@ -62,7 +63,7 @@ class CustomExpansionState extends State<CustomExpansion> {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: edgeInsets.vertical / 2),
       child: Card(
-        key: ValueKey(widget.allPeopleList[widget.index]['id']),
+        key: ValueKey(widget.allPeopleList[widget.index].id),
         color: cardColor,
         elevation: cardElevation,
         shadowColor: widget.isSelected
@@ -96,7 +97,7 @@ class CustomExpansionState extends State<CustomExpansion> {
                     // SizedBox(width: innerPad.horizontal / 2),
                     Expanded(
                       child: Text(
-                        widget.allPeopleList[widget.index]["name"].toString(),
+                        widget.allPeopleList[widget.index].name,
                         style: TextStyle(
                           fontSize: nameFontSize,
                           color: textColor,
