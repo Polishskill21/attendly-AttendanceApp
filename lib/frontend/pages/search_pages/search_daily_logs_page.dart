@@ -1,31 +1,30 @@
-import 'package:attendly/backend/dbLogic/db_read.dart';
+import 'package:attendly/data/local/config/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/person_model/category_record.dart';
 import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:attendly/localization/app_localizations.dart';
+import 'package:attendly/provider/daily_repo_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum SearchType { name, description, nameAndDescription }
 
-class SearchDailyLogsPage extends StatefulWidget {
-  final Database dbCon;
+class SearchDailyLogsPage extends ConsumerStatefulWidget {
   final bool isTablet;
 
   const SearchDailyLogsPage({
     super.key,
-    required this.dbCon,
     this.isTablet = false,
   });
 
   @override
-  State<SearchDailyLogsPage> createState() => _SearchDailyLogsPageState();
+  ConsumerState<SearchDailyLogsPage> createState() => _SearchDailyLogsPageState();
 }
 
-class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
-  late final DbSelection _reader;
+class _SearchDailyLogsPageState extends ConsumerState<SearchDailyLogsPage> {
   final _nameSearchController = TextEditingController();
   final _descriptionSearchController = TextEditingController();
   final _categoryController = TextEditingController();
@@ -34,10 +33,12 @@ class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
   Map<String, List<CategoryRecord>> _groupedResults = {};
   Set<SearchType> _selectedSearchType = {SearchType.name};
 
+  late DailyRepository _repo;
+
   @override
   void initState() {
     super.initState();
-    _reader = DbSelection(widget.dbCon);
+    _repo = ref.read(dailyRepositoryProvider);
     _nameSearchController.addListener(() => setState(() {}));
     _descriptionSearchController.addListener(() => setState(() {}));
   }
@@ -60,7 +61,7 @@ class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
 
     try {
       final searchType = _selectedSearchType.first;
-      final results = await _reader.searchDailyLogs(
+      final results = await _repo.searchLogs(
         name: searchType == SearchType.name || searchType == SearchType.nameAndDescription
             ? _nameSearchController.text
             : null,
@@ -71,8 +72,13 @@ class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
       );
 
       final Map<String, List<CategoryRecord>> grouped = {};
+      
       for (final row in results) {
-        final record = CategoryRecord.fromMap(row);
+        final person = row.readTable(_repo.db.directoryPeople);
+        final entry = row.readTable(_repo.db.dailyEntry);
+
+        final record = CategoryRecord.fromDrift(person, entry);
+        
         if (grouped.containsKey(record.date)) {
           grouped[record.date]!.add(record);
         } else {
@@ -83,8 +89,13 @@ class _SearchDailyLogsPageState extends State<SearchDailyLogsPage> {
       setState(() {
         _groupedResults = grouped;
       });
-    } catch (e) {
-      // Handle error
+    } on custom_db_exceptions.DatabaseNotReadyException {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+    catch (e) {
       debugPrint('Search failed: $e');
     } finally {
       setState(() {
