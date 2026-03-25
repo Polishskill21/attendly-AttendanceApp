@@ -1,9 +1,11 @@
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/widgets/error_dialog.dart';
 import 'package:intl/intl.dart';
+
 
 class HelperAllPerson {
   Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async {
@@ -228,12 +230,8 @@ class HelperAllPerson {
     );
   }
 
-  int _calculateAge(String? birthDateString) {
-    if (birthDateString == null || birthDateString.isEmpty) {
-      return 0;
-    }
+  int _calculateAge(DateTime birthDate) {
     try {
-      final birthDate = DateTime.parse(birthDateString);
       final today = DateTime.now();
       var age = today.year - birthDate.year;
       if (today.month < birthDate.month ||
@@ -246,14 +244,15 @@ class HelperAllPerson {
     }
   }
 
-  List<Widget> buildPersonDetails(List<Map<String, dynamic>> data, int index, AppLocalizations localizations, BuildContext context) {
+  List<Widget> buildPersonDetails(List<DirectoryPeopleData> data, int index, AppLocalizations localizations, BuildContext context) {
     final person = data[index];
-    final birthday = person['birthday']?.toString();
+    final displayBirthday = person.birthday;
+    final displayBirthdayFormated = DateFormat('dd.MM.yyyy').format(displayBirthday);
 
-    DateTime parsedDate = DateTime.parse(birthday!);
-    final displayBirthday = DateFormat('dd.MM.yyyy').format(parsedDate);
+    // DateTime parsedDate = DateTime.parse(birthday!);
+    // final displayBirthday = DateFormat('dd.MM.yyyy').format(parsedDate);
 
-    final age = _calculateAge(birthday);
+    final age = _calculateAge(displayBirthday);
     final isTablet = ResponsiveUtils.isTablet(context);
     final textScale = ResponsiveUtils.getTextScaleFactor(context);
     final fontSize = isTablet ? 22.0 * textScale : 20.0;
@@ -261,20 +260,20 @@ class HelperAllPerson {
     try{
       return [
         Text(
-          "• ${localizations.birthday}: $displayBirthday ($age)",
+          "• ${localizations.birthday}: $displayBirthdayFormated ($age)",
           style: TextStyle(fontSize: fontSize),
         ),
         Text(
-          "• ${localizations.gender}: ${stringToStringGender(person['gender'], localizations)}",
+          "• ${localizations.gender}: ${person.gender.localizedName(localizations)}",
           style: TextStyle(fontSize: fontSize),
         ),
         Text(
-          "• ${localizations.migration}: ${intToBoolString(person['migration'], localizations)}",
+          "• ${localizations.migration}: ${person.migration ? localizations.trueValue : localizations.falseValue}",
           style: TextStyle(fontSize: fontSize),
         ),
-        if (person['migration'] == 1)
+        if (person.migration)
           Text(
-            "• ${localizations.country}: ${person['migration_background'] ?? 'N/A'}",
+            "• ${localizations.country}: ${person.migrationBackground ?? 'N/A'}",
             style: TextStyle(fontSize: fontSize),
           ),
       ];
