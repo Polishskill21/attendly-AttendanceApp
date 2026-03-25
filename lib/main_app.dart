@@ -1,4 +1,3 @@
-import 'package:attendly/backend/manager/connection_manager.dart';
 import 'package:attendly/frontend/pages/daily_logs_pages/daily_person_page.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_page.dart';
 import 'package:attendly/frontend/pages/weekly_report/weekly_report_page.dart';
@@ -7,19 +6,16 @@ import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sqflite/sqflite.dart';
 
 class MainApp extends StatefulWidget {
-  final Database dbConnection;
   
-  const MainApp({super.key, required this.dbConnection});
+  const MainApp({super.key});
 
   @override
   State<StatefulWidget> createState() => _MainAppState();
 }
 
 class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
-  late Database _dbConnection;
   int _selectedTab = -1;
 
   final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
@@ -29,16 +25,11 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _dbConnection = widget.dbConnection;
     WidgetsBinding.instance.addObserver(this);
 
     // After the first frame, switch from empty to the real page
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _selectedTab = 0;
-        });
-      }
+      if (mounted) setState(() => _selectedTab = 0);
     });
   }
 
@@ -48,24 +39,20 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.detached) {
-      await DBConnectionManager.close();
-    }
-  }
+  // @override
+  // Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+  //   super.didChangeAppLifecycleState(state);
+  //   if (state == AppLifecycleState.detached) {
+  //     //await DBConnectionManager.close();
+  //   }
+  // }
 
   void _onTabChange(int index) {
     if (index == _selectedTab) return;
-    
-    setState(() {
-      _selectedTab = index;
-    });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshCurrentPage();
-    });
+    setState(() => _selectedTab = index);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshCurrentPage());
   }
 
   void _refreshCurrentPage() {
@@ -130,75 +117,42 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   Widget _buildPhoneLayout() {
     return Scaffold(
       drawer: CustomDrawer(
-        selectedTab: _selectedTab,
-        onTabChange: _onTabChange,
-        isTablet: false,
-      ),
-      body: SafeArea(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 550),
-          switchInCurve: Curves.easeInOut,
-          switchOutCurve: Curves.easeInOut,
-          layoutBuilder: (currentChild, previousChildren) {
-            return Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                ...previousChildren,
-                if (currentChild != null) currentChild,
-              ],
-            );
-          },
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            return _switcherTransition(child, animation);
-          },
-          child: _buildPageForTab(_selectedTab),
-        ),
-      ),
+          selectedTab: _selectedTab, onTabChange: _onTabChange, isTablet: false),
+      body: SafeArea(child: _animatedBody()),
     );
   }
-
+ 
   Widget _buildTabletLayout() {
     return Scaffold(
       drawer: CustomDrawer(
-        selectedTab: _selectedTab,
-        onTabChange: _onTabChange,
-        isTablet: true,
-      ),
+          selectedTab: _selectedTab, onTabChange: _onTabChange, isTablet: true),
       body: SafeArea(
         child: Row(
           children: [
             CustomDrawer(
-              selectedTab: _selectedTab,
-              onTabChange: _onTabChange,
-              isTablet: true,
-              isRailMode: true,
-            ),
-            
+                selectedTab: _selectedTab,
+                onTabChange: _onTabChange,
+                isTablet: true,
+                isRailMode: true),
             const VerticalDivider(width: 1, thickness: 1),
-            
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 550),
-                switchInCurve: Curves.easeInOut,
-                switchOutCurve: Curves.easeInOut,
-                layoutBuilder: (currentChild, previousChildren) {
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      ...previousChildren,
-                      if (currentChild != null) currentChild,
-                    ],
-                  );
-                },
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return _switcherTransition(child, animation);
-                },
-                child: _buildPageForTab(_selectedTab, isTablet: true),
-              ),
-            ),
+            Expanded(child: _animatedBody(isTablet: true)),
           ],
         ),
       ),
+    );
+  }
+ 
+  Widget _animatedBody({bool isTablet = false}) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 550),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      layoutBuilder: (currentChild, previousChildren) => Stack(
+        fit: StackFit.expand,
+        children: [...previousChildren, if (currentChild != null) currentChild],
+      ),
+      transitionBuilder: _switcherTransition,
+      child: _buildPageForTab(_selectedTab, isTablet: isTablet),
     );
   }
 
@@ -208,8 +162,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         return Container(key: const ValueKey('initial_empty'));
       case 0:
         return DirectoryPage(
-          key: const ValueKey('directory_page'),
-          dbCon: _dbConnection,
+          //key: const ValueKey('directory_page'),
           isSelectionMode: false,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
@@ -218,7 +171,6 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       case 1:
         return DailyPerson(
           key: _dailyPersonKey,
-          dbCon: _dbConnection,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
@@ -226,7 +178,6 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       case 2:
         return WeeklyReportPage(
           key: _weeklyReportKey,
-          dbCon: _dbConnection,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
@@ -234,7 +185,6 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       case 3:
         return YearStatsPage(
           key: _yearStatsKey,
-          dbCon: _dbConnection,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
