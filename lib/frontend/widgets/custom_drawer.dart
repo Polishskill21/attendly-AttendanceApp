@@ -1,15 +1,15 @@
+import 'package:attendly/frontend/app_database_state.dart';
 import 'package:attendly/frontend/pages/db_picker/db_list_page.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:attendly/backend/manager/connection_manager.dart';
-import 'package:attendly/backend/global/global_var.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_page.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
-import 'package:attendly/frontend/pages/directory_pages/state_manager_dir_page.dart';
 import 'package:attendly/localization/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends ConsumerWidget {
   final int selectedTab;
   final Function(int) onTabChange;
   final bool isTablet;
@@ -30,16 +30,34 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
+  // Future<void> _handleReturnToMainDb(BuildContext context, WidgetRef ref) async {
+  //   Navigator.of(context).pushAndRemoveUntil(
+  //     MaterialPageRoute(builder: (_) => const SplashScreen()),
+  //     (Route<dynamic> route) => false,
+  //   );
+  //   await ref.read(databaseManagerProvider.notifier).closeDatabase();
+  // }
+
+  Future<void> _handleReturnToMainDb(BuildContext context, WidgetRef ref) async {
+    await ref.read(databaseManagerProvider.notifier).closeDatabase();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const SplashScreen()),
+      (Route<dynamic> route) => false,
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (isRailMode && isTablet) {
-      return _buildNavigationRail(context);
+      return _buildNavigationRail(context, ref);
     } else {
-      return _buildDrawer(context);
+      return _buildDrawer(context, ref);
     }
   }
 
-  Widget _buildNavigationRail(BuildContext context) {
+  Widget _buildNavigationRail(BuildContext context, WidgetRef ref) {
+    final appState = ref.watch(databaseManagerProvider);
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 32);
@@ -66,7 +84,7 @@ class CustomDrawer extends StatelessWidget {
               ),
             ),
           ),
-          if (showNewYearBanner)
+          if (appState.showNewYearBanner)
             GestureDetector(
               onTap: () => _handleNewYearBannerTap(context),
               child: Container(
@@ -83,7 +101,7 @@ class CustomDrawer extends StatelessWidget {
                 ),
               ),
             ),
-          SizedBox(height: showNewYearBanner ? 0 : 40),
+          SizedBox(height: appState.showNewYearBanner ? 0 : 40),
         ],
       ),
       destinations: [
@@ -136,29 +154,24 @@ class CustomDrawer extends StatelessWidget {
             SizedBox(height: 16),
             IconButton(
               icon: Icon(
-                isTemporaryDb ? Icons.exit_to_app : Icons.folder_open_outlined,
+                appState.isTemporaryDb ? Icons.exit_to_app : Icons.folder_open_outlined,
                 size: iconSize,
               ),
               onPressed: () async {
-                if (isTemporaryDb) {
-                  await DBConnectionManager.close();
-                  StateManager.clearChildrenList();
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const SplashScreen()),
-                    (Route<dynamic> route) => false,
-                  );
+                if (appState.isTemporaryDb) {
+                  await _handleReturnToMainDb(context, ref);
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => DatabaseListPage(
-                        currentDbPath: DBConnectionManager.filePath,
+                      builder: (_) => DatabaseListPage(
+                        currentDbPath: appState.currentDbPath,
                         isTablet: isTablet,
                       ),
                     ),
                   );
                 }
               },
-              tooltip: isTemporaryDb 
+              tooltip: appState.isTemporaryDb 
                   ? localizations.returnToMainDatabase 
                   : localizations.changeDatabase,
             ),
@@ -169,10 +182,11 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
+  Widget _buildDrawer(BuildContext context, WidgetRef ref) {
+    final appState = ref.watch(databaseManagerProvider);
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dbPath = DBConnectionManager.filePath ?? localizations.noDatabaseOpen;
+    final dbPath = appState.currentDbPath ?? localizations.noDatabaseOpen;
     final dbName = p.basename(dbPath);
     
     final iconScale = ResponsiveUtils.getIconScaleFactor(context);
@@ -180,14 +194,13 @@ class CustomDrawer extends StatelessWidget {
     final textScale = isTablet ? 0.9 : 1.0;
 
     return Drawer(
-
       width: isTablet 
           ? MediaQuery.of(context).size.width * 0.55
           : MediaQuery.of(context).size.width * 0.65,
       child: SafeArea(
         child: Column(
           children: [
-            _buildDrawerHeader(context, theme, dbName, localizations),
+            _buildDrawerHeader(context, appState, theme, dbName, localizations),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -266,24 +279,18 @@ class CustomDrawer extends StatelessWidget {
             _buildDrawerItem(
               context: context,
               theme: theme,
-              icon: isTemporaryDb ? Icons.exit_to_app : Icons.folder_open_outlined,
-              text: isTemporaryDb ? localizations.returnToMainDatabase : localizations.changeDatabase,
+              icon: appState.isTemporaryDb ? Icons.exit_to_app : Icons.folder_open_outlined,
+              text: appState.isTemporaryDb ? localizations.returnToMainDatabase : localizations.changeDatabase,
               isSelected: false,
               onTap: () async {
                 Navigator.pop(context);
-
-                if (isTemporaryDb) {
-                  await DBConnectionManager.close();
-                  StateManager.clearChildrenList();
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const SplashScreen()),
-                    (Route<dynamic> route) => false,
-                  );
+                if (appState.isTemporaryDb) {
+                  await _handleReturnToMainDb(context, ref);
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => DatabaseListPage(
-                        currentDbPath: DBConnectionManager.filePath,
+                      builder: (_) => DatabaseListPage(
+                        currentDbPath: appState.currentDbPath,
                         isTablet: isTablet,
                       ),
                     ),
@@ -300,12 +307,12 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerHeader(BuildContext context, ThemeData theme, String dbName, AppLocalizations localizations) {
+  Widget _buildDrawerHeader(BuildContext context, AppDatabaseState appState, ThemeData theme, String dbName, AppLocalizations localizations) {
     final isTablet = this.isTablet || ResponsiveUtils.isTablet(context);
     final textScale = isTablet ? 0.85 : 1.0;
     
     return Container(
-        height: showNewYearBanner ? (isTablet ? 300 : 270) : (isTablet ? 240 : 210),
+        height: appState.showNewYearBanner ? (isTablet ? 300 : 270) : (isTablet ? 240 : 210),
         width: double.infinity,
         padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 10),
         decoration: BoxDecoration(
@@ -340,7 +347,7 @@ class CustomDrawer extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               softWrap: false,
             ),
-            if (showNewYearBanner) ...[
+            if (appState.showNewYearBanner) ...[
               const SizedBox(height: 15),
               _buildNewYearBanner(context, localizations, isTablet: isTablet),
             ]
