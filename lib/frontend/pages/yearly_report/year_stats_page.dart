@@ -72,9 +72,7 @@ class YearStatsPageState extends ConsumerState<YearStatsPage> {
             return Center(
               child: Text(
                 localizations.noDataForThisYear,
-                style: TextStyle(
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
-                    color: Colors.grey.shade600),
+                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
               ),
             );
           }
