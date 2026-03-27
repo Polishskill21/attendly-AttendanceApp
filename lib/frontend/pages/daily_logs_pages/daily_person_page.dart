@@ -1,4 +1,4 @@
-import 'package:attendly/data/local/config/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
 // import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/pages/search_pages/search_daily_logs_page.dart';
 import 'package:attendly/frontend/person_model/person_categories.dart';

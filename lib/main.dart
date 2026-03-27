@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:attendly/backend/settings_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
 import 'package:attendly/frontend/theme_builder.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +10,7 @@ import 'package:attendly/frontend/pages/settings_page/settings_notifier.dart';
 import 'package:attendly/localization/app_localizations_delegate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

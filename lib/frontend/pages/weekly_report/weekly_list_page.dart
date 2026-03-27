@@ -1,5 +1,5 @@
 import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/config/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';

@@ -1,6 +1,6 @@
 import 'package:attendly/data/local/dao/shared_dao_logic.dart';
 import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/config/db_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
 import 'package:attendly/data/local/tables/daily_entry_table.dart';
 import 'package:attendly/data/local/tables/directory_people_table.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';

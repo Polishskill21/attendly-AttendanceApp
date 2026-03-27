@@ -1,7 +1,7 @@
-import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/config/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/frontend/pages/weekly_report/weekly_list_page.dart';
+import 'package:attendly/global/global_function_collection.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:attendly/provider/weekly_repo_provider.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/frontend/widgets/chart_dialog_helper.dart'; 
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+
 
 class WeeklyReportPage extends ConsumerStatefulWidget {
   final int selectedTab;
