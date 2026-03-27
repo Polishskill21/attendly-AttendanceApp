@@ -18,9 +18,9 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
   int _selectedTab = -1;
 
-  final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
-  final GlobalKey<YearStatsPageState> _yearStatsKey = GlobalKey();
-  final GlobalKey<DailyPersonState> _dailyPersonKey = GlobalKey();
+  // final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
+  // final GlobalKey<YearStatsPageState> _yearStatsKey = GlobalKey();
+  // final GlobalKey<DailyPersonState> _dailyPersonKey = GlobalKey();
 
   @override
   void initState() {
@@ -52,24 +52,24 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
 
     setState(() => _selectedTab = index);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshCurrentPage());
+    // WidgetsBinding.instance.addPostFrameCallback((_) => _refreshCurrentPage());
   }
 
-  void _refreshCurrentPage() {
-    switch (_selectedTab) {
-      case 1: // Daily Person
-        _dailyPersonKey.currentState?.refreshDailyEntries();
-        break;
-      case 2: // Weekly Report
-        _weeklyReportKey.currentState?.fetchWeekData(_weeklyReportKey.currentState!.selectedWeekDate);
-        break;
-      case 3: // Year Stats
-        _yearStatsKey.currentState?.fetchYearStats();
-        break;
-      default:
-        break;
-    }
-  }
+  // void _refreshCurrentPage() {
+  //   switch (_selectedTab) {
+  //     // case 1: // Daily Person
+  //     //   _dailyPersonKey.currentState?.refreshDailyEntries();
+  //     //   break;
+  //     case 2: // Weekly Report
+  //       _weeklyReportKey.currentState?.fetchWeekData(_weeklyReportKey.currentState!.selectedWeekDate);
+  //       break;
+  //     case 3: // Year Stats
+  //       _yearStatsKey.currentState?.fetchYearStats();
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // }
 
   Widget _switcherTransition(Widget child, Animation<double> animation) {
     final fade = CurvedAnimation(
@@ -170,21 +170,21 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
         );
       case 1:
         return DailyPerson(
-          key: _dailyPersonKey,
+          // key: _dailyPersonKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
         );
       case 2:
         return WeeklyReportPage(
-          key: _weeklyReportKey,
+          // key: _weeklyReportKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
         );
       case 3:
         return YearStatsPage(
-          key: _yearStatsKey,
+          // key: _yearStatsKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,

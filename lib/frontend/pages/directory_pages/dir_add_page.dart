@@ -66,7 +66,7 @@ class _AddPageState extends ConsumerState<AddPage>{
     _helper.showResetMessage(context, AppLocalizations.of(context).allFieldsReset);
   }
 
-  Future<bool> _submitForm() async{
+  Future<void> _submitForm() async{
     final localizations = AppLocalizations.of(context);
     final name = _nameController.text.trim();
     final uiBirthday = _birthdayController.text.trim();
@@ -75,18 +75,18 @@ class _AddPageState extends ConsumerState<AddPage>{
     // Validate empty fields
     if (name.isEmpty || uiBirthday.isEmpty || selectedGender == null || selectedMigration == null) {
       _helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
-      return false;
+      return;
     }
 
     if (selectedMigration == true && homeCountry.isEmpty) {
       _helper.showErrorMessage(context, localizations.homeCountryRequiredForMigration);
-      return false;
+      return;
     }
 
     // Validate date format (dd.MM.YYYY)
     if (!_isValidDate(uiBirthday)) {
       _helper.showErrorMessage(context, localizations.invalidDateFormat);
-      return false;
+      return;
     }
 
     final repo = ref.read(directoryRepositoryProvider);
@@ -106,13 +106,13 @@ class _AddPageState extends ConsumerState<AddPage>{
       );
 
       await _helper.showSubmitMessage(context, localizations.formSubmittedSuccessfully);
-      if (mounted) Navigator.of(context).pop(true); 
-      return true;
+      if (mounted) Navigator.of(context).pop(); 
+      return;
     } on custom_db_exceptions.DuplicatePersonException catch (e) {
       _helper.showErrorMessage(context, localizations.personNamedAlreadyExists(e.name));
-      return false;
+      return;
     } on custom_db_exceptions.DatabaseNotReadyException {
-      return false; // Safely abort if DB is transitioning
+      return; // Safely abort if DB is transitioning
     // } on custom_db_exceptions.DbConnectionException catch (e) {
     //   debugPrint('Database connection error: $e');
     //   if (mounted) {
@@ -123,7 +123,7 @@ class _AddPageState extends ConsumerState<AddPage>{
     catch (e, stackTrace) {
       debugPrint('Unexpected error during form submission: $e');
       _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
-      return false;
+      return;
     }
   }
 
@@ -289,8 +289,8 @@ class _AddPageState extends ConsumerState<AddPage>{
                           ))
                       .toList(),
                   menuHeight: isTablet ? 300 : 250,
-                  width: MediaQuery.of(context).size.width -
-                      (isTablet ? 60 : 40),
+                  // width: MediaQuery.of(context).size.width -
+                  //     (isTablet ? 60 : 40),
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(
                         borderRadius:
@@ -340,8 +340,8 @@ class _AddPageState extends ConsumerState<AddPage>{
                           ))
                       .toList(),
                   menuHeight: isTablet ? 200 : 150,
-                  width: MediaQuery.of(context).size.width -
-                      (isTablet ? 60 : 40),
+                  // width: MediaQuery.of(context).size.width -
+                  //     (isTablet ? 60 : 40),
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(
                         borderRadius:
@@ -401,7 +401,7 @@ class _AddPageState extends ConsumerState<AddPage>{
                   ),
                   SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),
                   ElevatedButton.icon(
-                    onPressed: () => _submitForm(),
+                    onPressed: _submitForm,
                     icon: Icon(Icons.check, size: ResponsiveUtils.getIconSize(context, baseSize: 28), color: Colors.white),
                     label: Text(localizations.submit, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
                     style: ElevatedButton.styleFrom(

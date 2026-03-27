@@ -27,6 +27,7 @@ class YearStatsPage extends ConsumerStatefulWidget {
 }
 
 class YearStatsPageState extends ConsumerState<YearStatsPage> {
+  bool _isManualRefreshing = false;
 
   @override
   void initState() {
@@ -51,9 +52,19 @@ class YearStatsPageState extends ConsumerState<YearStatsPage> {
             ),
       appBar: RefreshableAppBar(
         title: localizations.yearlyStats,
-        onRefresh: null,
-        isLoading: asyncStats.isLoading || asyncStats.isReloading,
-        showRefresh: false,
+        showRefresh: true,
+        isLoading: asyncStats.isLoading || 
+                   asyncStats.isReloading || 
+                   _isManualRefreshing, 
+        onRefresh: () async {
+          setState(() => _isManualRefreshing = true);
+          debugPrint("Invalidating Yearly Stream");
+          fetchYearStats(); 
+
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) setState(() => _isManualRefreshing = false);
+        },
+        isTablet: widget.isTablet,
         leading: widget.isTablet
             ? null
             : Builder(
