@@ -100,11 +100,11 @@ class DbUpdater extends DbBaseHandler {
       await db!.execute("ROLLBACK");
       debugPrint("Error during weekly data recalibration: $e");
       debugPrintStack(stackTrace: stackTrace);
-      throw custom_db_exceptions.DatabaseOperationException(
-        "Failed to recalibrate weekly data.",
-        originalException: e is Exception ? e : Exception(e.toString()),
-        stackTrace: stackTrace,
-      );
+      // throw custom_db_exceptions.DatabaseOperationException(
+      //   "Failed to recalibrate weekly data.",
+      //   originalException: e is Exception ? e : Exception(e.toString()),
+      //   stackTrace: stackTrace,
+      // );
     }
   }
 
@@ -114,7 +114,7 @@ class DbUpdater extends DbBaseHandler {
     try {
       var res = await reader.getPersonFromAllPeople(id);
       if (res.isEmpty) {
-        throw custom_db_exceptions.PersonNotFoundException(id);
+        // throw custom_db_exceptions.PersonNotFoundException(id);
       }
 
       final oldName = res.first['name'] as String;
@@ -129,7 +129,7 @@ class DbUpdater extends DbBaseHandler {
         final existing = await db!
             .rawQuery('SELECT id FROM all_people WHERE name = ? AND id != ?', [child.name, id]);
         if (existing.isNotEmpty) {
-          throw custom_db_exceptions.DuplicatePersonException(child.name);
+          // throw custom_db_exceptions.DuplicatePersonException(child.name);
         }
       }
 
@@ -170,17 +170,17 @@ class DbUpdater extends DbBaseHandler {
         await db!.execute("ROLLBACK");
         rethrow;
       }
-    } on custom_db_exceptions.DatabaseException {
-      // Rethrow custom exceptions to be handled by the UI.
-      rethrow;
+    // } on custom_db_exceptions.DatabaseException {
+    //   // Rethrow custom exceptions to be handled by the UI.
+    //   rethrow;
     } catch (e, stackTrace) {
       // Wrap any other unexpected errors.
       debugPrint("Failed to update person with id $id. Error: $e");
       debugPrintStack(stackTrace: stackTrace);
-      throw custom_db_exceptions.DatabaseOperationException(
-          "Failed to update person with id $id",
-          originalException: e is Exception ? e : Exception(e.toString()),
-          stackTrace: stackTrace);
+      // throw custom_db_exceptions.DatabaseOperationException(
+      //     "Failed to update person with id $id",
+      //     originalException: e is Exception ? e : Exception(e.toString()),
+      //     stackTrace: stackTrace);
     }
   }
 
@@ -208,7 +208,7 @@ class DbUpdater extends DbBaseHandler {
         if(newCategory == Category.open){
           var duplicateCategory = await reader.returnCategoryIfExists(date, id, newCategory);
           if(duplicateCategory.isNotEmpty){
-            throw custom_db_exceptions.DuplicateDailyEntryException();
+            // throw custom_db_exceptions.DuplicateDailyEntryException();
           }
         }
 
@@ -238,16 +238,16 @@ class DbUpdater extends DbBaseHandler {
       debugPrint("Error updating daily table: $e");
       debugPrintStack(stackTrace: stackTrace);
       await db!.execute("ROLLBACK");
-      if(e is custom_db_exceptions.DuplicateDailyEntryException){
-        rethrow;
-      }
-      if(e is custom_db_exceptions.DuplicatePersonException){
-        rethrow;
-      }
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException("Failed to update daily entry", originalException: e as Exception, stackTrace: stackTrace);
+      // if(e is custom_db_exceptions.DuplicateDailyEntryException){
+      //   rethrow;
+      // }
+      // if(e is custom_db_exceptions.DuplicatePersonException){
+      //   rethrow;
+      // }
+      // if (e is custom_db_exceptions.DatabaseException) {
+      //   rethrow;
+      // }
+      // throw custom_db_exceptions.DatabaseOperationException("Failed to update daily entry", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
 
@@ -290,10 +290,10 @@ class DbUpdater extends DbBaseHandler {
     catch (e, stackTrace){
       debugPrint(e.toString());
       debugPrintStack(stackTrace: stackTrace);
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException("Failed to update weekly table data", originalException: e as Exception, stackTrace: stackTrace);
+      // if (e is custom_db_exceptions.DatabaseException) {
+      //   rethrow;
+      // }
+      // throw custom_db_exceptions.DatabaseOperationException("Failed to update weekly table data", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
 

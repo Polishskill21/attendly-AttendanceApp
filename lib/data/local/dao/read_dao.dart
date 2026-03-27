@@ -76,14 +76,14 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     return result ?? 0;
   }
 
-  Future<List<TypedResult>> getPeopleFromCurrentDay(DateTime date) {
+  Stream<List<TypedResult>> watchPeopleFromCurrentDay(DateTime date) {
     final query = select(dailyEntry).join([
       innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
     ])
       ..where(dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)))
       ..orderBy([OrderingTerm.asc(directoryPeople.name)]);
 
-    return query.get();
+    return query.watch();
   }
 
   Future<List<TypedResult>> searchDailyLogs({String? name, String? description, String? category}) {
@@ -118,11 +118,17 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
 
   // --- Weekly & Stats Queries ---
 
-  Future<WeeklyEntryData?> getWeeklyEntryByDate(DateTime date) {
-    return (select(weeklyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(date)))).getSingleOrNull();
+  Stream<WeeklyEntryData?> watchWeeklyEntryByDate(DateTime date) {
+    return (select(weeklyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(date)))).watchSingleOrNull();
   }
 
-  Future<List<WeeklyEntryData>> getAllWeeklyEntries() {
+  Stream<List<WeeklyEntryData>> watchAllWeeklyEntries() {
+    return (select(weeklyEntry)
+      ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.dates)]))
+      .watch();
+  }
+
+  Future<List<WeeklyEntryData>> getAllWeeklyEntriesFuture() {
     return (select(weeklyEntry)
       ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.dates)]))
       .get();

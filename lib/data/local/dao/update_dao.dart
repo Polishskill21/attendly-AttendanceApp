@@ -17,7 +17,7 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
   // --- 1. The Recalibration Logic ---
   Future<void> recalibrateWeeklyData() async {
     await transaction(() async {
-      final existingWeeks = await db.readDao.getAllWeeklyEntries();
+      final existingWeeks = await db.readDao.getAllWeeklyEntriesFuture();
       final countableStates = {for (var w in existingWeeks) w.dates: w.countable};
 
       await delete(weeklyEntry).go();
@@ -44,8 +44,9 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
       }
 
       for (final entry in countableStates.entries) {
-        await (update(weeklyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(entry.key))))
-            .write(WeeklyEntryCompanion(countable: Value(entry.value)));
+        await (update(weeklyEntry)
+            ..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(entry.key))))
+          .write(WeeklyEntryCompanion(countable: Value(entry.value)));
       }
     });
   }
@@ -165,14 +166,14 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
 
     await _ensureWeeklyRowExists(weekDate);
 
-    await customUpdate('UPDATE weekly_entry SET $ageCol = $ageCol $op 1, $genderCol = $genderCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)]);
+    await customUpdate('UPDATE weekly_entry SET $ageCol = $ageCol $op 1, $genderCol = $genderCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry});
 
     if (genCatCol.isNotEmpty) {
-      await customUpdate('UPDATE weekly_entry SET $genCatCol = $genCatCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)]);
+      await customUpdate('UPDATE weekly_entry SET $genCatCol = $genCatCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry});
     }
 
     if (migrCol != null && category == Category.open) {
-      await customUpdate('UPDATE weekly_entry SET $migrCol = $migrCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)]);
+      await customUpdate('UPDATE weekly_entry SET $migrCol = $migrCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry},);
     }
   }
 
@@ -190,10 +191,11 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
   // --- Helper Method ---
 
   Future<void> _ensureWeeklyRowExists(DateTime date) async {
-    await customStatement(
+    await customInsert(
       'INSERT OR IGNORE INTO weekly_entry (dates, under_10, age_10_13, age_14_17, age_18_24, over_24, all_m, all_f, all_d, open_male, open_female, open_diverse, offers_male, offers_female, offers_diverse, migration_male, migration_female, migration_diverse, countable) '
       'VALUES (?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)',
-      [db.dateOnlyConverter.toSql(date)],
+      variables: [Variable<String>(db.dateOnlyConverter.toSql(date))],
+      updates: {weeklyEntry},
     );
   }
 }

@@ -179,7 +179,7 @@ void main() {
 
       await db.insertDao.insertDailyEntry(personId: pId, date: date, category: Category.open);
 
-      final weekly = await db.readDao.getWeeklyEntryByDate(monday);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(monday).first;
       expect(weekly, isNotNull);
       expect(weekly!.age_14_17, 1);
       expect(weekly.migrationFemale, 1);

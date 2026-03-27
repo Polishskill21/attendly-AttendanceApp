@@ -7,13 +7,13 @@ final weeklyRepositoryProvider = Provider<WeeklyRepository>((ref) {
   return WeeklyRepository(ref.watch(appDatabaseProvider));
 });
 
-final weeklyReportProvider = FutureProvider.family<WeeklyEntryData?, DateTime>((ref, date) async {
+final weeklyReportProvider = StreamProvider.autoDispose.family<WeeklyEntryData?, DateTime>((ref, date) {
   final repo = ref.watch(weeklyRepositoryProvider);
-  return await repo.getWeeklyEntryByDate(date);
+  return repo.watchWeeklyEntryByDate(date);
 });
 
 
-final allWeeksProvider = FutureProvider<List<WeeklyEntryData>>((ref) async {
+final allWeeksProvider = StreamProvider.autoDispose<List<WeeklyEntryData>>((ref) {
   final repo = ref.watch(weeklyRepositoryProvider);
-  return await repo.getAllWeeks();
+  return repo.watchAllWeeks();
 });
