@@ -21,11 +21,11 @@ class CategoryRecord {
   // Factory constructor to create a CategoryRecord from a map
   factory CategoryRecord.fromDrift(DirectoryPeopleData person, DailyEntryData entry) {
     return CategoryRecord(
-      recordId: entry.recordID,
+      recordId: entry.recordId,
       personId: person.id,
       personName: person.name,
       // Format DateTime to String for your UI
-      date: DateFormat('yyyy-MM-dd').format(entry.dates), 
+      date: DateFormat('yyyy-MM-dd').format(entry.date), 
       category: entry.category.name, // Enum to String
       comment: entry.description,
     );

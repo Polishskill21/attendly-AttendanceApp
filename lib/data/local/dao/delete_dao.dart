@@ -16,14 +16,14 @@ class DeleteDao extends DatabaseAccessor<AppDatabase> with _$DeleteDaoMixin, Sha
   /// Replaces deleteFromAllPeople from the old implementation.
   Future<void> deleteDirPerson(int id) async {
     await transaction(() async {
-      final dailyEntries = await (select(dailyEntry)..where((t) => t.id.equals(id))).get();
+      final dailyEntries = await (select(dailyEntry)..where((t) => t.personId.equals(id))).get();
       final person = await (select(directoryPeople)..where((t) => t.id.equals(id))).getSingleOrNull();
 
       if (person == null) throw PersonNotFoundException(id);
 
       for (final entry in dailyEntries) {
-        final weekDate = getFirstDateOfWeek(entry.dates);
-        final age = calcAge(entry.dates, person.birthday);
+        final weekDate = getFirstDateOfWeek(entry.date);
+        final age = calcAge(entry.date, person.birthday);
 
         await db.updateDao.updateWeeklyTableCounters(
           weekDate: weekDate,
@@ -37,7 +37,7 @@ class DeleteDao extends DatabaseAccessor<AppDatabase> with _$DeleteDaoMixin, Sha
         await db.updateDao.updateCountableColZeroWeek(weekDate);
       }
 
-      await (delete(dailyEntry)..where((t) => t.id.equals(id))).go();
+      await (delete(dailyEntry)..where((t) => t.personId.equals(id))).go();
       await (delete(directoryPeople)..where((t) => t.id.equals(id))).go();
     });
   }
@@ -62,9 +62,9 @@ class DeleteDao extends DatabaseAccessor<AppDatabase> with _$DeleteDaoMixin, Sha
       );
 
       await (delete(dailyEntry)..where((t) => 
-        t.recordID.equals(recordID) & 
-        t.dates.equals(db.dateOnlyConverter.toSql(date)) & 
-        t.id.equals(personId)
+        t.recordId.equals(recordID) & 
+        t.date.equals(db.dateOnlyConverter.toSql(date)) & 
+        t.personId.equals(personId)
       )).go();
 
       await db.updateDao.updateCountableColZeroWeek(weekDate);
@@ -78,11 +78,11 @@ class DeleteDao extends DatabaseAccessor<AppDatabase> with _$DeleteDaoMixin, Sha
       for (final id in personIds) {
         // Find all records for that person on that specific date
         final entries = await (select(dailyEntry)
-              ..where((t) => t.id.equals(id) & t.dates.equals(db.dateOnlyConverter.toSql(date))))
+              ..where((t) => t.personId.equals(id) & t.date.equals(db.dateOnlyConverter.toSql(date))))
             .get();
 
         for (final entry in entries) {
-          await deleteDailyEntry(entry.recordID, entry.id, entry.dates);
+          await deleteDailyEntry(entry.recordId, entry.personId, entry.date);
         }
       }
     });

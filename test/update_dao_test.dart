@@ -119,7 +119,7 @@ void main() {
       
       // Get the recordID of the 'other' entry
       final entries = await db.select(db.dailyEntry).get();
-      final otherEntryId = entries.firstWhere((e) => e.category == Category.other).recordID;
+      final otherEntryId = entries.firstWhere((e) => e.category == Category.other).recordId;
 
       // Try to update the 'other' entry to be 'open'
       expect(
@@ -182,7 +182,7 @@ void main() {
       final entryDate = DateTime(2026, 02, 01);
 
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 50, dates: entryDate, id: pId, category: Category.open,
+        recordId: 50, date: entryDate, personId: pId, category: Category.open,
       ));
 
       await db.updateDao.updateDirPerson(
@@ -215,7 +215,7 @@ void main() {
     final date = DateTime(2026, 04, 01);
     
     await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-      dates: date, under_10: 10, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+      weekDate: date, under_10: 10, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
       allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
       offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0,
       migrationFemale: 0, migrationDiverse: 0, countable: true,

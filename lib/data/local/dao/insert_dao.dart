@@ -55,9 +55,9 @@ class InsertDao extends DatabaseAccessor<AppDatabase> with _$InsertDaoMixin, Sha
         final latestId = await _getLatestRecordID(date);
 
         await into(dailyEntry).insert(DailyEntryCompanion.insert(
-          recordID: latestId,
-          dates: date,
-          id: personId,
+          recordId: latestId,
+          date: date,
+          personId: personId,
           category: category,
           description: Value(description),
         ));
@@ -71,10 +71,10 @@ class InsertDao extends DatabaseAccessor<AppDatabase> with _$InsertDaoMixin, Sha
 
   Future<int> _getLatestRecordID(DateTime date) async {
     final query = selectOnly(dailyEntry)
-      ..addColumns([dailyEntry.recordID.max()])
-      ..where(dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)));
+      ..addColumns([dailyEntry.recordId.max()])
+      ..where(dailyEntry.date.equals(db.dateOnlyConverter.toSql(date)));
     
-    final result = await query.map((row) => row.read(dailyEntry.recordID.max())).getSingle();
+    final result = await query.map((row) => row.read(dailyEntry.recordId.max())).getSingle();
     return (result ?? 0) + 1;
   }
 
