@@ -40,7 +40,7 @@ abstract class DbBaseHandler {
 
   Future<void> ensureConnection() async {
     if (!await validateConnection()) {
-      throw DbConnectionException('Database connection lost or file deleted');
+      // throw DbConnectionException('Database connection lost or file deleted');
     }
   }
 }

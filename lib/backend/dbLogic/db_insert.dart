@@ -29,23 +29,23 @@ class DbInsertion extends DbBaseHandler {
     } on DatabaseException catch (e, stackTrace) {
 
       if (e.isUniqueConstraintError()) {
-        throw custom_db_exceptions.DuplicatePersonException(child.name);
+        // throw custom_db_exceptions.DuplicatePersonException(child.name);
       }
-      throw custom_db_exceptions.DatabaseOperationException(
-          "Failed to insert person",
-          originalException: e,
-          stackTrace: stackTrace);
+      // throw custom_db_exceptions.DatabaseOperationException(
+      //     "Failed to insert person",
+      //     originalException: e,
+      //     stackTrace: stackTrace);
     } catch (e, stackTrace) {
       debugPrint("Insertion class: Generic Exception");
       debugPrint(e.toString());
       debugPrintStack(stackTrace: stackTrace);
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException(
-          "Failed to insert person",
-          originalException: e as Exception,
-          stackTrace: stackTrace);
+    //   if (e is custom_db_exceptions.DatabaseException) {
+    //     rethrow;
+    //   }
+    //   throw custom_db_exceptions.DatabaseOperationException(
+    //       "Failed to insert person",
+    //       originalException: e as Exception,
+    //       stackTrace: stackTrace);
     }
   }
    
@@ -60,14 +60,14 @@ class DbInsertion extends DbBaseHandler {
       // 1. Validate only once per person
       List<Map<String, dynamic>> exists = await reader.getPersonFromAllPeople(person.id);
       if(exists.isEmpty) {
-        throw custom_db_exceptions.PersonNotFoundException(person.id);
+        // throw custom_db_exceptions.PersonNotFoundException(person.id);
       }
 
       List<Map<String, dynamic>> existsDaily = await reader.returnCategoryIfExists(person.date, person.id, person.category);
       
       if(existsDaily.isNotEmpty && existsDaily.first['category'] == "open"){
         debugPrint("skipped inserting the open cat twice");
-        throw custom_db_exceptions.DuplicateDailyEntryException();
+        // throw custom_db_exceptions.DuplicateDailyEntryException();
       }
 
       String sql = """
@@ -95,10 +95,10 @@ class DbInsertion extends DbBaseHandler {
       debugPrint(e.toString());
       debugPrint(stackTrace.toString());
       await db!.execute("ROLLBACK;");
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException("Failed to insert daily entry", originalException: e as Exception, stackTrace: stackTrace);
+      // if (e is custom_db_exceptions.DatabaseException) {
+      //   rethrow;
+      // }
+      // throw custom_db_exceptions.DatabaseOperationException("Failed to insert daily entry", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
   //   Future<void> dailyTable(DailyPerson person) async{
@@ -164,7 +164,7 @@ class DbInsertion extends DbBaseHandler {
     try{
       List<Map<String, dynamic>> person = await reader.getAgeAndGenderAndMigration(id, customDate);
       if(person.isEmpty){
-        throw custom_db_exceptions.PersonNotFoundException(id);
+        // throw custom_db_exceptions.PersonNotFoundException(id);
       }
 
       DateTime today =  DateTime.parse(customDate);
@@ -192,10 +192,10 @@ class DbInsertion extends DbBaseHandler {
     catch (e, stackTrace){
       debugPrint(e.toString());
       debugPrintStack(stackTrace: stackTrace);
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException("Failed to update weekly table", originalException: e as Exception, stackTrace: stackTrace);
+      // if (e is custom_db_exceptions.DatabaseException) {
+      //   rethrow;
+      // }
+      // throw custom_db_exceptions.DatabaseOperationException("Failed to update weekly table", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
 
