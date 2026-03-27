@@ -15,14 +15,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     try {
       final themeMode = await _service.getThemeMode();
       final locale    = await _service.getLocale();
+      if (!mounted) return;
       state = SettingsState(
         themeMode: themeMode,
         locale:    locale,
         isLoaded:  true,
       );
     } on SettingsException catch (e) {
+      if (!mounted) return;
       state = SettingsState(error: e, isLoaded: true);
     } catch (_) {
+      if (!mounted) return;
       state = SettingsState(
         error:    SettingsFileNotFoundException(),
         isLoaded: true,

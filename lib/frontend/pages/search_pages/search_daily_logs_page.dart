@@ -227,7 +227,8 @@ class _SearchDailyLogsPageState extends ConsumerState<SearchDailyLogsPage> {
                 SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
                 DropdownMenu<CategoryItem?>(
                   controller: _categoryController,
-                  width: MediaQuery.of(context).size.width - (ResponsiveUtils.getContentPadding(context).horizontal * 2),
+                  // width: MediaQuery.of(context).size.width - (ResponsiveUtils.getContentPadding(context).horizontal * 2),
+                  expandedInsets: EdgeInsets.zero,
                   menuHeight: isTablet ? 300 : 250,
                   enableFilter: true,
                   requestFocusOnTap: false,
@@ -263,7 +264,6 @@ class _SearchDailyLogsPageState extends ConsumerState<SearchDailyLogsPage> {
                           }),
                         )
                       : null,
-                  expandedInsets: EdgeInsets.zero,
                 ),
                 SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2.5),
                 ElevatedButton.icon(
@@ -282,7 +282,16 @@ class _SearchDailyLogsPageState extends ConsumerState<SearchDailyLogsPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _groupedResults.isEmpty
-                    ? Center(child: Text(localizations.noResultsFound, style: TextStyle(fontSize: bodySize)))
+                    ? SizedBox(
+                        width: double.infinity,
+                        child: Center(
+                          child: Text(
+                            localizations.noResultsFound,
+                            textAlign: TextAlign.center, 
+                            style: TextStyle(fontSize: bodySize),
+                          ),
+                        ),
+                      )
                     : ListView.builder(
                         padding: EdgeInsets.symmetric(
                           horizontal: ResponsiveUtils.getContentPadding(context).left + 12,

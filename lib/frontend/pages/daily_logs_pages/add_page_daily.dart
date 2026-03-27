@@ -145,9 +145,9 @@ class _AddDailyState extends ConsumerState<AddDaily>{
           context,
           localizations.personsAlreadyInCategoryOpen(duplicatePersons.length, names),
         );
-        if (mounted) {
-          Navigator.of(context).pop(true);
-        }
+        // if (mounted) {
+        //   Navigator.of(context).pop(true);
+        // }
       } else if (failCount > 0) {
         String errorDetails = failedPersons.join('\n\n');
         helper.showErrorMessage(context, "${localizations.personsFailedToAdd(failCount, successCount)}\n\nDetails:\n$errorDetails");
@@ -406,7 +406,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
                     );
                   }).toList(),
                   menuHeight: isTablet ? 300 : 250,
-                  width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
+                  // width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
                     contentPadding: ResponsiveUtils.getContentPadding(context),

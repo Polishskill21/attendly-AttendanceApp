@@ -34,6 +34,7 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
   final HelperAllPerson _helper = HelperAllPerson();
   late DateTime selectedWeekDate;
   bool _statusChanged = false;
+  bool _isManualRefreshing = false;
 
 
   @override
@@ -135,9 +136,18 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
           : CustomDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
         title: localizations.weeklyReport,
-        onRefresh: null,
-        isLoading: asyncWeekData.isLoading || asyncWeekData.isReloading,
-        showRefresh: false,
+        showRefresh: true,
+        isLoading: asyncWeekData.isLoading || 
+                   asyncWeekData.isReloading || 
+                   _isManualRefreshing,
+        onRefresh: () async {
+          setState(() => _isManualRefreshing = true);
+          debugPrint("Invalidating Weekly Stream");
+          fetchWeekData(selectedWeekDate); 
+
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) setState(() => _isManualRefreshing = false);
+        },
         isTablet: widget.isTablet,
         leading: widget.isTablet
             ? null

@@ -10,4 +10,14 @@ class PersonWithCategories {
     required this.name,
     required this.records,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PersonWithCategories &&
+          runtimeType == other.runtimeType &&
+          personId == other.personId;
+ 
+  @override
+  int get hashCode => personId.hashCode; 
 }

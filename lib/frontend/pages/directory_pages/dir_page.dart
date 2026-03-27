@@ -42,6 +42,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
   final TextEditingController _searchController = TextEditingController();
   final HelperAllPerson _helper = HelperAllPerson();
   int _expandedIndex = -1;
+  bool _isManualRefreshing = false;
 
   // Store selected person IDs instead of indices
   final Set<int> _selectedPersonIds = {};
@@ -69,6 +70,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
       ref.read(directorySearchQueryProvider.notifier).state =
           _searchController.text;
     });
+    if (_expandedIndex != -1) setState(() => _expandedIndex = -1);
   }
 
   @override
@@ -83,7 +85,6 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
       await Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => AddPage(isTablet: widget.isTablet),
       ));
-      // No need to refresh — stream updates automatically after insert.
     // } on custom_db_exceptions.DbConnectionException {
     //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
     } catch (e, stackTrace) {
@@ -212,11 +213,20 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
             ),
       appBar: RefreshableAppBar(
         title: localizations.directory,
-        onRefresh: () async {
-          ref.invalidate(directoryStreamProvider);
-        },
-        isLoading: asyncPeople.isLoading,
         showRefresh: true,
+        isLoading: asyncPeople.isLoading || 
+                   asyncPeople.isRefreshing || 
+                   asyncPeople.isReloading || 
+                   _isManualRefreshing,
+        onRefresh: () async {
+          setState(() => _isManualRefreshing = true);
+          
+          debugPrint("Invalidating dir stream");
+          ref.invalidate(directoryStreamProvider);
+          
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) setState(() => _isManualRefreshing = false);
+        },
         isTablet: isTablet,
         leading: widget.isTablet
             ? null

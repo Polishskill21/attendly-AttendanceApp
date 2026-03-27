@@ -1,5 +1,5 @@
 import 'package:attendly/data/local/config/db_exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/data/repo/daily_repository.dart';
+// import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/pages/search_pages/search_daily_logs_page.dart';
 import 'package:attendly/frontend/person_model/person_categories.dart';
 import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
@@ -34,8 +34,9 @@ class DailyPerson extends ConsumerStatefulWidget {
 }
 
 class DailyPersonState extends ConsumerState<DailyPerson> {
-  late DailyRepository _repo;
+  // late DailyRepository _repo;
   final HelperAllPerson _helper = HelperAllPerson();
+  bool _isManualRefreshing = false;
 
   void refreshDailyEntries() {
     ref.invalidate(dailyRawLogsProvider);
@@ -87,13 +88,12 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
 
   Future<void> _onFabPressed(BuildContext context) async {
     final currentDate = ref.read(dailyDateProvider);
-    bool? res = await Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => AddDaily(
-          initialDate: currentDate,
-          isTablet: widget.isTablet,
-        ))
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddDaily(initialDate: currentDate, isTablet: widget.isTablet),
+      ),
     );
-    if (res == true) refreshDailyEntries();
   }
 
   Future<void> _onSearchFabPressed() async {
@@ -112,16 +112,17 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
 
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => AddDaily(
-          initialDate: date,
-          preselectedPersons: selectedList,
-          isTablet: widget.isTablet,
-        ),
+        builder:
+            (context) => AddDaily(
+              initialDate: date,
+              preselectedPersons: selectedList,
+              isTablet: widget.isTablet,
+            ),
       ),
     );
+    
     if (result == true) {
       _toggleEditMode();
-      refreshDailyEntries();
     }
   }
 
@@ -130,21 +131,23 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
     final selectedSet = ref.read(dailySelectedPeopleProvider);
     final count = selectedSet.length;
     final date = ref.read(dailyDateProvider);
-    _repo = ref.read(dailyRepositoryProvider);
+    final repo = ref.read(dailyRepositoryProvider);
 
     final confirm = await _helper.displayDialog(
-      context, localizations.delete, localizations.confirmBulkDelete(count), localizations,
+      context,
+      localizations.delete,
+      localizations.confirmBulkDelete(count),
+      localizations,
     );
     if (confirm != true) return;
 
     try {
       _helper.showLoadingDialog(context, localizations.delete);
       final personIds = selectedSet.map((p) => p.personId).toList();
-      await _repo.bulkDeleteEntries(personIds, date);
+      await repo.bulkDeleteEntries(personIds, date);
       if (mounted) _helper.hideLoadingDialog(context);
       await _helper.showSubmitMessage(context, localizations.peopleEntriesDeleted(count));
       _toggleEditMode();
-      refreshDailyEntries();
     } catch (e, stackTrace) {
       if (mounted) _helper.hideLoadingDialog(context);
       _helper.showErrorMessage(context, 'Failed to delete entries: $e', stackTrace: stackTrace);
@@ -153,26 +156,27 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
 
   Future<void> _deleteCategory(CategoryRecord record) async {
     final localizations = AppLocalizations.of(context);
-    _repo = ref.read(dailyRepositoryProvider);
-    
+    final repo = ref.read(dailyRepositoryProvider);
+
     final confirm = await _helper.displayDialog(
-      context, localizations.deleteRecord,
+      context,
+      localizations.deleteRecord,
       localizations.confirmDeleteCategory(
         localizedCategoryLabel(context, record.category),
         record.personName ?? localizations.unknown,
         record.date,
-      ), localizations,
+      ),
+      localizations,
     );
 
     if (confirm == true) {
       try {
         _helper.showLoadingDialog(context, localizations.delete);
-        await _repo.deleteDailyEntry(record.recordId, record.personId, DateTime.parse(record.date));
+        await repo.deleteDailyEntry(record.recordId, record.personId, DateTime.parse(record.date));
         if (mounted) {
           _helper.hideLoadingDialog(context);
           await _helper.showSubmitMessage(context, localizations.recordDeleted);
         }
-        refreshDailyEntries();
       } catch (e) {
         if (mounted) _helper.hideLoadingDialog(context);
         _helper.showErrorMessage(context, e.toString());
@@ -184,7 +188,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    
+
     // Watch state
     final asyncFilteredData = ref.watch(dailyFilteredLogsProvider);
     final selectedDate = ref.watch(dailyDateProvider);
@@ -222,23 +226,45 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
     final visiblePeople = asyncFilteredData.valueOrNull ?? [];
 
     return Scaffold(
-      drawer: widget.isTablet ? null : CustomDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
+      drawer:
+          widget.isTablet
+              ? null
+              : CustomDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
         title: localizations.dailyLogs,
-        onRefresh: null,
-        isLoading: asyncFilteredData.isLoading || asyncFilteredData.isReloading,
-        showRefresh: false,
+        showRefresh: true, 
+        isLoading: asyncFilteredData.isLoading || 
+                   asyncFilteredData.isRefreshing || 
+                   asyncFilteredData.isReloading || 
+                   _isManualRefreshing,
+        onRefresh: () async {
+          setState(() => _isManualRefreshing = true);
+
+          debugPrint("Invalidating daily stream");
+          refreshDailyEntries();
+          
+          await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) setState(() => _isManualRefreshing = false);
+        },
         isTablet: widget.isTablet,
-        leading: isEditMode
-            ? IconButton(icon: Icon(Icons.close, size: appBarIconSize), onPressed: _toggleEditMode)
-            : widget.isTablet
+        leading:
+            isEditMode
+                ? IconButton(
+                  icon: Icon(Icons.close, size: appBarIconSize),
+                  onPressed: _toggleEditMode,
+                )
+                : widget.isTablet
                 ? null
                 : Builder(
-                    builder: (context) => IconButton(
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                      icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
-                    ),
-                  ),
+                  builder:
+                      (context) => IconButton(
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        icon: Icon(
+                          Icons.menu,
+                          size: ResponsiveUtils.getIconSize(context, baseSize: 35),
+                        ),
+                      ),
+                ),
         actions: [
           if (!isEditMode)
             IconButton(
@@ -247,7 +273,10 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
             ),
           if (isEditMode)
             IconButton(
-              icon: Icon(Icons.select_all, size: ResponsiveUtils.getIconSize(context, baseSize: 28)),
+              icon: Icon(
+                Icons.select_all,
+                size: ResponsiveUtils.getIconSize(context, baseSize: 28),
+              ),
               onPressed: visiblePeople.isEmpty ? null : () => _selectAll(visiblePeople),
             ),
         ],
@@ -258,13 +287,18 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveUtils.getListPadding(context).horizontal,
-                    vertical: ResponsiveUtils.getListPadding(context).vertical),
+                  horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+                  vertical: ResponsiveUtils.getListPadding(context).vertical,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     IconButton(
-                      onPressed: () => ref.read(dailyDateProvider.notifier).state = selectedDate.subtract(const Duration(days: 1)),
+                      onPressed:
+                          () =>
+                              ref.read(dailyDateProvider.notifier).state = selectedDate.subtract(
+                                const Duration(days: 1),
+                              ),
                       icon: Icon(Icons.arrow_back_ios_sharp, color: theme.iconTheme.color),
                       iconSize: arrowIconSize,
                     ),
@@ -279,16 +313,26 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                       ),
                     ),
                     IconButton(
-                      onPressed: isTodayOrFuture ? null : () => ref.read(dailyDateProvider.notifier).state = selectedDate.add(const Duration(days: 1)),
-                      icon: Icon(Icons.arrow_forward_ios_sharp, color: isTodayOrFuture ? theme.disabledColor : theme.iconTheme.color),
+                      onPressed:
+                          isTodayOrFuture
+                              ? null
+                              : () =>
+                                  ref.read(dailyDateProvider.notifier).state = selectedDate.add(
+                                    const Duration(days: 1),
+                                  ),
+                      icon: Icon(
+                        Icons.arrow_forward_ios_sharp,
+                        color: isTodayOrFuture ? theme.disabledColor : theme.iconTheme.color,
+                      ),
                       iconSize: arrowIconSize,
-                    )
+                    ),
                   ],
                 ),
               ),
               const _FilterSection(),
               Expanded(
                 child: asyncFilteredData.when(
+                  skipLoadingOnReload: true,
                   loading: () => const Center(child: CircularProgressIndicator()),
                   // error: (_, __) => Center(
                   //   child: ElevatedButton(onPressed: refreshDailyEntries, child: const Text("Retry"))
@@ -297,47 +341,78 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                     if (error is custom_db_exceptions.DatabaseNotReadyException) {
                       return const Center(child: CircularProgressIndicator());
                     }
-                    return const Center(child: CircularProgressIndicator()); // MyApp handles redirect
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    ); // MyApp handles redirect
                   },
-                  data: (people) => _PersonList(
-                    people: people,
-                    isEditMode: isEditMode,
-                    selectedPeople: selectedPeople,
-                    onToggleSelection: _toggleSelection,
-                    onAddCategory: (person) async {
-                      final res = await Navigator.push<bool>(context, MaterialPageRoute(builder: (ctx) => AddDaily(initialDate: selectedDate, preselectedPersons: [{'id': person.personId, 'name': person.name}], isTablet: widget.isTablet)));
-                      if (res == true) refreshDailyEntries();
-                    },
-                    onEditCategory: (record) async {
-                      final res = await Navigator.push<bool>(context, MaterialPageRoute(builder: (ctx) => EditCategoryPage(record: record, isTablet: widget.isTablet)));
-                      if (res == true) refreshDailyEntries();
-                    },
-                    onDeleteCategory: _deleteCategory,
-                  ),
+                  data:
+                      (people) => _PersonList(
+                        people: people,
+                        isEditMode: isEditMode,
+                        selectedPeople: selectedPeople,
+                        onToggleSelection: _toggleSelection,
+                        onAddCategory: (person) async {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (ctx) => AddDaily(
+                                initialDate: selectedDate,
+                                preselectedPersons: [{'id': person.personId, 'name': person.name}],
+                                isTablet: widget.isTablet,
+                              ),
+                            ),
+                          );
+                          // Removed refresh checking
+                        },
+                        onEditCategory: (record) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (ctx) => EditCategoryPage(record: record, isTablet: widget.isTablet),
+                            ),
+                          );
+                        },
+                        onDeleteCategory: _deleteCategory,
+                      ),
                 ),
-              )
+              ),
             ],
           ),
         ),
       ),
-      floatingActionButton: isEditMode
-          ? null
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  width: ResponsiveUtils.getButtonHeight(context) + 10,
-                  height: ResponsiveUtils.getButtonHeight(context) + 10,
-                  child: FloatingActionButton(heroTag: 'search_fab', onPressed: _onSearchFabPressed, child: Icon(Icons.search, size: ResponsiveUtils.getIconSize(context, baseSize: 30))),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: ResponsiveUtils.getButtonHeight(context) + 25,
-                  height: ResponsiveUtils.getButtonHeight(context) + 25,
-                  child: FloatingActionButton(heroTag: 'add_fab', onPressed: () => _onFabPressed(context), child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35))),
-                ),
-              ],
-            ),
+      floatingActionButton:
+          isEditMode
+              ? null
+              : Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    width: ResponsiveUtils.getButtonHeight(context) + 10,
+                    height: ResponsiveUtils.getButtonHeight(context) + 10,
+                    child: FloatingActionButton(
+                      heroTag: 'search_fab',
+                      onPressed: _onSearchFabPressed,
+                      child: Icon(
+                        Icons.search,
+                        size: ResponsiveUtils.getIconSize(context, baseSize: 30),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: ResponsiveUtils.getButtonHeight(context) + 25,
+                    height: ResponsiveUtils.getButtonHeight(context) + 25,
+                    child: FloatingActionButton(
+                      heroTag: 'add_fab',
+                      onPressed: () => _onFabPressed(context),
+                      child: Icon(
+                        Icons.add,
+                        size: ResponsiveUtils.getIconSize(context, baseSize: 35),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
       bottomNavigationBar: isEditMode ? _buildEditModeActions(selectedPeople.length) : null,
     );
   }
@@ -352,12 +427,18 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
         children: [
           TextButton.icon(
             icon: Icon(Icons.add_task, size: ResponsiveUtils.getIconSize(context)),
-            label: Text(localizations.addCategory, style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context))),
+            label: Text(
+              localizations.addCategory,
+              style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context)),
+            ),
             onPressed: hasSelection ? _onBulkAddCategory : null,
           ),
           TextButton.icon(
             icon: Icon(Icons.delete_sweep, size: ResponsiveUtils.getIconSize(context)),
-            label: Text('${localizations.delete} ($selectedCount)', style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context))),
+            label: Text(
+              '${localizations.delete} ($selectedCount)',
+              style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context)),
+            ),
             onPressed: hasSelection ? _onBulkDelete : null,
             style: TextButton.styleFrom(foregroundColor: hasSelection ? Colors.red : Colors.grey),
           ),
@@ -398,15 +479,26 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
     final body = ResponsiveUtils.getBodyFontSize(context);
     final selectedCat = ref.watch(dailyCategoryFilterProvider);
 
-    // Clear external UI if providers get cleared
-    if (ref.watch(dailySearchProvider).isEmpty && _searchController.text.isNotEmpty) _searchController.clear();
-    if (selectedCat == null && _categoryController.text.isNotEmpty) _categoryController.clear();
+    // Sync controllers when providers are externally reset (e.g. on date change).
+    // ref.listen callbacks fire after build — safe to mutate controller state here.
+    ref.listen<String>(dailySearchProvider, (_, next) {
+      if (next.isEmpty && _searchController.text.isNotEmpty) _searchController.clear();
+    });
+    ref.listen<String?>(dailyCategoryFilterProvider, (_, next) {
+      if (next == null && _categoryController.text.isNotEmpty) _categoryController.clear();
+    });
 
     return Padding(
       padding: ResponsiveUtils.getListPadding(context),
       child: ExpansionTile(
         leading: const Icon(Icons.filter_list),
-        title: Text(localizations.filterOptions, style: TextStyle(fontSize: ResponsiveUtils.getTitleFontSize(context), fontWeight: FontWeight.w600)),
+        title: Text(
+          localizations.filterOptions,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
         childrenPadding: ResponsiveUtils.getListPadding(context),
         children: [
@@ -416,37 +508,49 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
             decoration: InputDecoration(
               labelText: localizations.searchByName,
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(icon: const Icon(Icons.clear), onPressed: () => _searchController.clear())
-                  : null,
+              border: OutlineInputBorder(
+                borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+              ),
+              suffixIcon:
+                  _searchController.text.isNotEmpty
+                      ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => _searchController.clear(),
+                      )
+                      : null,
             ),
           ),
           const SizedBox(height: 12),
           DropdownMenu<CategoryItem?>(
             controller: _categoryController,
-            expandedInsets: EdgeInsets.zero, 
-            textStyle: TextStyle(fontSize: body + 2), 
+            expandedInsets: EdgeInsets.zero,
+            textStyle: TextStyle(fontSize: body + 2),
             enableFilter: true,
-            label: Text(
-              localizations.filterByCategory, 
-              style: TextStyle(fontSize: body),
-            ),
-            onSelected: (item) => ref.read(dailyCategoryFilterProvider.notifier).state = item?.category.name,
-            dropdownMenuEntries: getCategoryItems(context).map((item) => DropdownMenuEntry(
-              value: item, 
-              label: item.label, 
-              leadingIcon: item.icon != null ? Icon(item.icon) : null,
-              style: MenuItemButton.styleFrom(
-                textStyle: TextStyle(fontSize: body + 2),
-              ),
-            )).toList(),
-            trailingIcon: selectedCat != null
-                ? IconButton(icon: const Icon(Icons.clear), onPressed: () {
-                    _categoryController.clear();
-                    ref.read(dailyCategoryFilterProvider.notifier).state = null;
-                  })
-                : null,
+            label: Text(localizations.filterByCategory, style: TextStyle(fontSize: body)),
+            onSelected:
+                (item) =>
+                    ref.read(dailyCategoryFilterProvider.notifier).state = item?.category.name,
+            dropdownMenuEntries:
+                getCategoryItems(context)
+                    .map(
+                      (item) => DropdownMenuEntry(
+                        value: item,
+                        label: item.label,
+                        leadingIcon: item.icon != null ? Icon(item.icon) : null,
+                        style: MenuItemButton.styleFrom(textStyle: TextStyle(fontSize: body + 2)),
+                      ),
+                    )
+                    .toList(),
+            trailingIcon:
+                selectedCat != null
+                    ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _categoryController.clear();
+                        ref.read(dailyCategoryFilterProvider.notifier).state = null;
+                      },
+                    )
+                    : null,
           ),
         ],
       ),
@@ -475,7 +579,17 @@ class _PersonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (people.isEmpty) return Center(child: Text(AppLocalizations.of(context).noEntriesForThisDay, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))));
+    if (people.isEmpty) {
+      return Center(
+        child: Text(
+          AppLocalizations.of(context).noEntriesForThisDay,
+          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+        ),
+      );
+    }
+
+    final bodyFontSize = ResponsiveUtils.getBodyFontSize(context);
+    final iconSize = ResponsiveUtils.getIconSize(context);
 
     return ListView.builder(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.getButtonHeight(context) + 60),
@@ -487,7 +601,10 @@ class _PersonList extends StatelessWidget {
         return Card(
           color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
           shape: RoundedRectangleBorder(
-            side: isSelected ? BorderSide(color: Theme.of(context).primaryColor, width: 2) : BorderSide.none,
+            side:
+                isSelected
+                    ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
+                    : BorderSide.none,
             borderRadius: ResponsiveUtils.getCardBorderRadius(context),
           ),
           child: InkWell(
@@ -499,28 +616,76 @@ class _PersonList extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: Text(person.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getTitleFontSize(context)))),
-                      if (isEditMode) Checkbox(value: isSelected, onChanged: (_) => onToggleSelection(person)),
+                      Expanded(
+                        child: Text(
+                          person.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: ResponsiveUtils.getTitleFontSize(context),
+                          ),
+                        ),
+                      ),
+                      if (isEditMode)
+                        Checkbox(
+                          value: isSelected, 
+                          onChanged: (_) => onToggleSelection(person),
+                        ),
                     ],
                   ),
                   const Divider(),
-                  ...person.records.map((record) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(localizedCategoryLabel(context, record.category)),
-                    subtitle: record.comment != null ? Text(record.comment!) : null,
-                    trailing: isEditMode ? null : PopupMenuButton<String>(
-                      onSelected: (val) {
-                        if (val == 'edit') onEditCategory(record);
-                        if (val == 'delete') onDeleteCategory(record);
-                      },
-                      itemBuilder: (ctx) => [
-                        PopupMenuItem(value: 'edit', child: Text(AppLocalizations.of(context).edit)),
-                        PopupMenuItem(value: 'delete', child: Text(AppLocalizations.of(context).delete)),
-                      ],
+                  ...person.records.map(
+                    (record) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        localizedCategoryLabel(context, record.category),
+                        style: TextStyle(fontSize: bodyFontSize),
+                      ),
+                      subtitle: record.comment != null 
+                          ? Text(
+                              record.comment!,
+                              style: TextStyle(fontSize: bodyFontSize - 2),
+                            ) 
+                          : null,
+                      trailing:
+                          isEditMode
+                              ? null
+                              : PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert, size: iconSize),
+                                onSelected: (val) {
+                                  if (val == 'edit') onEditCategory(record);
+                                  if (val == 'delete') onDeleteCategory(record);
+                                },
+                                itemBuilder:
+                                    (ctx) => [
+                                      PopupMenuItem(
+                                        value: 'edit',
+                                        child: Text(
+                                          AppLocalizations.of(context).edit,
+                                          style: TextStyle(fontSize: bodyFontSize),
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text(
+                                          AppLocalizations.of(context).delete,
+                                          style: TextStyle(fontSize: bodyFontSize),
+                                        ),
+                                      ),
+                                    ],
+                              ),
                     ),
-                  )),
+                  ),
                   if (!isEditMode)
-                    Center(child: IconButton(icon: const Icon(Icons.add_circle_outline), color: Theme.of(context).primaryColor, onPressed: () => onAddCategory(person))),
+                    Center(
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.add_circle_outline,
+                          size: ResponsiveUtils.getIconSize(context, baseSize: 32),
+                        ),
+                        color: Theme.of(context).primaryColor,
+                        onPressed: () => onAddCategory(person),
+                      ),
+                    ),
                 ],
               ),
             ),

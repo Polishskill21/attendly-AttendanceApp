@@ -179,7 +179,7 @@ class _EditCategoryPageState extends ConsumerState<EditCategoryPage> {
                   );
                 }).toList(),
                 menuHeight: ResponsiveUtils.isTablet(context) ? 300 : 250,
-                width: MediaQuery.of(context).size.width - (ResponsiveUtils.isTablet(context) ? 48 : 32),
+                // width: MediaQuery.of(context).size.width - (ResponsiveUtils.isTablet(context) ? 48 : 32),
                 inputDecorationTheme: InputDecorationTheme(
                   border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
                   contentPadding: ResponsiveUtils.getContentPadding(context),
