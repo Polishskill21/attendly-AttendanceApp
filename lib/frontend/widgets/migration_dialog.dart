@@ -1,3 +1,4 @@
+import 'package:attendly/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class MigrationProgressDialog extends StatelessWidget {
@@ -37,20 +38,19 @@ class MigrationProgressDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return PopScope(
-      // Blocks the hardware back button and Android predictive-back gesture
       canPop: false,
       child: Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        // No close button — intentional
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Spinning indicator
               const SizedBox(
                 width: 48,
                 height: 48,
@@ -60,8 +60,7 @@ class MigrationProgressDialog extends StatelessWidget {
               const SizedBox(height: 28),
 
               // Title
-              Text(
-                'Migrating Database',
+              Text(localizations.migratingDatabase,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -71,9 +70,7 @@ class MigrationProgressDialog extends StatelessWidget {
               const SizedBox(height: 14),
 
               // Body message
-              Text(
-                'Your data is being moved to the new year.\n'
-                'Please do not close the app until this is finished.',
+              Text(localizations.migrationBodyMessage,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[600],
                       height: 1.5,
@@ -90,8 +87,7 @@ class MigrationProgressDialog extends StatelessWidget {
                   Icon(Icons.warning_amber_rounded,
                       size: 16, color: Colors.orange[700]),
                   const SizedBox(width: 6),
-                  Text(
-                    'Do not close the app',
+                  Text(localizations.doNotCloseAppWarning,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.orange[700],
                           fontWeight: FontWeight.w600,
