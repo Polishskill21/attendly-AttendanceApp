@@ -79,7 +79,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
       _commentController.clear();
       _categoryController.clear();
       selectedCategory = null;
-      selectedDate = widget.initialDate ?? getScopedDate(dbYear: dbYear);;
+      selectedDate = widget.initialDate ?? getScopedDate(dbYear: dbYear);
       _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
     });
 

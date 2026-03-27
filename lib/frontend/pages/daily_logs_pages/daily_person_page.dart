@@ -337,7 +337,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                   // error: (_, __) => Center(
                   //   child: ElevatedButton(onPressed: refreshDailyEntries, child: const Text("Retry"))
                   // ),
-                  error: (error, __) {
+                  error: (error, stacktrace) {
                     if (error is custom_db_exceptions.DatabaseNotReadyException) {
                       return const Center(child: CircularProgressIndicator());
                     }
