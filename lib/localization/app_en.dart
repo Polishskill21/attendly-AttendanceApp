@@ -643,4 +643,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get falseValue => "false";
+
+  // For migration_dialog.dart
+  @override
+  String get migratingDatabase => 'Migrating Database';
+
+  @override
+  String get migrationBodyMessage => 'Your data is being moved to the new year.\nPlease do not close the app until this is finished.';
+
+  @override
+  String get doNotCloseAppWarning => 'Do not close the app';
 }
