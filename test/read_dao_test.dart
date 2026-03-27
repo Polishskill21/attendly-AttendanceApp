@@ -19,7 +19,7 @@ void main() {
     
     // --- Directory Table Tests ---
     
-    test('getAllPeople & getPersonById', () async {
+    test('watchAllPerson & getPersonById', () async {
       await db.insertDao.insertDirPerson(DirectoryPeopleCompanion.insert(
         name: 'Rafa',
         birthday: DateTime(2000, 02, 21),
@@ -96,7 +96,7 @@ void main() {
 
     // --- Join & Search Tests ---
 
-    test('getPeopleFromCurrentDay returns joined data', () async {
+    test('watchPeopleFromCurrentDay returns joined data', () async {
       final date = DateTime(2026, 01, 25);
       final pId = await db.into(db.directoryPeople).insert(
         DirectoryPeopleCompanion.insert(name: 'Viktor B.', birthday: DateTime.now(), gender: Gender.m, migration: true, migrationBackground: const Value('Russian'))
@@ -127,7 +127,7 @@ void main() {
 
     // --- Weekly Entry Table Tests ---
 
-    test('Weekly Entry queries', () async {
+    test('Watch Weekly Entry queries', () async {
       final date = DateTime(2026, 01, 01);
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
         weekDate: date, under_10: 5, age_10_13: 2, age_14_17: 0, age_18_24: 0, over_24: 1,
