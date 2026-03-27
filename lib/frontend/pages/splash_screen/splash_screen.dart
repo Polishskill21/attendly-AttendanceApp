@@ -189,6 +189,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
 
   void _retryInitialization() {
+    if (widget.dbError != null) {
+      
+      ref.read(databaseManagerProvider.notifier).closeDatabase();
+      return;
+    }
     setState(() => _dbFuture = _initializeApp());
   }
 
