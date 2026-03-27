@@ -1,5 +1,5 @@
-import 'package:attendly/backend/db_exceptions.dart';
 import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/config/db_exceptions.dart';
 
 
 class WeeklyRepository {
