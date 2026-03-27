@@ -57,7 +57,7 @@ void main() {
 
       // 3. Assertions
       final entries = await db.readDao.getDailyEntriesByPersonId(pId);
-      final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
 
       expect(entries.isEmpty, true);
       expect(weekly!.age_14_17, 0); // Reverted
@@ -84,7 +84,7 @@ void main() {
       }
 
       // Verify stats exist before deletion
-      var week1 = await db.readDao.getWeeklyEntryByDate(DateTime(2026, 01, 05));
+      var week1 = await db.readDao.watchWeeklyEntryByDate(DateTime(2026, 01, 05)).first;
       expect(week1!.under_10, 1);
       expect(week1.allF, 1);
       expect(week1.migrationFemale, 1);
@@ -95,8 +95,8 @@ void main() {
       // 3. Verify cascading cleanup
       final person = await db.readDao.getPersonById(pId);
       final entries = await db.readDao.getDailyEntriesByPersonId(pId);
-      week1 = await db.readDao.getWeeklyEntryByDate(DateTime(2026, 01, 05));
-      final week2 = await db.readDao.getWeeklyEntryByDate(DateTime(2026, 01, 12));
+      week1 = await db.readDao.watchWeeklyEntryByDate(DateTime(2026, 01, 05)).first;
+      final week2 = await db.readDao.watchWeeklyEntryByDate(DateTime(2026, 01, 12)).first;
 
       expect(person, isNull);
       expect(entries.isEmpty, true);

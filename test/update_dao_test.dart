@@ -50,7 +50,7 @@ void main() {
 
       // 3. Verify the stats
       final weekDate = DateTime(2026, 05, 18); // Monday of that week
-      final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
 
       expect(weekly, isNotNull);
       expect(weekly!.age_10_13, 1); 
@@ -77,7 +77,7 @@ void main() {
         ),
       );
 
-      final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
 
       expect(weekly!.under_10, 0);   
       expect(weekly.age_14_17, 1);   
@@ -101,7 +101,7 @@ void main() {
         newCategory: Category.open,
       );
 
-      final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
 
       expect(weekly!.offersDiverse, 0); 
       expect(weekly.openDiverse, 1);
@@ -150,7 +150,7 @@ void main() {
       );
 
       // Verify Alice is still Male in stats because transaction rolled back
-      final weekly = await db.readDao.getWeeklyEntryByDate(DateTime(2025, 12, 29)); // Monday
+      final weekly = await db.readDao.watchWeeklyEntryByDate(DateTime(2025, 12, 29)).first; // Monday
       expect(weekly!.openMale, 1);
       expect(weekly.openFemale, 0);
     });
@@ -162,7 +162,7 @@ void main() {
         weekDate: weekDate, age: 5, gender: Gender.m, category: Category.open, migration: true, isAddition: true,
       );
 
-      var weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      var weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
       expect(weekly!.under_10, 1);
       expect(weekly.allM, 1);
       expect(weekly.migrationMale, 1);
@@ -171,7 +171,7 @@ void main() {
         weekDate: weekDate, age: 5, gender: Gender.m, category: Category.open, migration: true, isAddition: false,
       );
 
-      weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
       expect(weekly!.under_10, 0);
       expect(weekly.allM, 0);
       expect(weekly.migrationMale, 0);
@@ -191,7 +191,7 @@ void main() {
       );
 
       final weekDate = DateTime(2026, 01, 26);
-      final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
       expect(weekly, isNull); 
     });
 
@@ -204,7 +204,7 @@ void main() {
       await db.updateDao.recalibrateWeeklyData();
 
       final weekDate = DateTime(2026, 03, 02);
-      final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+      final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
 
       expect(weekly!.allM, 1);
       expect(weekly.migrationMale, 0); 
@@ -225,7 +225,7 @@ void main() {
       weekDate: date, age: 30, gender: Gender.d, category: Category.offer, migration: false, isAddition: true,
     );
 
-    final weekly = await db.readDao.getWeeklyEntryByDate(date);
+    final weekly = await db.readDao.watchWeeklyEntryByDate(date).first;
     expect(weekly!.under_10, 10); 
     expect(weekly.over_24, 1); 
   });
@@ -239,7 +239,7 @@ void main() {
     );
 
     await db.updateDao.updateCountableStatus(weekDate, true);
-    final weeklyTest = await db.readDao.getWeeklyEntryByDate(weekDate);
+    final weeklyTest = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
     expect(weeklyTest!.countable, true);
 
     // Now subtract it to make it zero
@@ -249,7 +249,7 @@ void main() {
 
     await db.updateDao.updateCountableColZeroWeek(weekDate);
 
-    final weekly = await db.readDao.getWeeklyEntryByDate(weekDate);
+    final weekly = await db.readDao.watchWeeklyEntryByDate(weekDate).first;
     expect(weekly!.countable, false);
   });
 }

@@ -105,7 +105,7 @@ void main() {
         recordID: 1, dates: date, id: pId, category: Category.open, description: const Value('Present')
       ));
 
-      final results = await db.readDao.getPeopleFromCurrentDay(date);
+      final results = await db.readDao.watchPeopleFromCurrentDay(date).first;
       expect(results.length, 1);
       expect(results.first.readTable(db.directoryPeople).name, 'Viktor B.');
     });
@@ -136,8 +136,8 @@ void main() {
         migrationFemale: 1, migrationDiverse: 0, countable: true
       ));
 
-      final entry = await db.readDao.getWeeklyEntryByDate(date);
-      final all = await db.readDao.getAllWeeklyEntries();
+      final entry = await db.readDao.watchWeeklyEntryByDate(date).first;
+      final all = await db.readDao.watchAllWeeklyEntries().first;
 
       expect(entry?.under_10, 5);
       expect(all.length, 1);
