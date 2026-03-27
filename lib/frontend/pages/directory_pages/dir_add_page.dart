@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:attendly/frontend/selection_options/gender_item.dart';
 import 'package:attendly/frontend/selection_options/migration_item.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
-import 'package:attendly/backend/db_connection_validator.dart';
+// import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/localization/app_localizations.dart';
 
 class AddPage extends ConsumerStatefulWidget{

@@ -1,4 +1,4 @@
-import 'package:attendly/backend/db_connection_validator.dart';
+// import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/data/repo/directory_repository.dart';

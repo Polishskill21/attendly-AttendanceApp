@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
-import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
+// import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/widgets/chart_dialog_helper.dart'; 
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
@@ -31,7 +31,7 @@ class WeeklyReportPage extends ConsumerStatefulWidget {
 }
 
 class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
-  final HelperAllPerson _helper = HelperAllPerson();
+  // final HelperAllPerson _helper = HelperAllPerson();
   late DateTime selectedWeekDate;
   bool _statusChanged = false;
   bool _isManualRefreshing = false;

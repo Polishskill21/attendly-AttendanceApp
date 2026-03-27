@@ -122,7 +122,7 @@ class _DatabaseListPageState extends ConsumerState<DatabaseListPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                 ),
-                color: isCurrentDb ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
+                color: isCurrentDb ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
                 child: ListTile(
                   enabled: !isCurrentDb,
                   contentPadding: EdgeInsets.symmetric(
