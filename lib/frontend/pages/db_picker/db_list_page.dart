@@ -1,8 +1,8 @@
 import 'dart:io';
+import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:attendly/backend/manager/storage_manager.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/localization/app_localizations.dart';

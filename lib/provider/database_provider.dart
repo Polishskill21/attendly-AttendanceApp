@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/database_manager.dart';
-import 'package:attendly/data/local/config/db_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
 import 'package:attendly/data/local/config/i_database_manager.dart';
 import 'package:attendly/frontend/app_database_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

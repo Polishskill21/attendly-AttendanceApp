@@ -1,8 +1,9 @@
-import 'package:attendly/backend/settings_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_service.dart';
 import 'package:attendly/frontend/pages/settings_page/settings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsService _service;

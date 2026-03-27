@@ -1,9 +1,10 @@
-import 'package:attendly/backend/global/global_func.dart';
 import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/person_model/category_record.dart';
 import 'package:attendly/frontend/person_model/person_categories.dart';
+import 'package:attendly/global/global_function_collection.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 
 final dailyRepositoryProvider = Provider<DailyRepository>((ref) {
   return DailyRepository(ref.watch(appDatabaseProvider));

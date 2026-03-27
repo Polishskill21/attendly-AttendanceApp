@@ -1,5 +1,5 @@
 import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/config/db_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
 import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;

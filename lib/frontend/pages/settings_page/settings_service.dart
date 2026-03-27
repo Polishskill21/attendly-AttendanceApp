@@ -1,9 +1,10 @@
+import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
 import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as p;
-import 'package:attendly/backend/settings_exceptions.dart';
+
 
 class SettingsService {
   static const String _fileName = "settings.json";

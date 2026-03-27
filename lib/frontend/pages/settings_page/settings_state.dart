@@ -1,6 +1,7 @@
-import 'package:attendly/backend/settings_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
 import 'package:flutter/material.dart';
- 
+
+
 class SettingsState {
   final ThemeMode themeMode;
   final Locale locale;
