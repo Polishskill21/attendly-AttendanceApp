@@ -18,7 +18,7 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
   Future<void> recalibrateWeeklyData() async {
     await transaction(() async {
       final existingWeeks = await db.readDao.getAllWeeklyEntriesFuture();
-      final countableStates = {for (var w in existingWeeks) w.dates: w.countable};
+      final countableStates = {for (var w in existingWeeks) w.weekDate: w.countable};
 
       await delete(weeklyEntry).go();
 
@@ -27,11 +27,11 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
       for (final row in rows) {
         final daily = row.readTable(dailyEntry);
         final person = row.readTable(directoryPeople);
-        final weekDate = getFirstDateOfWeek(daily.dates);
+        final weekDate = getFirstDateOfWeek(daily.date);
 
         await _ensureWeeklyRowExists(weekDate);
 
-        final age = calcAge(daily.dates, person.birthday);
+        final age = calcAge(daily.date, person.birthday);
 
         await updateWeeklyTableCounters(
           weekDate: weekDate,
@@ -45,7 +45,7 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
 
       for (final entry in countableStates.entries) {
         await (update(weeklyEntry)
-            ..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(entry.key))))
+            ..where((t) => t.weekDate.equals(db.dateOnlyConverter.toSql(entry.key))))
           .write(WeeklyEntryCompanion(countable: Value(entry.value)));
       }
     });
@@ -77,8 +77,8 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
         
         for (final entry in entries) {
           await updateWeeklyTableCounters(
-            weekDate: getFirstDateOfWeek(entry.dates),
-            age: calcAge(entry.dates, oldData.birthday),
+            weekDate: getFirstDateOfWeek(entry.date),
+            age: calcAge(entry.date, oldData.birthday),
             gender: oldData.gender,
             category: entry.category,
             migration: oldData.migration,
@@ -92,8 +92,8 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
           final newMigration = companion.migration.present ? companion.migration.value : oldData.migration;
 
           await updateWeeklyTableCounters(
-            weekDate: getFirstDateOfWeek(entry.dates),
-            age: calcAge(entry.dates, newBirthday),
+            weekDate: getFirstDateOfWeek(entry.date),
+            age: calcAge(entry.date, newBirthday),
             gender: newGender,
             category: entry.category,
             migration: newMigration,
@@ -142,7 +142,7 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
       }
 
       await (update(dailyEntry)
-            ..where((t) => t.recordID.equals(recordID) & t.dates.equals(db.dateOnlyConverter.toSql(date)) & t.id.equals(personId)))
+            ..where((t) => t.recordId.equals(recordID) & t.date.equals(db.dateOnlyConverter.toSql(date)) & t.personId.equals(personId)))
           .write(DailyEntryCompanion(category: Value(newCategory), description: Value(newDescription)));
     });
   }
@@ -166,33 +166,33 @@ class UpdateDao extends DatabaseAccessor<AppDatabase> with _$UpdateDaoMixin, Sha
 
     await _ensureWeeklyRowExists(weekDate);
 
-    await customUpdate('UPDATE weekly_entry SET $ageCol = $ageCol $op 1, $genderCol = $genderCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry});
+    await customUpdate('UPDATE weekly_entry SET $ageCol = $ageCol $op 1, $genderCol = $genderCol $op 1 WHERE week_date = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry});
 
     if (genCatCol.isNotEmpty) {
-      await customUpdate('UPDATE weekly_entry SET $genCatCol = $genCatCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry});
+      await customUpdate('UPDATE weekly_entry SET $genCatCol = $genCatCol $op 1 WHERE week_date = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry});
     }
 
     if (migrCol != null && category == Category.open) {
-      await customUpdate('UPDATE weekly_entry SET $migrCol = $migrCol $op 1 WHERE dates = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry},);
+      await customUpdate('UPDATE weekly_entry SET $migrCol = $migrCol $op 1 WHERE week_date = ?', variables: [Variable<String>(dateStr)], updates: {weeklyEntry},);
     }
   }
 
   Future<void> updateCountableColZeroWeek(DateTime weekDate) async {
     if (await db.readDao.areAllColumnsZero(weekDate)) {
-      await (update(weeklyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(weekDate)))).write(const WeeklyEntryCompanion(countable: Value(false)));
+      await (update(weeklyEntry)..where((t) => t.weekDate.equals(db.dateOnlyConverter.toSql(weekDate)))).write(const WeeklyEntryCompanion(countable: Value(false)));
     }
   }
 
   Future<void> updateCountableStatus(DateTime weekDate, bool newValue) async {
     final dateStr = db.dateOnlyConverter.toSql(weekDate);
-    await (update(weeklyEntry)..where((t) => t.dates.equals(dateStr))).write(WeeklyEntryCompanion(countable: Value(newValue)));
+    await (update(weeklyEntry)..where((t) => t.weekDate.equals(dateStr))).write(WeeklyEntryCompanion(countable: Value(newValue)));
   }
 
   // --- Helper Method ---
 
   Future<void> _ensureWeeklyRowExists(DateTime date) async {
     await customInsert(
-      'INSERT OR IGNORE INTO weekly_entry (dates, under_10, age_10_13, age_14_17, age_18_24, over_24, all_m, all_f, all_d, open_male, open_female, open_diverse, offers_male, offers_female, offers_diverse, migration_male, migration_female, migration_diverse, countable) '
+      'INSERT OR IGNORE INTO weekly_entry (week_date, under_10, age_10_13, age_14_17, age_18_24, over_24, all_m, all_f, all_d, open_male, open_female, open_diverse, offers_male, offers_female, offers_diverse, migration_male, migration_female, migration_diverse, countable) '
       'VALUES (?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)',
       variables: [Variable<String>(db.dateOnlyConverter.toSql(date))],
       updates: {weeklyEntry},

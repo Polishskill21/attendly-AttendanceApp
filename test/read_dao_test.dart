@@ -66,10 +66,10 @@ void main() {
       );
 
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 1, dates: date1, id: pId, category: Category.open, description: const Value('Old')
+        recordId: 1, date: date1, personId: pId, category: Category.open, description: const Value('Old')
       ));
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 2, dates: date2, id: pId, category: Category.offer, description: const Value('New')
+        recordId: 2, date: date2, personId: pId, category: Category.offer, description: const Value('New')
       ));
 
       expect(await db.readDao.getLatestDailyDate(), date2);
@@ -84,7 +84,7 @@ void main() {
       final date = DateTime(2026, 01, 25);
 
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 10, dates: date, id: pId, category: Category.parent, description: const Value('Desc')
+        recordId: 10, date: date, personId: pId, category: Category.parent, description: const Value('Desc')
       ));
 
       final cat = await db.readDao.getCategory(10, date, pId);
@@ -102,7 +102,7 @@ void main() {
         DirectoryPeopleCompanion.insert(name: 'Viktor B.', birthday: DateTime.now(), gender: Gender.m, migration: true, migrationBackground: const Value('Russian'))
       );
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 1, dates: date, id: pId, category: Category.open, description: const Value('Present')
+        recordId: 1, date: date, personId: pId, category: Category.open, description: const Value('Present')
       ));
 
       final results = await db.readDao.watchPeopleFromCurrentDay(date).first;
@@ -115,7 +115,7 @@ void main() {
         DirectoryPeopleCompanion.insert(name: 'Gregor', birthday: DateTime.now(), gender: Gender.m, migration: true, migrationBackground: const Value('Kazakhstan'))
       );
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 1, dates: DateTime.now(), id: pId, category: Category.open, description: const Value('Searching for something')
+        recordId: 1, date: DateTime.now(), personId: pId, category: Category.open, description: const Value('Searching for something')
       ));
 
       final byName = await db.readDao.searchDailyLogs(name: 'Greg');
@@ -130,7 +130,7 @@ void main() {
     test('Weekly Entry queries', () async {
       final date = DateTime(2026, 01, 01);
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: date, under_10: 5, age_10_13: 2, age_14_17: 0, age_18_24: 0, over_24: 1,
+        weekDate: date, under_10: 5, age_10_13: 2, age_14_17: 0, age_18_24: 0, over_24: 1,
         allM: 4, allF: 4, allD: 0, openMale: 2, openFemale: 2, openDiverse: 0,
         offersMale: 1, offersFemale: 1, offersDiverse: 0, migrationMale: 1, 
         migrationFemale: 1, migrationDiverse: 0, countable: true
@@ -146,7 +146,7 @@ void main() {
     test('getYearStats aggregates correctly and respects countable filter', () async {
       // 1. Insert a countable week (should be included in SUM)
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: DateTime(2026, 01, 01), 
+        weekDate: DateTime(2026, 01, 01), 
         under_10: 10, age_10_13: 5, age_14_17: 0, age_18_24: 0, over_24: 0,
         allM: 8, allF: 7, allD: 0, openMale: 5, openFemale: 5, openDiverse: 0,
         offersMale: 3, offersFemale: 2, offersDiverse: 0, migrationMale: 2, 
@@ -155,7 +155,7 @@ void main() {
 
       // 2. Insert another countable week (should be added to SUM)
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: DateTime(2026, 01, 08), 
+        weekDate: DateTime(2026, 01, 08), 
         under_10: 5, age_10_13: 5, age_14_17: 0, age_18_24: 0, over_24: 0,
         allM: 2, allF: 3, allD: 0, openMale: 1, openFemale: 1, openDiverse: 0,
         offersMale: 1, offersFemale: 2, offersDiverse: 0, migrationMale: 1, 
@@ -164,7 +164,7 @@ void main() {
 
       // 3. Insert a non-countable week (should be IGNORED by SUM)
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: DateTime(2026, 01, 15), 
+        weekDate: DateTime(2026, 01, 15), 
         under_10: 100, age_10_13: 100, age_14_17: 0, age_18_24: 0, over_24: 0,
         allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
         offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
@@ -187,21 +187,21 @@ void main() {
     test('getWeekCount returns only countable rows', () async {
       // Insert 2 countable and 1 non-countable
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: DateTime(2026, 02, 01), 
+        weekDate: DateTime(2026, 02, 01), 
         under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
         allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
         offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
         migrationFemale: 0, migrationDiverse: 0, countable: true
       ));
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: DateTime(2026, 02, 08), 
+        weekDate: DateTime(2026, 02, 08), 
         under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
         allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
         offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
         migrationFemale: 0, migrationDiverse: 0, countable: true
       ));
       await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
-        dates: DateTime(2026, 02, 15), 
+        weekDate: DateTime(2026, 02, 15), 
         under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
         allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
         offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 

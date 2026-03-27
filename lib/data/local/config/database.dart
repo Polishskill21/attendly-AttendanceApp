@@ -47,13 +47,24 @@ class AppDatabase extends _$AppDatabase{
 
         await transaction(() async {
           if (from < 2) {
-            debugPrint("Migrating table to v2");
-            // Appends 'T00:00:00.000' to any string that doesn't have a 'T' yet 
-            await customStatement("UPDATE all_people SET birthday = birthday || 'T00:00:00.000' WHERE birthday NOT LIKE '%T%'");
-            await customStatement("UPDATE daily_entry SET dates = dates || 'T00:00:00.000' WHERE dates NOT LIKE '%T%'");
-            await customStatement("UPDATE weekly_entry SET dates = dates || 'T00:00:00.000' WHERE dates NOT LIKE '%T%'");
+            debugPrint("Migrating table to v2: Renaming tables and columns");
+            
+            await m.renameTable(directoryPeople, 'all_people');
 
-            // Rebuilding all_people for new name constraints unique, case-insensitve
+            await m.renameColumn(dailyEntry, 'dates', dailyEntry.date);
+            await m.renameColumn(dailyEntry, 'id', dailyEntry.personId);
+
+            await m.renameColumn(weeklyEntry, 'dates', weeklyEntry.weekDate);
+
+
+            debugPrint("Migrating table to v2: Adjusting date formatting");
+            
+            await customStatement("UPDATE directory_people SET birthday = birthday || 'T00:00:00.000' WHERE birthday NOT LIKE '%T%'");
+            await customStatement("UPDATE daily_entry SET date = date || 'T00:00:00.000' WHERE date NOT LIKE '%T%'");
+            await customStatement("UPDATE weekly_entry SET week_date = week_date || 'T00:00:00.000' WHERE week_date NOT LIKE '%T%'");
+
+            debugPrint("Migrating table to v2: Rebuilding for new name constraints");
+            
             await m.alterTable(TableMigration(directoryPeople));
           }
         });
@@ -76,12 +87,12 @@ class AppDatabase extends _$AppDatabase{
       try {
         debugPrint("Performing a copy");
         await transaction(() async {
-          String sqlCopyData = "INSERT INTO main.all_people SELECT * FROM old_db.all_people;";
+          String sqlCopyData = "INSERT INTO main.directory_people SELECT * FROM old_db.directory_people;";
           await customStatement(sqlCopyData);
           
         });
         
-        debugPrint("Successfully rolled over 'all_people' table to new year database.");
+        debugPrint("Successfully rolled over 'directory_people' table to new year database.");
         
       } finally {
         String sqlDetachDB = "DETACH DATABASE old_db;";

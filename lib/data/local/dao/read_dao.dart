@@ -34,24 +34,24 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
   // --- Daily ---
 
   Future<List<DailyEntryData>> getDailyEntriesByPersonId(int id) {
-    return (select(dailyEntry)..where((t) => t.id.equals(id))).get();
+    return (select(dailyEntry)..where((t) => t.personId.equals(id))).get();
   }
 
   Future<DateTime?> getLatestDailyDate() async {
-    final query = selectOnly(dailyEntry)..addColumns([dailyEntry.dates.max()]);
-    final result = await query.map((row) => row.read(dailyEntry.dates.max())).getSingle();
+    final query = selectOnly(dailyEntry)..addColumns([dailyEntry.date.max()]);
+    final result = await query.map((row) => row.read(dailyEntry.date.max())).getSingle();
     return result != null ? db.dateOnlyConverter.fromSql(result) : null;
   }
 
   Future<bool> existsEntryForDate(DateTime date) async {
-    final query = select(dailyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(date)));
+    final query = select(dailyEntry)..where((t) => t.date.equals(db.dateOnlyConverter.toSql(date)));
     final result = await query.get();
     return result.isNotEmpty;
   }
 
   Future<Category?> getCategory(int recordId, DateTime date, int personId) async {
     final query = select(dailyEntry)
-      ..where((t) => t.recordID.equals(recordId) & t.dates.equals(db.dateOnlyConverter.toSql(date)) & t.id.equals(personId));
+      ..where((t) => t.recordId.equals(recordId) & t.date.equals(db.dateOnlyConverter.toSql(date)) & t.personId.equals(personId));
     final entry = await query.getSingleOrNull();
     return entry?.category;
   }
@@ -59,8 +59,8 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
   Future<bool> hasOpenCategoryForDate(int personId, DateTime date) async {
     final query = select(dailyEntry)
       ..where((t) => 
-        t.id.equals(personId) & 
-        t.dates.equals(db.dateOnlyConverter.toSql(date)) &
+        t.personId.equals(personId) & 
+        t.date.equals(db.dateOnlyConverter.toSql(date)) &
         t.category.equals(Category.open.name)
       );
     final result = await query.getSingleOrNull();
@@ -68,19 +68,19 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
   }
 
   Future<int> countEntriesForPerson(int personId) async {
-    final countExp = dailyEntry.id.count();
+    final countExp = dailyEntry.personId.count();
     final query = selectOnly(dailyEntry)
       ..addColumns([countExp])
-      ..where(dailyEntry.id.equals(personId));
+      ..where(dailyEntry.personId.equals(personId));
     final result = await query.map((row) => row.read(countExp)).getSingle();
     return result ?? 0;
   }
 
   Stream<List<TypedResult>> watchPeopleFromCurrentDay(DateTime date) {
     final query = select(dailyEntry).join([
-      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
+      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.personId)),
     ])
-      ..where(dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)))
+      ..where(dailyEntry.date.equals(db.dateOnlyConverter.toSql(date)))
       ..orderBy([OrderingTerm.asc(directoryPeople.name)]);
 
     return query.watch();
@@ -88,7 +88,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
 
   Future<List<TypedResult>> searchDailyLogs({String? name, String? description, String? category}) {
     final query = select(dailyEntry).join([
-      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
+      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.personId)),
     ]);
 
     if (name != null && name.isNotEmpty) {
@@ -101,42 +101,42 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
       query.where(dailyEntry.category.equals(category));
     }
 
-    query.orderBy([OrderingTerm.desc(dailyEntry.dates), OrderingTerm.asc(directoryPeople.name)]);
+    query.orderBy([OrderingTerm.desc(dailyEntry.date), OrderingTerm.asc(directoryPeople.name)]);
 
     return query.get();
   }
 
   Future<TypedResult?> getEntryWithPerson(int recordID, int personId, DateTime date) {
     return (select(dailyEntry).join([
-      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
+      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.personId)),
     ])..where(
-        dailyEntry.recordID.equals(recordID) & 
-        dailyEntry.dates.equals(db.dateOnlyConverter.toSql(date)) & 
-        dailyEntry.id.equals(personId)
+        dailyEntry.recordId.equals(recordID) & 
+        dailyEntry.date.equals(db.dateOnlyConverter.toSql(date)) & 
+        dailyEntry.personId.equals(personId)
       )).getSingleOrNull();
   }
 
   // --- Weekly & Stats Queries ---
 
   Stream<WeeklyEntryData?> watchWeeklyEntryByDate(DateTime date) {
-    return (select(weeklyEntry)..where((t) => t.dates.equals(db.dateOnlyConverter.toSql(date)))).watchSingleOrNull();
+    return (select(weeklyEntry)..where((t) => t.weekDate.equals(db.dateOnlyConverter.toSql(date)))).watchSingleOrNull();
   }
 
   Stream<List<WeeklyEntryData>> watchAllWeeklyEntries() {
     return (select(weeklyEntry)
-      ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.dates)]))
+      ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.weekDate)]))
       .watch();
   }
 
   Future<List<WeeklyEntryData>> getAllWeeklyEntriesFuture() {
     return (select(weeklyEntry)
-      ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.dates)]))
+      ..orderBy([(t) => OrderingTerm.desc(weeklyEntry.weekDate)]))
       .get();
   }
 
   Future<List<TypedResult>> getAllDailyEntriesWithPeople() {
     return (select(dailyEntry).join([
-      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.id)),
+      innerJoin(directoryPeople, directoryPeople.id.equalsExp(dailyEntry.personId)),
     ])).get();
   }
 
@@ -148,7 +148,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
       'all_m + all_f + all_d + open_male + open_female + open_diverse + '
       'offers_male + offers_female + offers_diverse + '
       'migration_male + migration_female + migration_diverse) AS total '
-      'FROM weekly_entry WHERE dates = ?',
+      'FROM weekly_entry WHERE week_date = ?',
       variables: [Variable<String>(dateStr)],
     );
 
@@ -189,7 +189,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
 
   /// Counts recorded weeks where countable is not 0
   Future<int> getWeekCount() async {
-    final countExp = weeklyEntry.dates.count();
+    final countExp = weeklyEntry.weekDate.count();
     final query = selectOnly(weeklyEntry)
       ..addColumns([countExp])
       ..where(weeklyEntry.countable.equals(true));

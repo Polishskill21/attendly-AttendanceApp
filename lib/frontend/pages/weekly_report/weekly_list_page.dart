@@ -34,13 +34,13 @@ class _WeeksListPageState extends ConsumerState<WeeksListPage> {
     final newValue = !week.countable;
 
     try {
-      await repo.updateCountableStatus(week.dates, newValue);
+      await repo.updateCountableStatus(week.weekDate, newValue);
       
       // ref.invalidate(allWeeksProvider);
       
       // ref.invalidate(weeklyReportProvider(week.dates));
 
-      widget.onStatusChanged?.call(week.dates, newValue);
+      widget.onStatusChanged?.call(week.weekDate, newValue);
 
     } on custom_db_exceptions.DatabaseNotReadyException {
       return;
@@ -112,12 +112,12 @@ class _WeeksListPageState extends ConsumerState<WeeksListPage> {
             itemCount: weeksData.length,
             itemBuilder: (context, index) {
               final weekData = weeksData[index];
-              final DateTime startDate = weekData.dates;
+              final DateTime startDate = weekData.weekDate;
               final DateTime endDate = startDate.add(const Duration(days: 4));
               final displayStr = "${DateFormat('dd.MM.yyyy').format(startDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}";
               
               final bool isCountable = weekData.countable;
-              final isCurrentWeek = weekData.dates == widget.currentWeekDate;
+              final isCurrentWeek = weekData.weekDate == widget.currentWeekDate;
 
               return Card(
                 elevation: ResponsiveUtils.getCardElevation(context),
@@ -135,7 +135,7 @@ class _WeeksListPageState extends ConsumerState<WeeksListPage> {
                   borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                   onTap: () {
                     Navigator.of(context).pop({
-                      'date': weekData.dates.toIso8601String(),
+                      'date': weekData.weekDate.toIso8601String(),
                       'isCountable': isCountable
                     });
                   },

@@ -88,7 +88,7 @@ class $DirectoryPeopleTable extends DirectoryPeople
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'all_people';
+  static const String $name = 'directory_people';
   @override
   VerificationContext validateIntegrity(
     Insertable<DirectoryPeopleData> instance, {
@@ -434,11 +434,11 @@ class $DailyEntryTable extends DailyEntry
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $DailyEntryTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _recordIDMeta = const VerificationMeta(
-    'recordID',
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
   );
   @override
-  late final GeneratedColumn<int> recordID = GeneratedColumn<int>(
+  late final GeneratedColumn<int> recordId = GeneratedColumn<int>(
     'record_id',
     aliasedName,
     false,
@@ -446,24 +446,26 @@ class $DailyEntryTable extends DailyEntry
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> dates =
+  late final GeneratedColumnWithTypeConverter<DateTime, String> date =
       GeneratedColumn<String>(
-        'dates',
+        'date',
         aliasedName,
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: true,
-      ).withConverter<DateTime>($DailyEntryTable.$converterdates);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+      ).withConverter<DateTime>($DailyEntryTable.$converterdate);
+  static const VerificationMeta _personIdMeta = const VerificationMeta(
+    'personId',
+  );
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
+  late final GeneratedColumn<int> personId = GeneratedColumn<int>(
+    'person_id',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES all_people (id)',
+      'REFERENCES directory_people (id)',
     ),
   );
   @override
@@ -488,9 +490,9 @@ class $DailyEntryTable extends DailyEntry
   );
   @override
   List<GeneratedColumn> get $columns => [
-    recordID,
-    dates,
-    id,
+    recordId,
+    date,
+    personId,
     category,
     description,
   ];
@@ -508,16 +510,19 @@ class $DailyEntryTable extends DailyEntry
     final data = instance.toColumns(true);
     if (data.containsKey('record_id')) {
       context.handle(
-        _recordIDMeta,
-        recordID.isAcceptableOrUnknown(data['record_id']!, _recordIDMeta),
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
       );
     } else if (isInserting) {
-      context.missing(_recordIDMeta);
+      context.missing(_recordIdMeta);
     }
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIdMeta,
+        personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta),
+      );
     } else if (isInserting) {
-      context.missing(_idMeta);
+      context.missing(_personIdMeta);
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -532,26 +537,26 @@ class $DailyEntryTable extends DailyEntry
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {recordID, dates, id};
+  Set<GeneratedColumn> get $primaryKey => {recordId, date, personId};
   @override
   DailyEntryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return DailyEntryData(
-      recordID:
+      recordId:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
             data['${effectivePrefix}record_id'],
           )!,
-      dates: $DailyEntryTable.$converterdates.fromSql(
+      date: $DailyEntryTable.$converterdate.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
-          data['${effectivePrefix}dates'],
+          data['${effectivePrefix}date'],
         )!,
       ),
-      id:
+      personId:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
-            data['${effectivePrefix}id'],
+            data['${effectivePrefix}person_id'],
           )!,
       category: $DailyEntryTable.$convertercategory.fromSql(
         attachedDatabase.typeMapping.read(
@@ -571,35 +576,35 @@ class $DailyEntryTable extends DailyEntry
     return $DailyEntryTable(attachedDatabase, alias);
   }
 
-  static TypeConverter<DateTime, String> $converterdates =
+  static TypeConverter<DateTime, String> $converterdate =
       const DateOnlyConverter();
   static JsonTypeConverter2<Category, String, String> $convertercategory =
       const EnumNameConverter<Category>(Category.values);
 }
 
 class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
-  final int recordID;
-  final DateTime dates;
-  final int id;
+  final int recordId;
+  final DateTime date;
+  final int personId;
   final Category category;
   final String? description;
   const DailyEntryData({
-    required this.recordID,
-    required this.dates,
-    required this.id,
+    required this.recordId,
+    required this.date,
+    required this.personId,
     required this.category,
     this.description,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['record_id'] = Variable<int>(recordID);
+    map['record_id'] = Variable<int>(recordId);
     {
-      map['dates'] = Variable<String>(
-        $DailyEntryTable.$converterdates.toSql(dates),
+      map['date'] = Variable<String>(
+        $DailyEntryTable.$converterdate.toSql(date),
       );
     }
-    map['id'] = Variable<int>(id);
+    map['person_id'] = Variable<int>(personId);
     {
       map['category'] = Variable<String>(
         $DailyEntryTable.$convertercategory.toSql(category),
@@ -613,9 +618,9 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
 
   DailyEntryCompanion toCompanion(bool nullToAbsent) {
     return DailyEntryCompanion(
-      recordID: Value(recordID),
-      dates: Value(dates),
-      id: Value(id),
+      recordId: Value(recordId),
+      date: Value(date),
+      personId: Value(personId),
       category: Value(category),
       description:
           description == null && nullToAbsent
@@ -630,9 +635,9 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DailyEntryData(
-      recordID: serializer.fromJson<int>(json['recordID']),
-      dates: serializer.fromJson<DateTime>(json['dates']),
-      id: serializer.fromJson<int>(json['id']),
+      recordId: serializer.fromJson<int>(json['recordId']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      personId: serializer.fromJson<int>(json['personId']),
       category: $DailyEntryTable.$convertercategory.fromJson(
         serializer.fromJson<String>(json['category']),
       ),
@@ -643,9 +648,9 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'recordID': serializer.toJson<int>(recordID),
-      'dates': serializer.toJson<DateTime>(dates),
-      'id': serializer.toJson<int>(id),
+      'recordId': serializer.toJson<int>(recordId),
+      'date': serializer.toJson<DateTime>(date),
+      'personId': serializer.toJson<int>(personId),
       'category': serializer.toJson<String>(
         $DailyEntryTable.$convertercategory.toJson(category),
       ),
@@ -654,23 +659,23 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
   }
 
   DailyEntryData copyWith({
-    int? recordID,
-    DateTime? dates,
-    int? id,
+    int? recordId,
+    DateTime? date,
+    int? personId,
     Category? category,
     Value<String?> description = const Value.absent(),
   }) => DailyEntryData(
-    recordID: recordID ?? this.recordID,
-    dates: dates ?? this.dates,
-    id: id ?? this.id,
+    recordId: recordId ?? this.recordId,
+    date: date ?? this.date,
+    personId: personId ?? this.personId,
     category: category ?? this.category,
     description: description.present ? description.value : this.description,
   );
   DailyEntryData copyWithCompanion(DailyEntryCompanion data) {
     return DailyEntryData(
-      recordID: data.recordID.present ? data.recordID.value : this.recordID,
-      dates: data.dates.present ? data.dates.value : this.dates,
-      id: data.id.present ? data.id.value : this.id,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
+      date: data.date.present ? data.date.value : this.date,
+      personId: data.personId.present ? data.personId.value : this.personId,
       category: data.category.present ? data.category.value : this.category,
       description:
           data.description.present ? data.description.value : this.description,
@@ -680,9 +685,9 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
   @override
   String toString() {
     return (StringBuffer('DailyEntryData(')
-          ..write('recordID: $recordID, ')
-          ..write('dates: $dates, ')
-          ..write('id: $id, ')
+          ..write('recordId: $recordId, ')
+          ..write('date: $date, ')
+          ..write('personId: $personId, ')
           ..write('category: $category, ')
           ..write('description: $description')
           ..write(')'))
@@ -690,56 +695,57 @@ class DailyEntryData extends DataClass implements Insertable<DailyEntryData> {
   }
 
   @override
-  int get hashCode => Object.hash(recordID, dates, id, category, description);
+  int get hashCode =>
+      Object.hash(recordId, date, personId, category, description);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DailyEntryData &&
-          other.recordID == this.recordID &&
-          other.dates == this.dates &&
-          other.id == this.id &&
+          other.recordId == this.recordId &&
+          other.date == this.date &&
+          other.personId == this.personId &&
           other.category == this.category &&
           other.description == this.description);
 }
 
 class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
-  final Value<int> recordID;
-  final Value<DateTime> dates;
-  final Value<int> id;
+  final Value<int> recordId;
+  final Value<DateTime> date;
+  final Value<int> personId;
   final Value<Category> category;
   final Value<String?> description;
   final Value<int> rowid;
   const DailyEntryCompanion({
-    this.recordID = const Value.absent(),
-    this.dates = const Value.absent(),
-    this.id = const Value.absent(),
+    this.recordId = const Value.absent(),
+    this.date = const Value.absent(),
+    this.personId = const Value.absent(),
     this.category = const Value.absent(),
     this.description = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DailyEntryCompanion.insert({
-    required int recordID,
-    required DateTime dates,
-    required int id,
+    required int recordId,
+    required DateTime date,
+    required int personId,
     required Category category,
     this.description = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : recordID = Value(recordID),
-       dates = Value(dates),
-       id = Value(id),
+  }) : recordId = Value(recordId),
+       date = Value(date),
+       personId = Value(personId),
        category = Value(category);
   static Insertable<DailyEntryData> custom({
-    Expression<int>? recordID,
-    Expression<String>? dates,
-    Expression<int>? id,
+    Expression<int>? recordId,
+    Expression<String>? date,
+    Expression<int>? personId,
     Expression<String>? category,
     Expression<String>? description,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (recordID != null) 'record_id': recordID,
-      if (dates != null) 'dates': dates,
-      if (id != null) 'id': id,
+      if (recordId != null) 'record_id': recordId,
+      if (date != null) 'date': date,
+      if (personId != null) 'person_id': personId,
       if (category != null) 'category': category,
       if (description != null) 'description': description,
       if (rowid != null) 'rowid': rowid,
@@ -747,17 +753,17 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
   }
 
   DailyEntryCompanion copyWith({
-    Value<int>? recordID,
-    Value<DateTime>? dates,
-    Value<int>? id,
+    Value<int>? recordId,
+    Value<DateTime>? date,
+    Value<int>? personId,
     Value<Category>? category,
     Value<String?>? description,
     Value<int>? rowid,
   }) {
     return DailyEntryCompanion(
-      recordID: recordID ?? this.recordID,
-      dates: dates ?? this.dates,
-      id: id ?? this.id,
+      recordId: recordId ?? this.recordId,
+      date: date ?? this.date,
+      personId: personId ?? this.personId,
       category: category ?? this.category,
       description: description ?? this.description,
       rowid: rowid ?? this.rowid,
@@ -767,16 +773,16 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (recordID.present) {
-      map['record_id'] = Variable<int>(recordID.value);
+    if (recordId.present) {
+      map['record_id'] = Variable<int>(recordId.value);
     }
-    if (dates.present) {
-      map['dates'] = Variable<String>(
-        $DailyEntryTable.$converterdates.toSql(dates.value),
+    if (date.present) {
+      map['date'] = Variable<String>(
+        $DailyEntryTable.$converterdate.toSql(date.value),
       );
     }
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (personId.present) {
+      map['person_id'] = Variable<int>(personId.value);
     }
     if (category.present) {
       map['category'] = Variable<String>(
@@ -795,9 +801,9 @@ class DailyEntryCompanion extends UpdateCompanion<DailyEntryData> {
   @override
   String toString() {
     return (StringBuffer('DailyEntryCompanion(')
-          ..write('recordID: $recordID, ')
-          ..write('dates: $dates, ')
-          ..write('id: $id, ')
+          ..write('recordId: $recordId, ')
+          ..write('date: $date, ')
+          ..write('personId: $personId, ')
           ..write('category: $category, ')
           ..write('description: $description, ')
           ..write('rowid: $rowid')
@@ -813,14 +819,14 @@ class $WeeklyEntryTable extends WeeklyEntry
   final String? _alias;
   $WeeklyEntryTable(this.attachedDatabase, [this._alias]);
   @override
-  late final GeneratedColumnWithTypeConverter<DateTime, String> dates =
+  late final GeneratedColumnWithTypeConverter<DateTime, String> weekDate =
       GeneratedColumn<String>(
-        'dates',
+        'week_date',
         aliasedName,
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: true,
-      ).withConverter<DateTime>($WeeklyEntryTable.$converterdates);
+      ).withConverter<DateTime>($WeeklyEntryTable.$converterweekDate);
   static const VerificationMeta _under_10Meta = const VerificationMeta(
     'under_10',
   );
@@ -1018,7 +1024,7 @@ class $WeeklyEntryTable extends WeeklyEntry
   );
   @override
   List<GeneratedColumn> get $columns => [
-    dates,
+    weekDate,
     under_10,
     age_10_13,
     age_14_17,
@@ -1216,15 +1222,15 @@ class $WeeklyEntryTable extends WeeklyEntry
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {dates};
+  Set<GeneratedColumn> get $primaryKey => {weekDate};
   @override
   WeeklyEntryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return WeeklyEntryData(
-      dates: $WeeklyEntryTable.$converterdates.fromSql(
+      weekDate: $WeeklyEntryTable.$converterweekDate.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
-          data['${effectivePrefix}dates'],
+          data['${effectivePrefix}week_date'],
         )!,
       ),
       under_10:
@@ -1325,12 +1331,12 @@ class $WeeklyEntryTable extends WeeklyEntry
     return $WeeklyEntryTable(attachedDatabase, alias);
   }
 
-  static TypeConverter<DateTime, String> $converterdates =
+  static TypeConverter<DateTime, String> $converterweekDate =
       const DateOnlyConverter();
 }
 
 class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
-  final DateTime dates;
+  final DateTime weekDate;
   final int under_10;
   final int age_10_13;
   final int age_14_17;
@@ -1350,7 +1356,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   final int migrationDiverse;
   final bool countable;
   const WeeklyEntryData({
-    required this.dates,
+    required this.weekDate,
     required this.under_10,
     required this.age_10_13,
     required this.age_14_17,
@@ -1374,8 +1380,8 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     {
-      map['dates'] = Variable<String>(
-        $WeeklyEntryTable.$converterdates.toSql(dates),
+      map['week_date'] = Variable<String>(
+        $WeeklyEntryTable.$converterweekDate.toSql(weekDate),
       );
     }
     map['under_10'] = Variable<int>(under_10);
@@ -1401,7 +1407,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
 
   WeeklyEntryCompanion toCompanion(bool nullToAbsent) {
     return WeeklyEntryCompanion(
-      dates: Value(dates),
+      weekDate: Value(weekDate),
       under_10: Value(under_10),
       age_10_13: Value(age_10_13),
       age_14_17: Value(age_14_17),
@@ -1429,7 +1435,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return WeeklyEntryData(
-      dates: serializer.fromJson<DateTime>(json['dates']),
+      weekDate: serializer.fromJson<DateTime>(json['weekDate']),
       under_10: serializer.fromJson<int>(json['under_10']),
       age_10_13: serializer.fromJson<int>(json['age_10_13']),
       age_14_17: serializer.fromJson<int>(json['age_14_17']),
@@ -1454,7 +1460,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'dates': serializer.toJson<DateTime>(dates),
+      'weekDate': serializer.toJson<DateTime>(weekDate),
       'under_10': serializer.toJson<int>(under_10),
       'age_10_13': serializer.toJson<int>(age_10_13),
       'age_14_17': serializer.toJson<int>(age_14_17),
@@ -1477,7 +1483,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   }
 
   WeeklyEntryData copyWith({
-    DateTime? dates,
+    DateTime? weekDate,
     int? under_10,
     int? age_10_13,
     int? age_14_17,
@@ -1497,7 +1503,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
     int? migrationDiverse,
     bool? countable,
   }) => WeeklyEntryData(
-    dates: dates ?? this.dates,
+    weekDate: weekDate ?? this.weekDate,
     under_10: under_10 ?? this.under_10,
     age_10_13: age_10_13 ?? this.age_10_13,
     age_14_17: age_14_17 ?? this.age_14_17,
@@ -1519,7 +1525,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   );
   WeeklyEntryData copyWithCompanion(WeeklyEntryCompanion data) {
     return WeeklyEntryData(
-      dates: data.dates.present ? data.dates.value : this.dates,
+      weekDate: data.weekDate.present ? data.weekDate.value : this.weekDate,
       under_10: data.under_10.present ? data.under_10.value : this.under_10,
       age_10_13: data.age_10_13.present ? data.age_10_13.value : this.age_10_13,
       age_14_17: data.age_14_17.present ? data.age_14_17.value : this.age_14_17,
@@ -1562,7 +1568,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   @override
   String toString() {
     return (StringBuffer('WeeklyEntryData(')
-          ..write('dates: $dates, ')
+          ..write('weekDate: $weekDate, ')
           ..write('under_10: $under_10, ')
           ..write('age_10_13: $age_10_13, ')
           ..write('age_14_17: $age_14_17, ')
@@ -1587,7 +1593,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
 
   @override
   int get hashCode => Object.hash(
-    dates,
+    weekDate,
     under_10,
     age_10_13,
     age_14_17,
@@ -1611,7 +1617,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is WeeklyEntryData &&
-          other.dates == this.dates &&
+          other.weekDate == this.weekDate &&
           other.under_10 == this.under_10 &&
           other.age_10_13 == this.age_10_13 &&
           other.age_14_17 == this.age_14_17 &&
@@ -1633,7 +1639,7 @@ class WeeklyEntryData extends DataClass implements Insertable<WeeklyEntryData> {
 }
 
 class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
-  final Value<DateTime> dates;
+  final Value<DateTime> weekDate;
   final Value<int> under_10;
   final Value<int> age_10_13;
   final Value<int> age_14_17;
@@ -1654,7 +1660,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
   final Value<bool> countable;
   final Value<int> rowid;
   const WeeklyEntryCompanion({
-    this.dates = const Value.absent(),
+    this.weekDate = const Value.absent(),
     this.under_10 = const Value.absent(),
     this.age_10_13 = const Value.absent(),
     this.age_14_17 = const Value.absent(),
@@ -1676,7 +1682,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
     this.rowid = const Value.absent(),
   });
   WeeklyEntryCompanion.insert({
-    required DateTime dates,
+    required DateTime weekDate,
     required int under_10,
     required int age_10_13,
     required int age_14_17,
@@ -1696,7 +1702,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
     required int migrationDiverse,
     required bool countable,
     this.rowid = const Value.absent(),
-  }) : dates = Value(dates),
+  }) : weekDate = Value(weekDate),
        under_10 = Value(under_10),
        age_10_13 = Value(age_10_13),
        age_14_17 = Value(age_14_17),
@@ -1716,7 +1722,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
        migrationDiverse = Value(migrationDiverse),
        countable = Value(countable);
   static Insertable<WeeklyEntryData> custom({
-    Expression<String>? dates,
+    Expression<String>? weekDate,
     Expression<int>? under_10,
     Expression<int>? age_10_13,
     Expression<int>? age_14_17,
@@ -1738,7 +1744,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (dates != null) 'dates': dates,
+      if (weekDate != null) 'week_date': weekDate,
       if (under_10 != null) 'under_10': under_10,
       if (age_10_13 != null) 'age_10_13': age_10_13,
       if (age_14_17 != null) 'age_14_17': age_14_17,
@@ -1762,7 +1768,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
   }
 
   WeeklyEntryCompanion copyWith({
-    Value<DateTime>? dates,
+    Value<DateTime>? weekDate,
     Value<int>? under_10,
     Value<int>? age_10_13,
     Value<int>? age_14_17,
@@ -1784,7 +1790,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
     Value<int>? rowid,
   }) {
     return WeeklyEntryCompanion(
-      dates: dates ?? this.dates,
+      weekDate: weekDate ?? this.weekDate,
       under_10: under_10 ?? this.under_10,
       age_10_13: age_10_13 ?? this.age_10_13,
       age_14_17: age_14_17 ?? this.age_14_17,
@@ -1810,9 +1816,9 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (dates.present) {
-      map['dates'] = Variable<String>(
-        $WeeklyEntryTable.$converterdates.toSql(dates.value),
+    if (weekDate.present) {
+      map['week_date'] = Variable<String>(
+        $WeeklyEntryTable.$converterweekDate.toSql(weekDate.value),
       );
     }
     if (under_10.present) {
@@ -1878,7 +1884,7 @@ class WeeklyEntryCompanion extends UpdateCompanion<WeeklyEntryData> {
   @override
   String toString() {
     return (StringBuffer('WeeklyEntryCompanion(')
-          ..write('dates: $dates, ')
+          ..write('weekDate: $weekDate, ')
           ..write('under_10: $under_10, ')
           ..write('age_10_13: $age_10_13, ')
           ..write('age_14_17: $age_14_17, ')
@@ -1964,14 +1970,17 @@ final class $$DirectoryPeopleTableReferences
   static MultiTypedResultKey<$DailyEntryTable, List<DailyEntryData>>
   _dailyEntryRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.dailyEntry,
-    aliasName: $_aliasNameGenerator(db.directoryPeople.id, db.dailyEntry.id),
+    aliasName: $_aliasNameGenerator(
+      db.directoryPeople.id,
+      db.dailyEntry.personId,
+    ),
   );
 
   $$DailyEntryTableProcessedTableManager get dailyEntryRefs {
     final manager = $$DailyEntryTableTableManager(
       $_db,
       $_db.dailyEntry,
-    ).filter((f) => f.id.id.sqlEquals($_itemColumn<int>('id')!));
+    ).filter((f) => f.personId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_dailyEntryRefsTable($_db));
     return ProcessedTableManager(
@@ -2028,7 +2037,7 @@ class $$DirectoryPeopleTableFilterComposer
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.dailyEntry,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.personId,
       builder:
           (
             joinBuilder, {
@@ -2123,7 +2132,7 @@ class $$DirectoryPeopleTableAnnotationComposer
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.dailyEntry,
-      getReferencedColumn: (t) => t.id,
+      getReferencedColumn: (t) => t.personId,
       builder:
           (
             joinBuilder, {
@@ -2243,8 +2252,9 @@ class $$DirectoryPeopleTableTableManager
                                 p0,
                               ).dailyEntryRefs,
                       referencedItemsForCurrentItem:
-                          (item, referencedItems) =>
-                              referencedItems.where((e) => e.id == item.id),
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.personId == item.id,
+                          ),
                       typedResults: items,
                     ),
                 ];
@@ -2271,18 +2281,18 @@ typedef $$DirectoryPeopleTableProcessedTableManager =
     >;
 typedef $$DailyEntryTableCreateCompanionBuilder =
     DailyEntryCompanion Function({
-      required int recordID,
-      required DateTime dates,
-      required int id,
+      required int recordId,
+      required DateTime date,
+      required int personId,
       required Category category,
       Value<String?> description,
       Value<int> rowid,
     });
 typedef $$DailyEntryTableUpdateCompanionBuilder =
     DailyEntryCompanion Function({
-      Value<int> recordID,
-      Value<DateTime> dates,
-      Value<int> id,
+      Value<int> recordId,
+      Value<DateTime> date,
+      Value<int> personId,
       Value<Category> category,
       Value<String?> description,
       Value<int> rowid,
@@ -2292,19 +2302,19 @@ final class $$DailyEntryTableReferences
     extends BaseReferences<_$AppDatabase, $DailyEntryTable, DailyEntryData> {
   $$DailyEntryTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $DirectoryPeopleTable _idTable(_$AppDatabase db) =>
+  static $DirectoryPeopleTable _personIdTable(_$AppDatabase db) =>
       db.directoryPeople.createAlias(
-        $_aliasNameGenerator(db.dailyEntry.id, db.directoryPeople.id),
+        $_aliasNameGenerator(db.dailyEntry.personId, db.directoryPeople.id),
       );
 
-  $$DirectoryPeopleTableProcessedTableManager get id {
-    final $_column = $_itemColumn<int>('id')!;
+  $$DirectoryPeopleTableProcessedTableManager get personId {
+    final $_column = $_itemColumn<int>('person_id')!;
 
     final manager = $$DirectoryPeopleTableTableManager(
       $_db,
       $_db.directoryPeople,
     ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_idTable($_db));
+    final item = $_typedResult.readTableOrNull(_personIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -2321,14 +2331,14 @@ class $$DailyEntryTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get recordID => $composableBuilder(
-    column: $table.recordID,
+  ColumnFilters<int> get recordId => $composableBuilder(
+    column: $table.recordId,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get dates =>
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get date =>
       $composableBuilder(
-        column: $table.dates,
+        column: $table.date,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
@@ -2343,10 +2353,10 @@ class $$DailyEntryTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$DirectoryPeopleTableFilterComposer get id {
+  $$DirectoryPeopleTableFilterComposer get personId {
     final $$DirectoryPeopleTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.personId,
       referencedTable: $db.directoryPeople,
       getReferencedColumn: (t) => t.id,
       builder:
@@ -2376,13 +2386,13 @@ class $$DailyEntryTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get recordID => $composableBuilder(
-    column: $table.recordID,
+  ColumnOrderings<int> get recordId => $composableBuilder(
+    column: $table.recordId,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get dates => $composableBuilder(
-    column: $table.dates,
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2396,10 +2406,10 @@ class $$DailyEntryTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$DirectoryPeopleTableOrderingComposer get id {
+  $$DirectoryPeopleTableOrderingComposer get personId {
     final $$DirectoryPeopleTableOrderingComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.personId,
       referencedTable: $db.directoryPeople,
       getReferencedColumn: (t) => t.id,
       builder:
@@ -2429,11 +2439,11 @@ class $$DailyEntryTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get recordID =>
-      $composableBuilder(column: $table.recordID, builder: (column) => column);
+  GeneratedColumn<int> get recordId =>
+      $composableBuilder(column: $table.recordId, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<DateTime, String> get dates =>
-      $composableBuilder(column: $table.dates, builder: (column) => column);
+  GeneratedColumnWithTypeConverter<DateTime, String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<Category, String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
@@ -2443,10 +2453,10 @@ class $$DailyEntryTableAnnotationComposer
     builder: (column) => column,
   );
 
-  $$DirectoryPeopleTableAnnotationComposer get id {
+  $$DirectoryPeopleTableAnnotationComposer get personId {
     final $$DirectoryPeopleTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
+      getCurrentColumn: (t) => t.personId,
       referencedTable: $db.directoryPeople,
       getReferencedColumn: (t) => t.id,
       builder:
@@ -2480,7 +2490,7 @@ class $$DailyEntryTableTableManager
           $$DailyEntryTableUpdateCompanionBuilder,
           (DailyEntryData, $$DailyEntryTableReferences),
           DailyEntryData,
-          PrefetchHooks Function({bool id})
+          PrefetchHooks Function({bool personId})
         > {
   $$DailyEntryTableTableManager(_$AppDatabase db, $DailyEntryTable table)
     : super(
@@ -2495,32 +2505,32 @@ class $$DailyEntryTableTableManager
               () => $$DailyEntryTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> recordID = const Value.absent(),
-                Value<DateTime> dates = const Value.absent(),
-                Value<int> id = const Value.absent(),
+                Value<int> recordId = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<int> personId = const Value.absent(),
                 Value<Category> category = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailyEntryCompanion(
-                recordID: recordID,
-                dates: dates,
-                id: id,
+                recordId: recordId,
+                date: date,
+                personId: personId,
                 category: category,
                 description: description,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                required int recordID,
-                required DateTime dates,
-                required int id,
+                required int recordId,
+                required DateTime date,
+                required int personId,
                 required Category category,
                 Value<String?> description = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DailyEntryCompanion.insert(
-                recordID: recordID,
-                dates: dates,
-                id: id,
+                recordId: recordId,
+                date: date,
+                personId: personId,
                 category: category,
                 description: description,
                 rowid: rowid,
@@ -2535,7 +2545,7 @@ class $$DailyEntryTableTableManager
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({id = false}) {
+          prefetchHooksCallback: ({personId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -2554,15 +2564,17 @@ class $$DailyEntryTableTableManager
                   dynamic
                 >
               >(state) {
-                if (id) {
+                if (personId) {
                   state =
                       state.withJoin(
                             currentTable: table,
-                            currentColumn: table.id,
+                            currentColumn: table.personId,
                             referencedTable: $$DailyEntryTableReferences
-                                ._idTable(db),
+                                ._personIdTable(db),
                             referencedColumn:
-                                $$DailyEntryTableReferences._idTable(db).id,
+                                $$DailyEntryTableReferences
+                                    ._personIdTable(db)
+                                    .id,
                           )
                           as T;
                 }
@@ -2590,11 +2602,11 @@ typedef $$DailyEntryTableProcessedTableManager =
       $$DailyEntryTableUpdateCompanionBuilder,
       (DailyEntryData, $$DailyEntryTableReferences),
       DailyEntryData,
-      PrefetchHooks Function({bool id})
+      PrefetchHooks Function({bool personId})
     >;
 typedef $$WeeklyEntryTableCreateCompanionBuilder =
     WeeklyEntryCompanion Function({
-      required DateTime dates,
+      required DateTime weekDate,
       required int under_10,
       required int age_10_13,
       required int age_14_17,
@@ -2617,7 +2629,7 @@ typedef $$WeeklyEntryTableCreateCompanionBuilder =
     });
 typedef $$WeeklyEntryTableUpdateCompanionBuilder =
     WeeklyEntryCompanion Function({
-      Value<DateTime> dates,
+      Value<DateTime> weekDate,
       Value<int> under_10,
       Value<int> age_10_13,
       Value<int> age_14_17,
@@ -2648,9 +2660,9 @@ class $$WeeklyEntryTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get dates =>
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get weekDate =>
       $composableBuilder(
-        column: $table.dates,
+        column: $table.weekDate,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
@@ -2754,8 +2766,8 @@ class $$WeeklyEntryTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get dates => $composableBuilder(
-    column: $table.dates,
+  ColumnOrderings<String> get weekDate => $composableBuilder(
+    column: $table.weekDate,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2859,8 +2871,8 @@ class $$WeeklyEntryTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumnWithTypeConverter<DateTime, String> get dates =>
-      $composableBuilder(column: $table.dates, builder: (column) => column);
+  GeneratedColumnWithTypeConverter<DateTime, String> get weekDate =>
+      $composableBuilder(column: $table.weekDate, builder: (column) => column);
 
   GeneratedColumn<int> get under_10 =>
       $composableBuilder(column: $table.under_10, builder: (column) => column);
@@ -2965,7 +2977,7 @@ class $$WeeklyEntryTableTableManager
                   $$WeeklyEntryTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<DateTime> dates = const Value.absent(),
+                Value<DateTime> weekDate = const Value.absent(),
                 Value<int> under_10 = const Value.absent(),
                 Value<int> age_10_13 = const Value.absent(),
                 Value<int> age_14_17 = const Value.absent(),
@@ -2986,7 +2998,7 @@ class $$WeeklyEntryTableTableManager
                 Value<bool> countable = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WeeklyEntryCompanion(
-                dates: dates,
+                weekDate: weekDate,
                 under_10: under_10,
                 age_10_13: age_10_13,
                 age_14_17: age_14_17,
@@ -3009,7 +3021,7 @@ class $$WeeklyEntryTableTableManager
               ),
           createCompanionCallback:
               ({
-                required DateTime dates,
+                required DateTime weekDate,
                 required int under_10,
                 required int age_10_13,
                 required int age_14_17,
@@ -3030,7 +3042,7 @@ class $$WeeklyEntryTableTableManager
                 required bool countable,
                 Value<int> rowid = const Value.absent(),
               }) => WeeklyEntryCompanion.insert(
-                dates: dates,
+                weekDate: weekDate,
                 under_10: under_10,
                 age_10_13: age_10_13,
                 age_14_17: age_14_17,
