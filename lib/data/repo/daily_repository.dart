@@ -13,12 +13,12 @@ class DailyRepository {
   // --- READ OPERATIONS ---
 
   /// Fetches all daily entries joined with person data for a specific date.
-  Future<List<TypedResult>> getDailyLogsFromCurrentDay(DateTime date) async {
+  Stream<List<TypedResult>> watchDailyLogsFromCurrentDay(DateTime date) {
     try {
-      return await db.readDao.getPeopleFromCurrentDay(date);
+      return db.readDao.watchPeopleFromCurrentDay(date);
     } catch (e, stack) {
       throw DatabaseOperationException(
-        "Failed to fetch daily logs",
+        "Failed to watch daily logs",
         originalException: e is Exception ? e : Exception(e.toString()),
         stackTrace: stack,
       );
