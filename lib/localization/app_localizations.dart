@@ -295,4 +295,9 @@ abstract class AppLocalizations {
   String get openUserManual;
   String get externalPdfAppHint;
   String get failedToOpenPdf;
+
+  // For migration_dialog.dart
+  String get migratingDatabase;
+  String get migrationBodyMessage;
+  String get doNotCloseAppWarning;
 }
