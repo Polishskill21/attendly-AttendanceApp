@@ -36,9 +36,9 @@ class _WeeksListPageState extends ConsumerState<WeeksListPage> {
     try {
       await repo.updateCountableStatus(week.dates, newValue);
       
-      ref.invalidate(allWeeksProvider);
+      // ref.invalidate(allWeeksProvider);
       
-      ref.invalidate(weeklyReportProvider(week.dates));
+      // ref.invalidate(weeklyReportProvider(week.dates));
 
       widget.onStatusChanged?.call(week.dates, newValue);
 
