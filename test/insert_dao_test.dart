@@ -147,8 +147,8 @@ void main() {
 
       final entries = await db.readDao.getDailyEntriesByPersonId(pId);
       expect(entries.length, 2);
-      expect(entries.any((e) => e.recordID == 1), true);
-      expect(entries.any((e) => e.recordID == 2), true);
+      expect(entries.any((e) => e.recordId == 1), true);
+      expect(entries.any((e) => e.recordId == 2), true);
     });
 
     test('insertDailyEntry skips duplicate "Open" category entries', () async {

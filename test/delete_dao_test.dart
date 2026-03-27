@@ -45,7 +45,7 @@ void main() {
 
       // 1. Setup initial state: Entry + Weekly Counters
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: recordId, dates: entryDate, id: pId, category: Category.open,
+        recordId: recordId, date: entryDate, personId: pId, category: Category.open,
       ));
       
       await db.updateDao.updateWeeklyTableCounters(
@@ -75,7 +75,7 @@ void main() {
 
       for (var date in [dateW1, dateW2]) {
         await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-          recordID: date.day, dates: date, id: pId, category: Category.open,
+          recordId: date.day, date: date, personId: pId, category: Category.open,
         ));
         await db.updateDao.updateWeeklyTableCounters(
           weekDate: date.subtract(Duration(days: date.weekday - 1)), 
@@ -134,12 +134,11 @@ void main() {
       final p2 = await setupPerson(name: 'User B', birthday: DateTime(2000, 1, 1));
 
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 1, dates: date, id: p1, category: Category.offer,
+        recordId: 1, date: date, personId: p1, category: Category.offer,
       ));
       await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
-        recordID: 2, dates: date, id: p2, category: Category.offer,
+        recordId: 2, date: date, personId: p2, category: Category.offer,
       ));
-
       // Batch delete for that date
       await db.deleteDao.deleteMultipleDailyEntries([p1, p2], date);
 
