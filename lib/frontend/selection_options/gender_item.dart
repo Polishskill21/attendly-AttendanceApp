@@ -21,7 +21,7 @@ List<GenderItem> getGenderItems(BuildContext context) {
 }
 
 // Keep the old list for backward compatibility but deprecate it
-@deprecated
+@Deprecated("Keep the old list for backward compatibility but deprecate it")
 List<GenderItem> genderItems = [
   GenderItem(1, "Male", Gender.m, Icons.male),
   GenderItem(2, "Female", Gender.f, Icons.female),

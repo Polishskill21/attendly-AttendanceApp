@@ -23,7 +23,7 @@ List<CategoryItem> getCategoryItems(BuildContext context) {
 }
 
 // Keep the old list for backward compatibility but deprecate it
-@deprecated
+@Deprecated("Keep the old list for backward compatibility but deprecate it")
 List<CategoryItem> categoryItems = [
   CategoryItem(1, "Open", Category.open, FontAwesomeIcons.clipboardUser),
   CategoryItem(2, "Offer", Category.offer, Icons.local_offer_outlined),

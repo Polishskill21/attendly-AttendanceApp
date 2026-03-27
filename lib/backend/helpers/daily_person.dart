@@ -11,5 +11,5 @@ class DailyPerson {
     required String date, 
     required this.category, 
     this.description
-  }): this.date = date.split('.').reversed.join('-');
+  }): date = date.split('.').reversed.join('-');
 }

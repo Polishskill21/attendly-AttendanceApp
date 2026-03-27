@@ -7,7 +7,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:attendly/backend/db_connection_validator.dart';
+// import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/selection_options/gender_item.dart';
 import 'package:attendly/frontend/selection_options/migration_item.dart';
