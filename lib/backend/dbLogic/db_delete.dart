@@ -49,7 +49,7 @@ class DbDeletion extends DbBaseHandler {
           }
         }
         else{
-          throw custom_db_exceptions.PersonNotFoundException(id);
+          // throw custom_db_exceptions.PersonNotFoundException(id);
         }        
         String deleteDaily = "DELETE FROM daily_entry WHERE id = ?";
         await db!.execute(deleteDaily, [id]);
@@ -68,11 +68,11 @@ class DbDeletion extends DbBaseHandler {
         await db!.execute("COMMIT");
       }
     catch (e, stackTrace){
-      await db!.execute("ROLLBACK");
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException("Failed to delete person with ID $id.", originalException: e as Exception, stackTrace: stackTrace);
+      // await db!.execute("ROLLBACK");
+      // if (e is custom_db_exceptions.DatabaseException) {
+        // rethrow;
+      // }
+      // throw custom_db_exceptions.DatabaseOperationException("Failed to delete person with ID $id.", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
 
@@ -106,10 +106,10 @@ class DbDeletion extends DbBaseHandler {
       }
     catch (e, stackTrace){
       await db!.execute("ROLLBACK");
-      if (e is custom_db_exceptions.DatabaseException) {
-        rethrow;
-      }
-      throw custom_db_exceptions.DatabaseOperationException("Failed to delete daily entry.", originalException: e as Exception, stackTrace: stackTrace);
+      // if (e is custom_db_exceptions.DatabaseException) {
+      //   rethrow;
+      // }
+      // throw custom_db_exceptions.DatabaseOperationException("Failed to delete daily entry.", originalException: e as Exception, stackTrace: stackTrace);
     }
   }
   
@@ -157,11 +157,11 @@ class DbDeletion extends DbBaseHandler {
         await deleteDailyEntry(recordId, personId, date: dateStr);
       }
     } catch (e, stackTrace) {
-      throw custom_db_exceptions.DatabaseOperationException(
-        'Failed to delete entries for people.',
-        originalException: e is Exception ? e : Exception(e.toString()),
-        stackTrace: stackTrace,
-      );
+    //   throw custom_db_exceptions.DatabaseOperationException(
+    //     'Failed to delete entries for people.',
+    //     originalException: e is Exception ? e : Exception(e.toString()),
+    //     stackTrace: stackTrace,
+    //   );
     }
   }
 

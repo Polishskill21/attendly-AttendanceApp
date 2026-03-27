@@ -11,48 +11,52 @@ final dailyRepositoryProvider = Provider<DailyRepository>((ref) {
 
 
 final dailyDateProvider = StateProvider<DateTime>((ref) {
-  final dbYear = ref.watch(databaseManagerProvider).dbYear;
+  final dbYear = ref.watch(
+    databaseManagerProvider.select((s) => s.dbYear),
+  );
   return getScopedDate(dbYear: dbYear);
 });
 
-final dailySearchProvider = StateProvider<String>((ref) => '');
-final dailyCategoryFilterProvider = StateProvider<String?>((ref) => null);
-final dailyEditModeProvider = StateProvider<bool>((ref) => false);
-final dailySelectedPeopleProvider = StateProvider<Set<PersonWithCategories>>((ref) => {});
+final dailySearchProvider         = StateProvider.autoDispose<String>((ref) => '');
+final dailyCategoryFilterProvider = StateProvider.autoDispose<String?>((ref) => null);
+final dailyEditModeProvider       = StateProvider.autoDispose<bool>((ref) => false);
+final dailySelectedPeopleProvider = StateProvider.autoDispose<Set<PersonWithCategories>>((ref) => {});
 
 
-final dailyRawLogsProvider = FutureProvider<List<PersonWithCategories>>((ref) async {
+final dailyRawLogsProvider = StreamProvider<List<PersonWithCategories>>((ref) async* {
   final date = ref.watch(dailyDateProvider);
   final repo = ref.watch(dailyRepositoryProvider);
 
-  final rawResults = await repo.getDailyLogsFromCurrentDay(date);
+  final stream = repo.watchDailyLogsFromCurrentDay(date);
 
-  final Map<int, PersonWithCategories> personMap = {};
+  await for (final rawResults in stream) {
+    final Map<int, PersonWithCategories> personMap = {};
 
-  for (final row in rawResults) {
-    final personData = row.readTable(repo.db.directoryPeople);
-    final dailyData = row.readTable(repo.db.dailyEntry);
-    
-    final personId = personData.id;
+    for (final row in rawResults) {
+      final personData = row.readTable(repo.db.directoryPeople);
+      final dailyData = row.readTable(repo.db.dailyEntry);
+      
+      final personId = personData.id;
 
-    if (!personMap.containsKey(personId)) {
-      personMap[personId] = PersonWithCategories(
-        personId: personId,
-        name: personData.name,
-        records: [],
-      );
+      if (!personMap.containsKey(personId)) {
+        personMap[personId] = PersonWithCategories(
+          personId: personId,
+          name: personData.name,
+          records: [],
+        );
+      }
+
+      final record = CategoryRecord.fromDrift(personData, dailyData);
+      personMap[personId]!.records.add(record);
     }
-
-    final record = CategoryRecord.fromDrift(personData, dailyData);
     
-    personMap[personId]!.records.add(record);
+    // Yield the new list every time the database updates
+    yield personMap.values.toList();
   }
-  
-  return personMap.values.toList();
 });
 
 
-final dailyFilteredLogsProvider = Provider<AsyncValue<List<PersonWithCategories>>>((ref) {
+final dailyFilteredLogsProvider = Provider.autoDispose<AsyncValue<List<PersonWithCategories>>>((ref) {
   final rawDataAsync = ref.watch(dailyRawLogsProvider);
   final searchQuery = ref.watch(dailySearchProvider).toLowerCase();
   final selectedCategory = ref.watch(dailyCategoryFilterProvider);

@@ -1,5 +1,5 @@
-import 'package:attendly/backend/db_exceptions.dart';
 import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/config/db_exceptions.dart';
 
 
 class WeeklyRepository {
@@ -10,9 +10,9 @@ class WeeklyRepository {
   // --- READ OPERATIONS ---
 
   /// Fetches the full statistics for a specific week by its starting date.
-  Future<WeeklyEntryData?> getWeeklyEntryByDate(DateTime date) async {
+  Stream<WeeklyEntryData?> watchWeeklyEntryByDate(DateTime date) {
     try {
-      return await db.readDao.getWeeklyEntryByDate(date);
+      return db.readDao.watchWeeklyEntryByDate(date);
     } catch (e, stack) {
       throw DatabaseOperationException(
         "Failed to fetch weekly data for ${date.toIso8601String()}",
@@ -23,9 +23,9 @@ class WeeklyRepository {
   }
 
   /// Fetches all recorded weeks.
-  Future<List<WeeklyEntryData>> getAllWeeks() async {
+  Stream<List<WeeklyEntryData>> watchAllWeeks() {
     try {
-      return await db.readDao.getAllWeeklyEntries();
+      return db.readDao.watchAllWeeklyEntries();
     } catch (e, stack) {
       throw DatabaseOperationException(
         "Failed to fetch the list of weekly entries",
