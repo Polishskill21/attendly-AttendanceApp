@@ -7,20 +7,29 @@ final yearlyRepositoryProvider = Provider<YearlyStatsRepository>((ref) {
   return YearlyStatsRepository(ref.watch(appDatabaseProvider));
 });
 
-final yearlyStatsProvider = FutureProvider<YearStatsModel?>((ref) async {
+final yearlyStatsProvider = StreamProvider.autoDispose<YearStatsModel?>((ref) async* {
+  final db = ref.watch(appDatabaseProvider);
   final yearlyRepo = ref.watch(yearlyRepositoryProvider);
 
-  final results = await Future.wait([
-    yearlyRepo.getYearlyStats(),
-    yearlyRepo.getRecordedWeekCount(),
-  ]);
+  // A lightweight trigger stream that fires every time the weekly_entry table changes
+  final tableChanges = db.customSelect(
+    'SELECT COUNT(*) FROM weekly_entry', 
+    readsFrom: {db.weeklyEntry}
+  ).watch();
 
-  final statsData = results[0] as List<Map<String, dynamic>>;
-  final weekCount = results[1] as int;
+  await for (final _ in tableChanges) {
+    final results = await Future.wait([
+      yearlyRepo.getYearlyStats(),
+      yearlyRepo.getRecordedWeekCount(),
+    ]);
 
-  if (statsData.isNotEmpty && statsData.first.values.any((v) => v != null)) {
-    return YearStatsModel(stats: statsData.first, weekCount: weekCount);
+    final statsData = results[0] as List<Map<String, dynamic>>;
+    final weekCount = results[1] as int;
+
+    if (statsData.isNotEmpty && statsData.first.values.any((v) => v != null)) {
+      yield YearStatsModel(stats: statsData.first, weekCount: weekCount);
+    } else {
+      yield null;
+    }
   }
-
-  return null;
 });
