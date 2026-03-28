@@ -1,14 +1,14 @@
 import 'dart:io';
+import 'package:attendly/data/local/config/storage_manager.dart';
+import 'package:attendly/provider/database_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:attendly/backend/manager/connection_manager.dart';
-import 'package:attendly/backend/manager/storage_manager.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
-import 'package:attendly/frontend/pages/directory_pages/state_manager_dir_page.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 
-class DatabaseListPage extends StatefulWidget {
+class DatabaseListPage extends ConsumerStatefulWidget {
   // Add a field to hold the path of the currently active database.
   final String? currentDbPath;
   final bool isTablet;
@@ -20,10 +20,10 @@ class DatabaseListPage extends StatefulWidget {
   });
 
   @override
-  State<DatabaseListPage> createState() => _DatabaseListPageState();
+  ConsumerState<DatabaseListPage> createState() => _DatabaseListPageState();
 }
 
-class _DatabaseListPageState extends State<DatabaseListPage> {
+class _DatabaseListPageState extends ConsumerState<DatabaseListPage> {
   late final Future<List<File>> _dbFilesFuture;
 
   @override
@@ -33,17 +33,16 @@ class _DatabaseListPageState extends State<DatabaseListPage> {
   }
 
   /// Handles the selection of a database file.
-  void _onFileSelected(BuildContext context, String selectedDbPath) async {
+  void _onFileSelected(BuildContext context, File selectedDb) async {
     // Close current connection and clear state before switching
-    await DBConnectionManager.close();
-    StateManager.clearChildrenList();
+    await ref.read(databaseManagerProvider.notifier).closeDatabase();
 
     if (!mounted) return;
 
     // Navigate to splash screen to re-initialize with the new DB
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (context) => SplashScreen(selectedDbPath: selectedDbPath),
+        builder: (context) => SplashScreen(selectedDb: selectedDb),
       ),
       (Route<dynamic> route) => false,
     );
@@ -123,7 +122,7 @@ class _DatabaseListPageState extends State<DatabaseListPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: ResponsiveUtils.getCardBorderRadius(context),
                 ),
-                color: isCurrentDb ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
+                color: isCurrentDb ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
                 child: ListTile(
                   enabled: !isCurrentDb,
                   contentPadding: EdgeInsets.symmetric(
@@ -150,7 +149,7 @@ class _DatabaseListPageState extends State<DatabaseListPage> {
                       color: isCurrentDb ? Colors.grey[600] : null,
                     ),
                   ),
-                  onTap: isCurrentDb ? null : () => _onFileSelected(context, file.path),
+                  onTap: isCurrentDb ? null : () => _onFileSelected(context, file),
                 ),
               );
             },

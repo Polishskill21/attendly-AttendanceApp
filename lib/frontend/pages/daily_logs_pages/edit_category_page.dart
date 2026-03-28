@@ -1,40 +1,38 @@
-import 'package:attendly/backend/enums/category.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/tables/enums/category.dart';
+import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
-import 'package:collection/collection.dart';
+import 'package:attendly/provider/daily_repo_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:attendly/backend/dbLogic/db_read.dart';
-import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/person_model/category_record.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
-import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditCategoryPage extends StatefulWidget {
+class EditCategoryPage extends ConsumerStatefulWidget {
   final CategoryRecord record;
-  final Database database;
   final bool isTablet;
 
   const EditCategoryPage({
     super.key,
     required this.record,
-    required this.database,
     this.isTablet = false,
   });
 
   @override
-  State<StatefulWidget> createState() => _EditCategoryPageState();
+  ConsumerState<EditCategoryPage> createState() => _EditCategoryPageState();
 }
 
-class _EditCategoryPageState extends State<EditCategoryPage> {
+class _EditCategoryPageState extends ConsumerState<EditCategoryPage> {
   late TextEditingController _commentController;
   late TextEditingController _categoryController;
   Category? _selectedCategory;
-  late DbUpdater _updater;
-  late HelperAllPerson _helper;
+
+  late DailyRepository _repo;
+  final HelperAllPerson _helper = HelperAllPerson();
   bool _didChangeDependencies = false;
 
   @override
@@ -43,10 +41,8 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
     _commentController = TextEditingController(text: widget.record.comment);
     _selectedCategory = Category.values.byName(widget.record.category);
     _categoryController = TextEditingController();
-    
-    final reader = DbSelection(widget.database);
-    _updater = DbUpdater(widget.database, reader);
-    _helper = HelperAllPerson();
+
+    _repo = ref.read(dailyRepositoryProvider);
   }
 
   @override
@@ -65,7 +61,7 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
     super.dispose();
   }
 
-  Future<void> _saveChanges() async {
+  Future<void> _submitChanges() async {
     final localizations = AppLocalizations.of(context);
     if (_selectedCategory == null) {
       _helper.showErrorMessage(context, localizations.pleaseSelectCategory);
@@ -73,15 +69,18 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
     }
 
     try {
-      await _updater.updateDailyTable(
-        widget.record.recordId,
-        widget.record.date,
-        widget.record.personId,
-        _selectedCategory!,
-        _commentController.text.trim(),
+      await _repo.updateDailyEntry(
+        recordId: widget.record.recordId,
+        date: DateTime.parse(widget.record.date),
+        personId: widget.record.personId,
+        newCategory: _selectedCategory!,
+        newDescription: _commentController.text.trim().isEmpty 
+            ? null 
+            : _commentController.text.trim(),
       );
 
       await _helper.showSubmitMessage(context, localizations.recordUpdatedSuccessfully);
+      
       if (mounted) {
         Navigator.of(context).pop(true);
       }
@@ -91,11 +90,13 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
           context,
           localizations.personAlreadyInCategoryOpen(widget.record.personName ?? localizations.unknown),
         );
-    } on custom_db_exceptions.DbConnectionException catch (e) {
-      debugPrint('Database connection error: $e');
-      if (mounted) {
-        await DbConnectionValidator.handleConnectionError(context);
-      }
+    } on custom_db_exceptions.DatabaseNotReadyException {
+      return;
+    // }on custom_db_exceptions.DbConnectionException catch (e) {
+    //   debugPrint('Database connection error: $e');
+    //   if (mounted) {
+    //     await DbConnectionValidator.handleConnectionError(context);
+    //   }
     } on custom_db_exceptions.DatabaseException catch (e) {
       debugPrint('Database error: $e');
       _helper.showErrorMessage(context, e.toString());
@@ -178,7 +179,7 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
                   );
                 }).toList(),
                 menuHeight: ResponsiveUtils.isTablet(context) ? 300 : 250,
-                width: MediaQuery.of(context).size.width - (ResponsiveUtils.isTablet(context) ? 48 : 32),
+                // width: MediaQuery.of(context).size.width - (ResponsiveUtils.isTablet(context) ? 48 : 32),
                 inputDecorationTheme: InputDecorationTheme(
                   border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
                   contentPadding: ResponsiveUtils.getContentPadding(context),
@@ -220,7 +221,7 @@ class _EditCategoryPageState extends State<EditCategoryPage> {
               SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 3),
               Center(
                 child: ElevatedButton.icon(
-                  onPressed: _saveChanges,
+                  onPressed: _submitChanges,
                   icon: Icon(Icons.save, color: Colors.white, size: ResponsiveUtils.getIconSize(context, baseSize: 28)),
                   label: Text(
                     localizations.saveChanges,

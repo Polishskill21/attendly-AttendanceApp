@@ -1,4 +1,4 @@
-import 'package:attendly/backend/enums/category.dart';
+import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -23,7 +23,7 @@ List<CategoryItem> getCategoryItems(BuildContext context) {
 }
 
 // Keep the old list for backward compatibility but deprecate it
-@deprecated
+@Deprecated("Keep the old list for backward compatibility but deprecate it")
 List<CategoryItem> categoryItems = [
   CategoryItem(1, "Open", Category.open, FontAwesomeIcons.clipboardUser),
   CategoryItem(2, "Offer", Category.offer, Icons.local_offer_outlined),

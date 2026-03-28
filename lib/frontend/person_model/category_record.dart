@@ -1,3 +1,6 @@
+import 'package:attendly/data/local/config/database.dart';
+import 'package:intl/intl.dart';
+
 class CategoryRecord {
   final int recordId;
   final int personId;
@@ -16,14 +19,15 @@ class CategoryRecord {
   });
 
   // Factory constructor to create a CategoryRecord from a map
-  factory CategoryRecord.fromMap(Map<String, dynamic> map) {
+  factory CategoryRecord.fromDrift(DirectoryPeopleData person, DailyEntryData entry) {
     return CategoryRecord(
-      recordId: map['record_id'],
-      personId: map['id'],
-      personName: map['name'], 
-      date: map['dates'],
-      category: map['category'],
-      comment: map['description'],
+      recordId: entry.recordId,
+      personId: person.id,
+      personName: person.name,
+      // Format DateTime to String for your UI
+      date: DateFormat('yyyy-MM-dd').format(entry.date), 
+      category: entry.category.name, // Enum to String
+      comment: entry.description,
     );
   }
 }

@@ -1,62 +1,53 @@
-import 'package:attendly/backend/enums/genders.dart';
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/provider/directory_repo_provider.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqlite_api.dart';
-import 'package:attendly/backend/helpers/child.dart';
-import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/backend/db_connection_validator.dart';
-import 'package:attendly/backend/dbLogic/db_read.dart';
-import 'package:attendly/backend/dbLogic/db_update.dart';
+// import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/selection_options/gender_item.dart';
 import 'package:attendly/frontend/selection_options/migration_item.dart';
-import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/localization/app_localizations.dart';
 
 
-class EditPage extends StatefulWidget{
-  final Map<String,dynamic> childToUpdate;
-  final Database database;
+class EditPage extends ConsumerStatefulWidget{
+  final DirectoryPeopleData personToUpdate;
   final bool isTablet;
 
   const EditPage({
     super.key, 
-    required this.childToUpdate, 
-    required this.database,
+    required this.personToUpdate, 
     this.isTablet = false,
   });
 
   @override
-  State<StatefulWidget> createState() => _EditPageState();
+  ConsumerState<EditPage> createState() => _EditPageState();
 }
 
-class _EditPageState extends State<EditPage>{  
+class _EditPageState extends ConsumerState<EditPage>{  
   DateTime? _lastSelectedDate;
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _migrationController = TextEditingController();
   final TextEditingController _homeCountryController = TextEditingController();
-  Genders? selectedGender;
+  final HelperAllPerson _helper = HelperAllPerson();
+
+
+  Gender? selectedGender;
   bool? selectedMigration;
-  late DbSelection reader;
-  late DbUpdater updater;
-  late HelperAllPerson helper;
-
-  GenderItem? initalSelectionGenderValueDropDown;
-  MigraionItem? initalSelectionMigrationValueDropDown;
-
+  GenderItem? _initialGender;
+  MigraionItem? _initialMigration;
   bool _hasInitializedSelections = false;
 
 
-  List<dynamic> allData = [];
-
-   @override void initState() {
+  @override 
+  void initState() {
     super.initState();
-    reader = DbSelection(widget.database);
-    updater = DbUpdater(widget.database, reader);
-    helper = HelperAllPerson();
     _populateControllers();
   }
 
@@ -66,12 +57,12 @@ class _EditPageState extends State<EditPage>{
     // Initialize dropdown selections only once when context is available
     if (!_hasInitializedSelections) {
       if (selectedGender != null) {
-        initalSelectionGenderValueDropDown = genderMapToDropDownItem(selectedGender!, context);
-        _genderController.text = initalSelectionGenderValueDropDown?.label ?? '';
+        _initialGender = _genderToItem(selectedGender!, context);
+        _genderController.text = _initialGender?.label ?? '';
       }
       if (selectedMigration != null) {
-        initalSelectionMigrationValueDropDown = migrationMapToDropDownItem(selectedMigration!, context);
-        _migrationController.text = initalSelectionMigrationValueDropDown?.label ?? '';
+        _initialMigration = _migrationToItem(selectedMigration!, context);
+        _migrationController.text = _initialMigration?.label ?? '';
       }
       _hasInitializedSelections = true;
     }
@@ -88,125 +79,120 @@ class _EditPageState extends State<EditPage>{
   }
 
   void _populateControllers() {
+    final p = widget.personToUpdate;
+
     try{
-    _nameController.text = widget.childToUpdate['name'];
-    _homeCountryController.text = widget.childToUpdate['migration_background'] ?? "";
-    String dbDate = widget.childToUpdate['birthday'];
-    DateTime parsedDate = DateFormat('yyyy-MM-dd').parse(dbDate);
-    _birthdayController.text = DateFormat('dd.MM.yyyy').format(parsedDate);
+      _nameController.text = p.name;
+      _homeCountryController.text = p.migrationBackground ?? '';
 
-    _lastSelectedDate = parsedDate;
+      _birthdayController.text = DateFormat('dd.MM.yyyy').format(p.birthday);
+      _lastSelectedDate = p.birthday;
 
-    String gender = widget.childToUpdate['gender'];
-    selectedGender = stringToGender(gender);
+      selectedGender = p.gender;
 
-    int migration = widget.childToUpdate['migration'];
-    selectedMigration = intToBool(migration);
+      selectedMigration = p.migration;
     }
     catch(e, stackTrace){
-      helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
+      _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
     }
   }
 
-  GenderItem? genderMapToDropDownItem(Genders gender, BuildContext context){
+  GenderItem? _genderToItem(Gender gender, BuildContext context) {
     final items = getGenderItems(context);
-    switch(gender){
-      case Genders.m:
-        return items[0];
-      case Genders.f:
-        return items[1];
-      case Genders.d:
-        return items[2];
+    switch (gender) {
+      case Gender.m: return items[0];
+      case Gender.f: return items[1];
+      case Gender.d: return items[2];
     }
   }
 
-  MigraionItem? migrationMapToDropDownItem(bool migration, BuildContext context){
+  MigraionItem? _migrationToItem(bool migration, BuildContext context) {
     final items = getMigrationItems(context);
-    if(migration){
-      return items[0];
-    }
-    else{
-      return items[1];
-    }
+    return migration ? items[0] : items[1];
   }
 
   void _submitForm() async {
     final localizations = AppLocalizations.of(context);
-    String name = _nameController.text.trim();
-    String birthdayUI = _birthdayController.text.trim();
-    String homeCountry = _homeCountryController.text.trim();
+    final p = widget.personToUpdate;
+    final name = _nameController.text.trim();
+    final homeCountry = _homeCountryController.text.trim();
+    final currentBirthday = _lastSelectedDate!;
 
-    // Validate empty fields
-    if (name.isEmpty ||
-        birthdayUI.isEmpty ||
-        selectedGender == null ||
-        selectedMigration == null) {
-      helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
-      debugPrint(
-          "$name, $birthdayUI, $selectedGender, $selectedMigration, $homeCountry");
+
+    if (name.isEmpty || selectedGender == null || selectedMigration == null) {
+      _helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
       return;
     }
 
-    if (selectedMigration == true && homeCountry.isEmpty) {
-      helper.showErrorMessage(
-          context, localizations.homeCountryRequiredForMigration);
-      return;
-    }
-
-    // Validate date format (YYYY-MM-dd)
-    if (!_isValidDate(birthdayUI)) {
-      helper.showErrorMessage(context, localizations.invalidDateFormat);
-      return;
-    }
+    final repo = ref.read(directoryRepositoryProvider);
 
     try {
-      //create child object and pop page
-      final child = Child(
-          name: name,
-          birthday: birthdayUI,
-          gender: selectedGender!,
-          migration: selectedMigration!,
-          migrationBackground: homeCountry);
+      DirectoryPeopleCompanion companion = const DirectoryPeopleCompanion();
 
-      //database update database
-      await updater.updateAllPeopleTable(widget.childToUpdate['id'], child);
-      
-      await helper.showSubmitMessage(
-          context, localizations.updatedSuccessfully);
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
+      // Compare directly against typed fields — no Map lookups
+      if (name != p.name) {
+        companion = companion.copyWith(name: Value(name));
       }
+      if (currentBirthday.year != p.birthday.year ||
+          currentBirthday.month != p.birthday.month ||
+          currentBirthday.day != p.birthday.day) {
+        companion = companion.copyWith(birthday: Value(currentBirthday));
+      }
+      if (selectedGender != p.gender) {
+        companion = companion.copyWith(gender: Value(selectedGender!));
+      }
+      if (selectedMigration != p.migration) {
+        companion = companion.copyWith(migration: Value(selectedMigration!));
+      }
+      if (homeCountry != (p.migrationBackground ?? '')) {
+        companion = companion.copyWith(migrationBackground: Value(homeCountry));
+      }
+
+      final hasChanges = companion.name.present ||
+          companion.birthday.present ||
+          companion.gender.present ||
+          companion.migration.present ||
+          companion.migrationBackground.present;
+
+      if (!hasChanges) {
+        debugPrint("No changes detected, skipping update.");
+        if (mounted) Navigator.of(context).pop(false);
+        return;
+      }
+
+      await repo.updatePerson(p.id, companion);
+      
+      await _helper.showSubmitMessage(context, localizations.updatedSuccessfully);
+      if (mounted) Navigator.of(context).pop(true);
     } on custom_db_exceptions.DuplicatePersonException catch (e) {
-      helper.showErrorMessage(context, localizations.personNamedAlreadyExists(e.name));
+      _helper.showErrorMessage(
+          context, localizations.personNamedAlreadyExists(e.name));
 
     } on custom_db_exceptions.PersonNotFoundException catch (e) {
-      helper.showErrorMessage(context, localizations.personWithIdNotFound(e.id));
-      
-    } on custom_db_exceptions.DbConnectionException catch (e) {
-      debugPrint('Database connection error: $e');
-      if (mounted) {
-        await DbConnectionValidator.handleConnectionError(context);
-      }
-    } on custom_db_exceptions.DatabaseOperationException catch (e, stackTrace) {
-      debugPrint('Database operation error: $e');
-      helper.showErrorMessage(context, e.toString(),
-          stackTrace: stackTrace);
-    } catch (e, stackTrace) {
+      _helper.showErrorMessage(
+          context, localizations.personWithIdNotFound(e.id));
 
-      helper.showErrorMessage(context, e.toString(),
-          stackTrace: stackTrace);
+    } on custom_db_exceptions.DatabaseNotReadyException {
+      return;
+    // } on custom_db_exceptions.DbConnectionException {
+    //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
+
+    } on custom_db_exceptions.DatabaseOperationException catch (e, st) {
+      _helper.showErrorMessage(context, e.toString(), stackTrace: st);
+
+    } catch (e, st) {
+      _helper.showErrorMessage(context, e.toString(), stackTrace: st);
     }
   }
 
-  bool _isValidDate(String date) {
-    try {
-      DateFormat("dd.MM.yyyy").parseStrict(date);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
+  // bool _isValidDate(String date) {
+  //   try {
+  //     DateFormat("dd.MM.yyyy").parseStrict(date);
+  //     return true;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
 
   Future<void> _selectBirthday(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -219,28 +205,20 @@ class _EditPageState extends State<EditPage>{
       keyboardType: TextInputType.numberWithOptions(),
       builder: (context, child) {
         if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
-
-       final mq = MediaQuery.of(context);
-       final currentScale = mq.textScaler.scale(1.0);
-       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
-       
-       return MediaQuery(
-          data: mq.copyWith(
-            textScaler: TextScaler.linear(newScale),
-          ),
-          child: Transform.scale(
-            scale: 1.1,
-            child: child,
-          ),
+        
+        final mq = MediaQuery.of(context);
+        final newScale = (mq.textScaler.scale(1.0) * 1.2).clamp(1.0, 1.6);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.linear(newScale)),
+          child: Transform.scale(scale: 1.1, child: child),
         );
       },
     );
     
     if (picked != null) {
-      String formattedDate = DateFormat('dd.MM.yyyy').format(picked);
       setState(() {
         _lastSelectedDate = picked;
-        _birthdayController.text = formattedDate;
+        _birthdayController.text = DateFormat('dd.MM.yyyy').format(picked);
       });
     }
   }
@@ -331,38 +309,39 @@ class _EditPageState extends State<EditPage>{
                 controller: _genderController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectChildGender,
-                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                dropdownMenuEntries: getGenderItems(context).map<DropdownMenuEntry<GenderItem>>((GenderItem menu) {
-                  return DropdownMenuEntry<GenderItem>(
-                    value: menu, 
-                    label: menu.label, 
-                    leadingIcon: Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)),
-                    style: MenuItemButton.styleFrom(
-                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    ),
-                  );
-                }).toList(),
+                textStyle: TextStyle(
+                    fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                initialSelection: _initialGender,
+                dropdownMenuEntries: getGenderItems(context)
+                    .map<DropdownMenuEntry<GenderItem>>((menu) =>
+                        DropdownMenuEntry<GenderItem>(
+                          value: menu,
+                          label: menu.label,
+                          leadingIcon: Icon(menu.icon, size: iconSize),
+                          style: MenuItemButton.styleFrom(
+                              textStyle: TextStyle(
+                                  fontSize: ResponsiveUtils.getBodyFontSize(
+                                      context))),
+                        ))
+                    .toList(),
                 inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+                  border: OutlineInputBorder(
+                      borderRadius:
+                          ResponsiveUtils.getCardBorderRadius(context)),
                   contentPadding: ResponsiveUtils.getContentPadding(context),
                 ),
                 trailingIcon: selectedGender != null
                     ? IconButton(
-                        icon: Icon(Icons.clear, size: ResponsiveUtils.getIconSize(context)),
-                        onPressed: () {
-                          setState(() {
-                            selectedGender = null;
-                            _genderController.clear();
-                            initalSelectionGenderValueDropDown = null;
-                          });
-                        },
+                        icon: Icon(Icons.clear, size: iconSize),
+                        onPressed: () => setState(() {
+                          selectedGender = null;
+                          _genderController.clear();
+                          _initialGender = null;
+                        }),
                       )
                     : null,
-                onSelected: (GenderItem? item) {
-                  setState(() {
-                    selectedGender = item?.value;
-                  });
-                }
+                onSelected: (item) =>
+                    setState(() => selectedGender = item?.value),
               ),
 
               SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
@@ -374,42 +353,41 @@ class _EditPageState extends State<EditPage>{
                 controller: _migrationController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectChildsMigrationBackground,
-                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                dropdownMenuEntries: getMigrationItems(context).map<DropdownMenuEntry<MigraionItem>>((MigraionItem menu) {
-                  return DropdownMenuEntry<MigraionItem>(
-                    value: menu, 
-                    label: menu.label, 
-                    leadingIcon: Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)),
-                    style: MenuItemButton.styleFrom(
-                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    ),
-                  );
-                }).toList(),
+                textStyle: TextStyle(
+                    fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                initialSelection: _initialMigration,
+                dropdownMenuEntries: getMigrationItems(context)
+                    .map<DropdownMenuEntry<MigraionItem>>((menu) =>
+                        DropdownMenuEntry<MigraionItem>(
+                          value: menu,
+                          label: menu.label,
+                          leadingIcon: Icon(menu.icon, size: iconSize),
+                          style: MenuItemButton.styleFrom(
+                              textStyle: TextStyle(
+                                  fontSize: ResponsiveUtils.getBodyFontSize(
+                                      context))),
+                        ))
+                    .toList(),
                 inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+                  border: OutlineInputBorder(
+                      borderRadius:
+                          ResponsiveUtils.getCardBorderRadius(context)),
                   contentPadding: ResponsiveUtils.getContentPadding(context),
                 ),
                 trailingIcon: selectedMigration != null
                     ? IconButton(
-                        icon: Icon(Icons.clear, size: ResponsiveUtils.getIconSize(context)),
-                        onPressed: () {
-                          setState(() {
-                            selectedMigration = null;
-                            _migrationController.clear();
-                            initalSelectionMigrationValueDropDown = null;
-                          });
-                        },
+                        icon: Icon(Icons.clear, size: iconSize),
+                        onPressed: () => setState(() {
+                          selectedMigration = null;
+                          _migrationController.clear();
+                          _initialMigration = null;
+                        }),
                       )
                     : null,
-                onSelected: (MigraionItem? item) {
-                  setState(() {
-                    selectedMigration = item?.value;
-
-                    if (selectedMigration == false) {
-                      _homeCountryController.clear();
-                    }
-                  });
-                }
+                onSelected: (item) => setState(() {
+                  selectedMigration = item?.value;
+                  if (selectedMigration == false) _homeCountryController.clear();
+                }),
               ),
 
               SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),

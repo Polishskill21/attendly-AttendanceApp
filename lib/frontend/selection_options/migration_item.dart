@@ -19,7 +19,7 @@ List<MigraionItem> getMigrationItems(BuildContext context) {
 }
 
 // Keep the old list for backward compatibility but deprecate it
-@deprecated
+@Deprecated("Keep the old list for backward compatibility but deprecate it")
 List<MigraionItem> migrationItems = [
   MigraionItem(1, "True", true, Icons.location_on_outlined),
   MigraionItem(2, "False", false, Icons.location_off_outlined)

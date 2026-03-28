@@ -1,10 +1,10 @@
-import 'package:attendly/backend/manager/storage_manager.dart';
+import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
+import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as p;
-import 'package:attendly/backend/manager/db_data_manager.dart';
-import 'package:attendly/backend/settings_exceptions.dart';
+
 
 class SettingsService {
   static const String _fileName = "settings.json";
@@ -16,8 +16,7 @@ class SettingsService {
 
     // NewYearHandler is now responsible for creating the file with defaults.
     // This ensures the file exists before SettingsService is used.
-    await AnnualDataManager.create();
-    final dir = await StorageManager.getExternalDirectory();
+    final dir = await StorageManager.getExternalDocumentsDir();
     if (dir == null) {
       throw SettingsDirectoryNotFoundException();
     }

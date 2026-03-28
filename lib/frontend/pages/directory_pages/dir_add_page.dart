@@ -1,49 +1,46 @@
-import 'package:attendly/backend/enums/genders.dart';
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/provider/directory_repo_provider.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/selection_options/gender_item.dart';
 import 'package:attendly/frontend/selection_options/migration_item.dart';
-import 'package:attendly/backend/helpers/child.dart';
-import 'package:attendly/backend/dbLogic/db_read.dart';
-import 'package:attendly/backend/dbLogic/db_insert.dart';
-import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
-import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/backend/db_connection_validator.dart';
+// import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/localization/app_localizations.dart';
 
-class AddPage extends StatefulWidget{
-  final Database database;
+class AddPage extends ConsumerStatefulWidget{
   final bool isTablet;
 
   const AddPage({
     super.key, 
-    required this.database,
     this.isTablet = false,
   });
 
   @override
-  State<StatefulWidget> createState() => _AddPageState();
+  ConsumerState<AddPage> createState() => _AddPageState();
 }
 
-class _AddPageState extends State<AddPage>{  
+class _AddPageState extends ConsumerState<AddPage>{  
   DateTime? _lastSelectedDate;
-
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _migrationController = TextEditingController();
   final TextEditingController _homeCountryController = TextEditingController();
-  Genders? selectedGender;
+  final _helper = HelperAllPerson();
+  Gender? selectedGender;
   bool? selectedMigration;
-  late DbInsertion inserter;
-  late DbSelection reader;
-  late DbUpdater updater;
-  late HelperAllPerson helper;
 
-  List<dynamic> allData = [];
+  @override 
+  void initState(){
+    super.initState();
+  }
+
 
   @override
   void dispose() {
@@ -66,66 +63,67 @@ class _AddPageState extends State<AddPage>{
       selectedMigration = null;
     });
 
-    helper.showResetMessage(context, AppLocalizations.of(context).allFieldsReset);
+    _helper.showResetMessage(context, AppLocalizations.of(context).allFieldsReset);
   }
 
-  @override 
-  void initState(){
-    super.initState();
-    reader = DbSelection(widget.database);
-    updater = DbUpdater(widget.database, reader);
-    inserter = DbInsertion(widget.database, reader, updater);
-    helper = HelperAllPerson();
-  }
-
-  Future<bool> _submitForm() async{
+  Future<void> _submitForm() async{
     final localizations = AppLocalizations.of(context);
-    String name = _nameController.text.trim();
-    String uiBirthday = _birthdayController.text.trim();
-    String homeCountry = _homeCountryController.text.trim();
+    final name = _nameController.text.trim();
+    final uiBirthday = _birthdayController.text.trim();
+    final homeCountry = _homeCountryController.text.trim();
 
     // Validate empty fields
     if (name.isEmpty || uiBirthday.isEmpty || selectedGender == null || selectedMigration == null) {
-      helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
-      return false;
+      _helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
+      return;
     }
 
     if (selectedMigration == true && homeCountry.isEmpty) {
-      helper.showErrorMessage(context, localizations.homeCountryRequiredForMigration);
-      return false;
+      _helper.showErrorMessage(context, localizations.homeCountryRequiredForMigration);
+      return;
     }
 
-    // Validate date format (YYYY-MM-dd)
+    // Validate date format (dd.MM.YYYY)
     if (!_isValidDate(uiBirthday)) {
-      helper.showErrorMessage(context, localizations.invalidDateFormat);
-      return false;
+      _helper.showErrorMessage(context, localizations.invalidDateFormat);
+      return;
     }
+
+    final repo = ref.read(directoryRepositoryProvider);
 
     try {
+      DateTime parsedBirthday = DateFormat("dd.MM.yyyy").parse(uiBirthday);
       //create child object and pop page
-      final child = Child(name: name, birthday: uiBirthday, gender: selectedGender!, migration: selectedMigration!, migrationBackground: homeCountry);
+      // final child = Child(name: name, birthday: uiBirthday, gender: selectedGender!, migration: selectedMigration!, migrationBackground: homeCountry);
+      await repo.addPerson(
+        DirectoryPeopleCompanion.insert(
+          name: name,
+          birthday: parsedBirthday,
+          gender: selectedGender!,
+          migration: selectedMigration!,
+          migrationBackground: Value(homeCountry),
+        ),
+      );
 
-      //database insertion
-      await inserter.allPeopleTable(child);
-
-      await helper.showSubmitMessage(context, localizations.formSubmittedSuccessfully);
-      if (mounted) {
-        Navigator.of(context).pop(true);
-      }
-      return true;
-    } on custom_db_exceptions.DbConnectionException catch (e) {
-      debugPrint('Database connection error: $e');
-      if (mounted) {
-        await DbConnectionValidator.handleConnectionError(context);
-      }
-      return false;
+      await _helper.showSubmitMessage(context, localizations.formSubmittedSuccessfully);
+      if (mounted) Navigator.of(context).pop(); 
+      return;
     } on custom_db_exceptions.DuplicatePersonException catch (e) {
-      helper.showErrorMessage(context, localizations.personNamedAlreadyExists(e.name));
-      return false;
-    } catch (e, stackTrace) {
+      _helper.showErrorMessage(context, localizations.personNamedAlreadyExists(e.name));
+      return;
+    } on custom_db_exceptions.DatabaseNotReadyException {
+      return; // Safely abort if DB is transitioning
+    // } on custom_db_exceptions.DbConnectionException catch (e) {
+    //   debugPrint('Database connection error: $e');
+    //   if (mounted) {
+    //     await DbConnectionValidator.handleConnectionError(context);
+    //   }
+    //   return false;
+    }
+    catch (e, stackTrace) {
       debugPrint('Unexpected error during form submission: $e');
-      helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
-      return false;
+      _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
+      return;
     }
   }
 
@@ -267,46 +265,49 @@ class _AddPageState extends State<AddPage>{
               Text(localizations.selectGender, 
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
               ),
-              DropdownMenu<GenderItem>(
-                controller: _genderController,
-                expandedInsets: EdgeInsets.zero,
-                hintText: localizations.selectChildGender,
-                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                enableFilter: true,
-                requestFocusOnTap: false,
-                onSelected: (GenderItem? item) {
-                  setState(() {
-                    selectedGender = item?.value;
-                  });
-                },
-                dropdownMenuEntries: getGenderItems(context).map<DropdownMenuEntry<GenderItem>>((GenderItem menu) {
-                  return DropdownMenuEntry<GenderItem>(
-                    value: menu,
-                    label: menu.label,
-                    leadingIcon: Icon(menu.icon, size: isTablet ? 24 : 20),
-                    style: MenuItemButton.styleFrom(
-                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    ),
-                  );
-                }).toList(),
-                menuHeight: isTablet ? 300 : 250,
-                width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
-                inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
-                  contentPadding: ResponsiveUtils.getContentPadding(context),
-                ),
-                trailingIcon: selectedGender != null
-                    ? IconButton(
-                        icon: Icon(Icons.clear, size: iconSize),
-                        onPressed: () {
-                          setState(() {
+                DropdownMenu<GenderItem>(
+                  controller: _genderController,
+                  expandedInsets: EdgeInsets.zero,
+                  hintText: localizations.selectChildGender,
+                  textStyle: TextStyle(
+                      fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  enableFilter: true,
+                  requestFocusOnTap: false,
+                  onSelected: (item) =>
+                      setState(() => selectedGender = item?.value),
+                  dropdownMenuEntries: getGenderItems(context)
+                      .map<DropdownMenuEntry<GenderItem>>((menu) =>
+                          DropdownMenuEntry<GenderItem>(
+                            value: menu,
+                            label: menu.label,
+                            leadingIcon:
+                                Icon(menu.icon, size: isTablet ? 24 : 20),
+                            style: MenuItemButton.styleFrom(
+                                textStyle: TextStyle(
+                                    fontSize: ResponsiveUtils.getBodyFontSize(
+                                        context))),
+                          ))
+                      .toList(),
+                  menuHeight: isTablet ? 300 : 250,
+                  // width: MediaQuery.of(context).size.width -
+                  //     (isTablet ? 60 : 40),
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: OutlineInputBorder(
+                        borderRadius:
+                            ResponsiveUtils.getCardBorderRadius(context)),
+                    contentPadding:
+                        ResponsiveUtils.getContentPadding(context),
+                  ),
+                  trailingIcon: selectedGender != null
+                      ? IconButton(
+                          icon: Icon(Icons.clear, size: iconSize),
+                          onPressed: () => setState(() {
                             selectedGender = null;
                             _genderController.clear();
-                          });
-                        },
-                      )
-                    : null,
-              ),
+                          }),
+                        )
+                      : null,
+                ),
 
               SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
 
@@ -314,45 +315,50 @@ class _AddPageState extends State<AddPage>{
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
               ),
               DropdownMenu<MigraionItem>(
-                controller: _migrationController,
-                expandedInsets: EdgeInsets.zero,
-                hintText: localizations.selectChildsMigrationBackground,
-                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                enableFilter: true,
-                requestFocusOnTap: false,
-                onSelected: (MigraionItem? item) {
-                  setState(() {
+                  controller: _migrationController,
+                  expandedInsets: EdgeInsets.zero,
+                  hintText: localizations.selectChildsMigrationBackground,
+                  textStyle: TextStyle(
+                      fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  enableFilter: true,
+                  requestFocusOnTap: false,
+                  onSelected: (item) => setState(() {
                     selectedMigration = item?.value;
-                  });
-                },
-                dropdownMenuEntries: getMigrationItems(context).map<DropdownMenuEntry<MigraionItem>>((MigraionItem menu) {
-                  return DropdownMenuEntry<MigraionItem>(
-                    value: menu,
-                    label: menu.label,
-                    leadingIcon: Icon(menu.icon, size: isTablet ? 24 : 20),
-                    style: MenuItemButton.styleFrom(
-                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    ),
-                  );
-                }).toList(),
-                menuHeight: isTablet ? 200 : 150,
-                width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
-                inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
-                  contentPadding: ResponsiveUtils.getContentPadding(context),
-                ),
-                trailingIcon: selectedMigration != null
-                    ? IconButton(
-                        icon: Icon(Icons.clear, size: iconSize),
-                        onPressed: () {
-                          setState(() {
+                    if (selectedMigration == false) _homeCountryController.clear();
+                  }),
+                  dropdownMenuEntries: getMigrationItems(context)
+                      .map<DropdownMenuEntry<MigraionItem>>((menu) =>
+                          DropdownMenuEntry<MigraionItem>(
+                            value: menu,
+                            label: menu.label,
+                            leadingIcon:
+                                Icon(menu.icon, size: isTablet ? 24 : 20),
+                            style: MenuItemButton.styleFrom(
+                                textStyle: TextStyle(
+                                    fontSize: ResponsiveUtils.getBodyFontSize(
+                                        context))),
+                          ))
+                      .toList(),
+                  menuHeight: isTablet ? 200 : 150,
+                  // width: MediaQuery.of(context).size.width -
+                  //     (isTablet ? 60 : 40),
+                  inputDecorationTheme: InputDecorationTheme(
+                    border: OutlineInputBorder(
+                        borderRadius:
+                            ResponsiveUtils.getCardBorderRadius(context)),
+                    contentPadding:
+                        ResponsiveUtils.getContentPadding(context),
+                  ),
+                  trailingIcon: selectedMigration != null
+                      ? IconButton(
+                          icon: Icon(Icons.clear, size: iconSize),
+                          onPressed: () => setState(() {
                             selectedMigration = null;
                             _migrationController.clear();
-                          });
-                        },
-                      )
-                    : null,
-              ),
+                          }),
+                        )
+                      : null,
+                ),
 
               SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
 
@@ -395,7 +401,7 @@ class _AddPageState extends State<AddPage>{
                   ),
                   SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),
                   ElevatedButton.icon(
-                    onPressed: () => _submitForm(),
+                    onPressed: _submitForm,
                     icon: Icon(Icons.check, size: ResponsiveUtils.getIconSize(context, baseSize: 28), color: Colors.white),
                     label: Text(localizations.submit, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
                     style: ElevatedButton.styleFrom(

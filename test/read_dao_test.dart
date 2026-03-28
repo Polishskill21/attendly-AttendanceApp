@@ -1,0 +1,217 @@
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/tables/enums/gender.dart';
+import 'package:attendly/data/local/tables/enums/category.dart';
+import 'package:drift/drift.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  late AppDatabase db;
+
+  setUp(() {
+    db = AppDatabase.testInstance();
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  group('ReadDao Comprehensive Method Tests', () {
+    
+    // --- Directory Table Tests ---
+    
+    test('watchAllPerson & getPersonById', () async {
+      await db.insertDao.insertDirPerson(DirectoryPeopleCompanion.insert(
+        name: 'Rafa',
+        birthday: DateTime(2000, 02, 21),
+        gender: Gender.m,
+        migration: true,
+        migrationBackground: const Value('Polnisch'),
+      ));
+
+      final all = await db.readDao.watchAllPerson(true).first;
+      expect(all.length, 1);
+      
+      final person = await db.readDao.getPersonById(all.first.id);
+      expect(person?.name, 'Rafa');
+      expect(person?.birthday, DateTime(2000, 02, 21));
+
+      // final rawResult = await db.customSelect("SELECT birthday FROM all_people WHERE name = 'Rafa'").getSingle();
+      // print("RAW SQL VALUE: ${rawResult.read<String>('birthday')}");
+    });
+
+    test('findPeopleByName returns exact matches', () async {
+      await db.insertDao.insertDirPerson(DirectoryPeopleCompanion.insert(
+        name: 'Michelle',
+        birthday: DateTime(2005, 09, 14),
+        gender: Gender.f,
+        migration: false,
+        migrationBackground: const Value('German'),
+      ));
+
+      final found = await db.readDao.findPeopleByName('Michelle');
+      final notFound = await db.readDao.findPeopleByName('Unknown');
+      
+      expect(found.length, 1);
+      expect(notFound.isEmpty, true);
+    });
+
+    // --- Daily Entry Table Tests ---
+
+    test('getLatestDailyDate & existsEntryForDate', () async {
+      final date1 = DateTime(2026, 01, 20);
+      final date2 = DateTime(2026, 01, 25);
+      
+      final pId = await db.into(db.directoryPeople).insert(
+        DirectoryPeopleCompanion.insert(name: 'Test', birthday: DateTime.now(), gender: Gender.m, migration: false)
+      );
+
+      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
+        recordId: 1, date: date1, personId: pId, category: Category.open, description: const Value('Old')
+      ));
+      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
+        recordId: 2, date: date2, personId: pId, category: Category.offer, description: const Value('New')
+      ));
+
+      expect(await db.readDao.getLatestDailyDate(), date2);
+      expect(await db.readDao.existsEntryForDate(date1), true);
+      expect(await db.readDao.existsEntryForDate(DateTime(2020, 01, 01)), false);
+    });
+
+    test('getCategory & countEntriesForPerson', () async {
+      final pId = await db.into(db.directoryPeople).insert(
+        DirectoryPeopleCompanion.insert(name: 'Counter', birthday: DateTime.now(), gender: Gender.m, migration: false)
+      );
+      final date = DateTime(2026, 01, 25);
+
+      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
+        recordId: 10, date: date, personId: pId, category: Category.parent, description: const Value('Desc')
+      ));
+
+      final cat = await db.readDao.getCategory(10, date, pId);
+      final count = await db.readDao.countEntriesForPerson(pId);
+
+      expect(cat, Category.parent);
+      expect(count, 1);
+    });
+
+    // --- Join & Search Tests ---
+
+    test('watchPeopleFromCurrentDay returns joined data', () async {
+      final date = DateTime(2026, 01, 25);
+      final pId = await db.into(db.directoryPeople).insert(
+        DirectoryPeopleCompanion.insert(name: 'Viktor B.', birthday: DateTime.now(), gender: Gender.m, migration: true, migrationBackground: const Value('Russian'))
+      );
+      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
+        recordId: 1, date: date, personId: pId, category: Category.open, description: const Value('Present')
+      ));
+
+      final results = await db.readDao.watchPeopleFromCurrentDay(date).first;
+      expect(results.length, 1);
+      expect(results.first.readTable(db.directoryPeople).name, 'Viktor B.');
+    });
+
+    test('searchDailyLogs filters by partial name and description', () async {
+      final pId = await db.into(db.directoryPeople).insert(
+        DirectoryPeopleCompanion.insert(name: 'Gregor', birthday: DateTime.now(), gender: Gender.m, migration: true, migrationBackground: const Value('Kazakhstan'))
+      );
+      await db.into(db.dailyEntry).insert(DailyEntryCompanion.insert(
+        recordId: 1, date: DateTime.now(), personId: pId, category: Category.open, description: const Value('Searching for something')
+      ));
+
+      final byName = await db.readDao.searchDailyLogs(name: 'Greg');
+      final byDesc = await db.readDao.searchDailyLogs(description: 'thing');
+      
+      expect(byName.length, 1);
+      expect(byDesc.length, 1);
+    });
+
+    // --- Weekly Entry Table Tests ---
+
+    test('Watch Weekly Entry queries', () async {
+      final date = DateTime(2026, 01, 01);
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: date, under_10: 5, age_10_13: 2, age_14_17: 0, age_18_24: 0, over_24: 1,
+        allM: 4, allF: 4, allD: 0, openMale: 2, openFemale: 2, openDiverse: 0,
+        offersMale: 1, offersFemale: 1, offersDiverse: 0, migrationMale: 1, 
+        migrationFemale: 1, migrationDiverse: 0, countable: true
+      ));
+
+      final entry = await db.readDao.watchWeeklyEntryByDate(date).first;
+      final all = await db.readDao.watchAllWeeklyEntries().first;
+
+      expect(entry?.under_10, 5);
+      expect(all.length, 1);
+    });
+
+    test('getYearStats aggregates correctly and respects countable filter', () async {
+      // 1. Insert a countable week (should be included in SUM)
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: DateTime(2026, 01, 01), 
+        under_10: 10, age_10_13: 5, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 8, allF: 7, allD: 0, openMale: 5, openFemale: 5, openDiverse: 0,
+        offersMale: 3, offersFemale: 2, offersDiverse: 0, migrationMale: 2, 
+        migrationFemale: 2, migrationDiverse: 0, countable: true
+      ));
+
+      // 2. Insert another countable week (should be added to SUM)
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: DateTime(2026, 01, 08), 
+        under_10: 5, age_10_13: 5, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 2, allF: 3, allD: 0, openMale: 1, openFemale: 1, openDiverse: 0,
+        offersMale: 1, offersFemale: 2, offersDiverse: 0, migrationMale: 1, 
+        migrationFemale: 1, migrationDiverse: 0, countable: true
+      ));
+
+      // 3. Insert a non-countable week (should be IGNORED by SUM)
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: DateTime(2026, 01, 15), 
+        under_10: 100, age_10_13: 100, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: false
+      ));
+
+      final statsResult = await db.readDao.getYearStats();
+      
+      expect(statsResult.length, 1);
+      final stats = statsResult.first;
+
+      // Verify aggregation (10 + 5 = 15)
+      expect(stats['under_10'], 15);
+      // Verify second column (5 + 5 = 10)
+      expect(stats['age_10_13'], 10);
+      // Verify migration summing (2 + 1 = 3)
+      expect(stats['migration_male'], 3);
+    });
+
+    test('getWeekCount returns only countable rows', () async {
+      // Insert 2 countable and 1 non-countable
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: DateTime(2026, 02, 01), 
+        under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: true
+      ));
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: DateTime(2026, 02, 08), 
+        under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: true
+      ));
+      await db.into(db.weeklyEntry).insert(WeeklyEntryCompanion.insert(
+        weekDate: DateTime(2026, 02, 15), 
+        under_10: 0, age_10_13: 0, age_14_17: 0, age_18_24: 0, over_24: 0,
+        allM: 0, allF: 0, allD: 0, openMale: 0, openFemale: 0, openDiverse: 0,
+        offersMale: 0, offersFemale: 0, offersDiverse: 0, migrationMale: 0, 
+        migrationFemale: 0, migrationDiverse: 0, countable: false
+      ));
+
+      final count = await db.readDao.getWeekCount();
+      
+      // Should be 2 because the third entry is countable: false
+      expect(count, 2);
+    });
+  });
+}

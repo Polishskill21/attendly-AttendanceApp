@@ -1,21 +1,22 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:attendly/backend/manager/connection_manager.dart';
-import 'package:attendly/backend/manager/storage_manager.dart';
+import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:attendly/localization/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
-class DebugMenu extends StatefulWidget {
+class DebugMenu extends ConsumerStatefulWidget  {
   const DebugMenu({super.key});
 
   @override
-  State<StatefulWidget> createState() => _DebugMenuState();
+  ConsumerState<DebugMenu> createState() => _DebugMenuState();
 }
 
-class _DebugMenuState extends State<DebugMenu> {
+class _DebugMenuState extends ConsumerState<DebugMenu> {
   String _settingsContent = '';
   bool _isLoading = true;
   String? _error;
@@ -34,8 +35,7 @@ class _DebugMenuState extends State<DebugMenu> {
     });
 
     try {
-      // Use the same directory logic as your app
-      final directory = await StorageManager.getExternalDirectory();
+      final directory = await StorageManager.getExternalDocumentsDir();
       if (directory == null) {
         setState(() {
           _error = 'Could not access external directory';
@@ -60,17 +60,16 @@ class _DebugMenuState extends State<DebugMenu> {
         }
 
         try {
-          // Pretty print JSON
           final jsonObject = jsonDecode(content);
-          final prettyString = JsonEncoder.withIndent('  ').convert(jsonObject);
-
+          final prettyString =
+              JsonEncoder.withIndent('  ').convert(jsonObject);
           setState(() {
             _settingsContent = prettyString;
             _isLoading = false;
           });
         } catch (jsonError) {
           setState(() {
-            _settingsContent = content; // Show raw content if JSON parsing fails
+            _settingsContent = content;
             _error = 'JSON parsing error: $jsonError';
             _isLoading = false;
           });
@@ -78,7 +77,8 @@ class _DebugMenuState extends State<DebugMenu> {
       } else {
         setState(() {
           _settingsContent = '{}';
-          _error = 'Settings file does not exist at: ${settingsFile.path}';
+          _error =
+              'Settings file does not exist at: ${settingsFile.path}';
           _isLoading = false;
         });
       }
@@ -98,7 +98,8 @@ class _DebugMenuState extends State<DebugMenu> {
 
     Clipboard.setData(ClipboardData(text: contentToCopy));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(localizations.settingsCopiedToClipboard)),
+      SnackBar(
+          content: Text(localizations.settingsCopiedToClipboard)),
     );
   }
 
@@ -106,151 +107,186 @@ class _DebugMenuState extends State<DebugMenu> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final iconSize = ResponsiveUtils.getIconSize(context);
+    // Read the active db state from AppState
+    final appState = ref.watch(databaseManagerProvider); 
 
     return PopScope(
-        onPopInvokedWithResult: (didPop, result) {
-          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(
-              localizations.debugSettings,
-              style: TextStyle(
-                fontSize: ResponsiveUtils.getTitleFontSize(context),
-                fontWeight: FontWeight.bold,
-              ),
+      onPopInvokedWithResult: (didPop, result) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            localizations.debugSettings,
+            style: TextStyle(
+              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontWeight: FontWeight.bold,
             ),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, size: iconSize),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(Icons.copy, size: iconSize),
-                onPressed: _copyToClipboard,
-                tooltip: localizations.copyToClipboard,
-              ),
-              IconButton(
-                icon: Icon(Icons.refresh, size: iconSize),
-                onPressed: _loadSettingsFile,
-                tooltip: 'Refresh',
-              ),
-            ],
           ),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.only(
-              bottom: ResponsiveUtils.getContentPadding(context).bottom + MediaQuery.of(context).padding.bottom,
-              left: ResponsiveUtils.getContentPadding(context).left,
-              right: ResponsiveUtils.getContentPadding(context).right,
-              top: ResponsiveUtils.getContentPadding(context).top,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, size: iconSize),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.copy, size: iconSize),
+              onPressed: _copyToClipboard,
+              tooltip: localizations.copyToClipboard,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            IconButton(
+              icon: Icon(Icons.refresh, size: iconSize),
+              onPressed: _loadSettingsFile,
+              tooltip: 'Refresh',
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: ResponsiveUtils.getContentPadding(context).bottom +
+                MediaQuery.of(context).padding.bottom,
+            left: ResponsiveUtils.getContentPadding(context).left,
+            right: ResponsiveUtils.getContentPadding(context).right,
+            top: ResponsiveUtils.getContentPadding(context).top,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                localizations.settingsJsonContents,
+                style: TextStyle(
+                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (_settingsPath != null) ...[
+                SizedBox(
+                    height: ResponsiveUtils.isTablet(context) ? 12 : 8),
                 Text(
-                  localizations.settingsJsonContents,
+                  'Path: $_settingsPath',
                   style: TextStyle(
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
-                    fontWeight: FontWeight.bold,
+                    fontSize:
+                        ResponsiveUtils.getBodyFontSize(context) - 4,
+                    fontFamily: 'monospace',
+                    color: Colors.grey.shade600,
                   ),
                 ),
-                if (_settingsPath != null) ...[
-                  SizedBox(height: ResponsiveUtils.isTablet(context) ? 12 : 8),
-                  Text(
-                    'Path: $_settingsPath',
-                    style: TextStyle(
-                      fontSize: ResponsiveUtils.getBodyFontSize(context) - 4,
-                      fontFamily: 'monospace',
-                      color: Colors.grey.shade600,
+              ],
+              SizedBox(
+                  height: ResponsiveUtils.isTablet(context) ? 24 : 16),
+              if (_error != null)
+                Container(
+                  padding:
+                      ResponsiveUtils.getContentPadding(context),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red.shade200),
+                    borderRadius:
+                        ResponsiveUtils.getCardBorderRadius(context),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error,
+                          color: Colors.red.shade600, size: iconSize),
+                      SizedBox(
+                          width:
+                              ResponsiveUtils.isTablet(context) ? 12 : 8),
+                      Expanded(
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize:
+                                ResponsiveUtils.getBodyFontSize(context) -
+                                    4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              SizedBox(
+                  height: ResponsiveUtils.isTablet(context) ? 24 : 16),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Container(
+                      width: double.infinity,
+                      padding:
+                          ResponsiveUtils.getContentPadding(context),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        border:
+                            Border.all(color: Colors.grey.shade300),
+                        borderRadius:
+                            ResponsiveUtils.getCardBorderRadius(context),
+                      ),
+                      child: SingleChildScrollView(
+                        child: SelectableText(
+                          _settingsContent.isEmpty
+                              ? '{}'
+                              : _settingsContent,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize:
+                                ResponsiveUtils.getBodyFontSize(context) -
+                                    6,
+                          ),
+                        ),
+                      ),
+                    ),
+              Divider(
+                  height: ResponsiveUtils.isTablet(context) ? 40 : 32),
+              // DB path — from AppState instead of DBConnectionManager
+              _buildInfoTile(
+                title: localizations.databasePath,
+                icon: Icons.storage_outlined,
+                subtitle: appState.currentDbPath ??
+                    localizations.notAvailable,
+                iconSize: iconSize,
+                isTablet: ResponsiveUtils.isTablet(context),
+              ),
+              // Connection status — AppState.isReady replaces db?.isOpen
+              _buildInfoTile(
+                title: localizations.connectionStatus,
+                icon: appState.isReady
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                subtitle: appState.isReady
+                    ? localizations.connected
+                    : localizations.disconnected,
+                iconColor: appState.isReady ? Colors.green : Colors.red,
+                iconSize: iconSize,
+                isTablet: ResponsiveUtils.isTablet(context),
+              ),
+              SizedBox(
+                  height: ResponsiveUtils.isTablet(context) ? 24 : 16),
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: ResponsiveUtils.getIconSize(context,
+                        baseSize: 16),
+                    color: Colors.grey.shade600,
+                  ),
+                  SizedBox(
+                      width:
+                          ResponsiveUtils.isTablet(context) ? 12 : 8),
+                  Expanded(
+                    child: Text(
+                      localizations.debugMenuDescription,
+                      style: TextStyle(
+                        fontSize:
+                            ResponsiveUtils.getBodyFontSize(context) - 6,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ),
                 ],
-                SizedBox(height: ResponsiveUtils.isTablet(context) ? 24 : 16),
-                if (_error != null)
-                  Container(
-                    padding: ResponsiveUtils.getContentPadding(context),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      border: Border.all(color: Colors.red.shade200),
-                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error, color: Colors.red.shade600, size: iconSize),
-                        SizedBox(width: ResponsiveUtils.isTablet(context) ? 12 : 8),
-                        Expanded(
-                          child: Text(
-                            _error!,
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: ResponsiveUtils.getBodyFontSize(context) - 4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                SizedBox(height: ResponsiveUtils.isTablet(context) ? 24 : 16),
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : Container(
-                        width: double.infinity,
-                        padding: ResponsiveUtils.getContentPadding(context),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: ResponsiveUtils.getCardBorderRadius(context),
-                        ),
-                        child: SingleChildScrollView(
-                          child: SelectableText(
-                            _settingsContent.isEmpty ? '{}' : _settingsContent,
-                            style: TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: ResponsiveUtils.getBodyFontSize(context) - 6,
-                            ),
-                          ),
-                        ),
-                      ),
-                Divider(height: ResponsiveUtils.isTablet(context) ? 40 : 32),
-                _buildInfoTile(
-                  title: localizations.databasePath,
-                  icon: Icons.storage_outlined,
-                  subtitle: DBConnectionManager.filePath ?? localizations.notAvailable,
-                  iconSize: iconSize,
-                  isTablet: ResponsiveUtils.isTablet(context),
-                ),
-                _buildInfoTile(
-                  title: localizations.connectionStatus,
-                  icon: DBConnectionManager.db?.isOpen ?? false
-                      ? Icons.check_circle_outline
-                      : Icons.error_outline,
-                  subtitle: DBConnectionManager.db?.isOpen ?? false
-                      ? localizations.connected
-                      : localizations.disconnected,
-                  iconColor: DBConnectionManager.db?.isOpen ?? false ? Colors.green : Colors.red,
-                  iconSize: iconSize,
-                  isTablet: ResponsiveUtils.isTablet(context),
-                ),
-                SizedBox(height: ResponsiveUtils.isTablet(context) ? 24 : 16),
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: ResponsiveUtils.getIconSize(context, baseSize: 16), color: Colors.grey.shade600),
-                    SizedBox(width: ResponsiveUtils.isTablet(context) ? 12 : 8),
-                    Expanded(
-                      child: Text(
-                        localizations.debugMenuDescription,
-                        style: TextStyle(
-                          fontSize: ResponsiveUtils.getBodyFontSize(context) - 6,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget _buildInfoTile({
@@ -263,11 +299,7 @@ class _DebugMenuState extends State<DebugMenu> {
   }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        icon,
-        color: iconColor,
-        size: iconSize,
-      ),
+      leading: Icon(icon, color: iconColor, size: iconSize),
       title: Text(
         title,
         style: TextStyle(
@@ -277,7 +309,8 @@ class _DebugMenuState extends State<DebugMenu> {
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 6),
+        style: TextStyle(
+            fontSize: ResponsiveUtils.getBodyFontSize(context) - 6),
       ),
     );
   }

@@ -1,15 +1,16 @@
 import 'dart:io';
-import 'package:attendly/backend/settings_exceptions.dart';
+import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
 import 'package:attendly/frontend/theme_builder.dart';
+import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
-import 'package:attendly/frontend/pages/settings_page/settings_provider.dart';
-import 'package:attendly/frontend/pages/settings_page/settings_service.dart';
+import 'package:attendly/frontend/pages/settings_page/settings_notifier.dart';
 import 'package:attendly/localization/app_localizations_delegate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,61 +27,68 @@ void main() async {
   }
   //debugPaintSizeEnabled = true;
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => SettingsProvider(SettingsService()),
-      child: const MyApp(),
-    ),
+    const ProviderScope(
+      child: MyApp()
+    )
+    // ChangeNotifierProvider(
+    //   create: (context) => SettingsProvider(SettingsService()),
+    //   child: const MyApp(),
+    // ),
   );
 }
 
-class MyApp extends StatelessWidget {
+/// Thin wrapper that keeps the old SettingsProvider (provider package) alive.
+/// ProviderScope (riverpod) is outside, so both coexist cleanly.
+
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        if (settings.error != null) {
-          return _buildErrorApp(context, settings.error!);
-        }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final dbState  = ref.watch(databaseManagerProvider);
 
-        return MaterialApp(
-          title: 'Attendly',
-          themeMode: settings.themeMode,
-          locale: settings.locale,
-          localizationsDelegates: [
-            AppLocalizationsDelegate(),
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('en', ''),
-            Locale('de', ''),
-          ],
-          theme: Themebuilder.buildLightTheme(),
-          darkTheme: Themebuilder.buildDarkTheme(),
-          builder: (context, child) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            SystemChrome.setSystemUIOverlayStyle(
-              (isDark
-                  ? SystemUiOverlayStyle.light
-                  : SystemUiOverlayStyle.dark).copyWith(
-                statusBarColor: Colors.transparent,
-                systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-                systemNavigationBarIconBrightness:
-                    isDark ? Brightness.light : Brightness.dark,
-              ),
-            );
-            return child!;
-          },
-          home: const SplashScreen(),
-        );
-      },
+    if (settings.error != null) return _buildErrorApp(settings.error!);
+
+    if (dbState.dbError != null) {
+    return MaterialApp(
+      home: SplashScreen(dbError: dbState.dbError),
     );
   }
 
-  Widget _buildErrorApp(BuildContext context, SettingsException error) {
+    return MaterialApp(
+      title: 'Attendly',
+      themeMode: settings.themeMode,
+      locale:    settings.locale,
+      localizationsDelegates: [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''),
+        Locale('de', ''),
+      ],
+      theme:     Themebuilder.buildLightTheme(),
+      darkTheme: Themebuilder.buildDarkTheme(),
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        SystemChrome.setSystemUIOverlayStyle(
+          (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+            statusBarColor: Colors.transparent,
+            systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
+            systemNavigationBarIconBrightness:
+                isDark ? Brightness.light : Brightness.dark,
+          ),
+        );
+        return child!;
+      },
+      home: const SplashScreen(),
+    );
+  }
+
+  Widget _buildErrorApp(SettingsException error) {
     // Use a temporary MaterialApp to show the error screen.
     // It uses the default light theme and locale.
     final localizations = AppLocalizationsDelegate.getLocalization(const Locale('en'));

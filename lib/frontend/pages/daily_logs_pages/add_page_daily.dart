@@ -1,50 +1,48 @@
-import 'package:attendly/backend/enums/category.dart';
-import 'package:attendly/backend/global/global_func.dart';
+import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/data/local/tables/enums/category.dart';
+import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_page.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/global/global_function_collection.dart';
+import 'package:attendly/provider/daily_repo_provider.dart';
+import 'package:attendly/provider/database_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
-import 'package:attendly/backend/helpers/daily_person.dart';
-import 'package:attendly/backend/dbLogic/db_insert.dart';
-import 'package:attendly/backend/dbLogic/db_read.dart';
-import 'package:attendly/backend/dbLogic/db_update.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
-import 'package:attendly/backend/db_exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/localization/app_localizations.dart';
 
-class AddDaily extends StatefulWidget{
-  final Database database;
+
+class AddDaily extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final List<Map<String, dynamic>>? preselectedPersons;
   final bool isTablet;
 
   const AddDaily({
     super.key, 
-    required this.database, 
     this.initialDate, 
     this.preselectedPersons,
     this.isTablet = false,
   });
 
   @override
-  State<StatefulWidget> createState() => _AddDailyState();
+  ConsumerState<AddDaily> createState() => _AddDailyState();
 }
 
-class _AddDailyState extends State<AddDaily>{
+class _AddDailyState extends ConsumerState<AddDaily>{
   DateTime? _persistedDate;
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final HelperAllPerson helper = HelperAllPerson();
+
+  late DailyRepository _repo;
+
   Category? selectedCategory;
   List<Map<String, dynamic>> selectedPersons = [];
   DateTime? selectedDate;
-  late DbInsertion inserter;
-  late DbSelection reader;
-  late DbUpdater updater;
-  late HelperAllPerson helper;
   int _multiplier = 1;
   final TextEditingController _controller = TextEditingController();
 
@@ -60,13 +58,12 @@ class _AddDailyState extends State<AddDaily>{
   @override
   void initState() {
     super.initState();
-    reader = DbSelection(widget.database);
-    updater = DbUpdater(widget.database, reader);
-    inserter = DbInsertion(widget.database, reader, updater);
-    helper = HelperAllPerson();
+
+    _repo = ref.read(dailyRepositoryProvider);
+    final dbYear = ref.read(databaseManagerProvider).dbYear;
     
     // Initialize with passed date or current date
-    selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate();
+    selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate(dbYear: dbYear);
     _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
     _controller.text = _multiplier.toString();
 
@@ -77,12 +74,13 @@ class _AddDailyState extends State<AddDaily>{
 
   void _resetFields(){
     final localizations = AppLocalizations.of(context);
+    final dbYear = ref.read(databaseManagerProvider).dbYear;
     setState(() {
       selectedPersons.clear();
       _commentController.clear();
       _categoryController.clear();
       selectedCategory = null;
-      selectedDate = widget.initialDate ?? getScopedDate();
+      selectedDate = widget.initialDate ?? getScopedDate(dbYear: dbYear);
       _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
     });
 
@@ -98,10 +96,9 @@ class _AddDailyState extends State<AddDaily>{
   Future<bool> _submitForm() async {
     final localizations = AppLocalizations.of(context);
     String description = _commentController.text.trim();
-    String dateStr = _dateController.text.trim();
 
     // Validate required fields
-    if (selectedPersons.isEmpty || selectedCategory == null || dateStr.isEmpty) {
+    if (selectedPersons.isEmpty || selectedCategory == null || selectedDate == null) {
       helper.showErrorMessage(context, localizations.personCategoryDateRequired);
       return false;
     }
@@ -115,18 +112,18 @@ class _AddDailyState extends State<AddDaily>{
 
     try {
       helper.showLoadingDialog(context, localizations.save);
+
       for (var person in selectedPersons) {
         try {
           // Create DailyPerson object
-          final dailyPerson = DailyPerson(
-            id: person['id'],
-            date: dateStr,
+          await _repo.addDailyEntry(
+            personId: person['id'],
+            date: selectedDate!,
             category: selectedCategory!,
-            description: description.isEmpty ? null : description
+            description: description.isEmpty ? null : description,
+            multiplier: currentMultiplier,
           );
 
-          // Database insertion
-          await inserter.dailyTable(dailyPerson, multiplier: currentMultiplier);
           successCount++;
 
         } on custom_db_exceptions.DuplicateDailyEntryException catch (_) {
@@ -149,9 +146,9 @@ class _AddDailyState extends State<AddDaily>{
           context,
           localizations.personsAlreadyInCategoryOpen(duplicatePersons.length, names),
         );
-        if (mounted) {
-          Navigator.of(context).pop(true);
-        }
+        // if (mounted) {
+        //   Navigator.of(context).pop(true);
+        // }
       } else if (failCount > 0) {
         String errorDetails = failedPersons.join('\n\n');
         helper.showErrorMessage(context, "${localizations.personsFailedToAdd(failCount, successCount)}\n\nDetails:\n$errorDetails");
@@ -162,13 +159,16 @@ class _AddDailyState extends State<AddDaily>{
         }
       }
       return successCount > 0 && failCount == 0;
-    } on custom_db_exceptions.DbConnectionException catch (e) {
+    } on custom_db_exceptions.DatabaseNotReadyException {
       if(mounted) helper.hideLoadingDialog(context);
-      debugPrint(e.toString());
-      if (mounted) {
-        await DbConnectionValidator.handleConnectionError(context);
-      }
       return false;
+    // } on custom_db_exceptions.DbConnectionException catch (e) {
+    //   if(mounted) helper.hideLoadingDialog(context);
+    //   debugPrint(e.toString());
+    //   if (mounted) {
+    //     await DbConnectionValidator.handleConnectionError(context);
+    //   }
+    //   return false;
     } catch (e, stackTrace) {
       if(mounted) helper.hideLoadingDialog(context);
       debugPrint('Unexpected error during form submission: $e');
@@ -179,9 +179,10 @@ class _AddDailyState extends State<AddDaily>{
   }
 
   Future<void> _selectDate() async {
+    final dbYear = ref.read(databaseManagerProvider).dbYear;
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? getScopedDate(),
+      initialDate: selectedDate ?? getScopedDate(dbYear: dbYear),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       keyboardType: TextInputType.numberWithOptions(),
@@ -264,22 +265,28 @@ class _AddDailyState extends State<AddDaily>{
                   ),
                   child: InkWell(
                     onTap: (widget.preselectedPersons?.isNotEmpty ?? false) ? null : () async {
-                      final value = await Navigator.of(context).push(
+                      
+                      final value = await Navigator.of(context).push<List<DirectoryPeopleData>>(
                         MaterialPageRoute(
                           builder: (context) => DirectoryPage(
-                            dbCon: widget.database,
                             isSelectionMode: true,
+                            
+                            initiallySelectedIds: selectedPersons.map((p) => p['id'] as int).toList(),
+                            
                             onPersonsSelected: (selectedPersonsData) {
                               Navigator.of(context).pop(selectedPersonsData);
                             },
-                            initiallySelectedPersons: selectedPersons,
                             isTablet: isTablet,
                           ),
                         )
                       );
+                      
                       if (value != null) {
                         setState(() {
-                          selectedPersons = value;
+                          selectedPersons = value.map((person) => {
+                            'id': person.id,
+                            'name': person.name,
+                          }).toList();
                         });
                       }
                     },
@@ -400,7 +407,7 @@ class _AddDailyState extends State<AddDaily>{
                     );
                   }).toList(),
                   menuHeight: isTablet ? 300 : 250,
-                  width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
+                  // width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
                     contentPadding: ResponsiveUtils.getContentPadding(context),
