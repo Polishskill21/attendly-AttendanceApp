@@ -15,6 +15,8 @@ class ChangelogHelper {
     final currentVersion = packageInfo.version;
     final lastSeenVersion = prefs.getString(_versionKey);
 
+    debugPrint('Changelog check — current: $currentVersion, lastSeen: $lastSeenVersion');
+
     if (lastSeenVersion != currentVersion) {
       if (context.mounted) {
         await _showUpdateDialog(context, currentVersion);
@@ -35,6 +37,7 @@ class ChangelogHelper {
     try {
       markdownContent = await rootBundle.loadString('assets/changelogs/$version.md');
     } catch (e) {
+      debugPrint("Error could not open $e");
       return; 
     }
     if (context.mounted) {
