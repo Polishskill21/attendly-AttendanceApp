@@ -507,6 +507,7 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
             style: TextStyle(fontSize: body + 2),
             decoration: InputDecoration(
               labelText: localizations.searchByName,
+              labelStyle: TextStyle(fontSize: body + 2, color: Theme.of(context).primaryColor),
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: ResponsiveUtils.getCardBorderRadius(context),
