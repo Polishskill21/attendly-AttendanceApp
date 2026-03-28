@@ -43,6 +43,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
   final HelperAllPerson _helper = HelperAllPerson();
   int _expandedIndex = -1;
   bool _isManualRefreshing = false;
+  late final StateController<String> _searchQueryNotifier;
 
   // Store selected person IDs instead of indices
   final Set<int> _selectedPersonIds = {};
@@ -61,22 +62,27 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
     //   }
     // });
 
+    _searchQueryNotifier = ref.read(directorySearchQueryProvider.notifier);
+
     if (widget.isSelectionMode && widget.initiallySelectedIds != null) {
       _selectedPersonIds.addAll(widget.initiallySelectedIds!);
     }
 
+    if (widget.isSelectionMode) {
+      _searchQueryNotifier.state = '';
+    }
+
     _searchController.text = ref.read(directorySearchQueryProvider);
     _searchController.addListener(() {
-      ref.read(directorySearchQueryProvider.notifier).state =
-          _searchController.text;
+      _searchQueryNotifier.state = _searchController.text;
     });
     if (_expandedIndex != -1) setState(() => _expandedIndex = -1);
   }
 
   @override
   void dispose() {
+    _searchQueryNotifier.state = '';
     _searchController.dispose();
-    // ref.read(directorySearchQueryProvider.notifier).state = '';
     super.dispose();
   }
 
@@ -185,12 +191,11 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
         floatingActionButton:
             _selectedPersonIds.isNotEmpty && widget.onPersonsSelected != null
                 ? FloatingActionButton.extended(
-                    onPressed: () {
-                      // Pass selected people back — we read from the stream data
-                      final data = asyncPeople.valueOrNull ?? [];
-                      final selected = data
-                          .where((p) =>
-                              _selectedPersonIds.contains(p.id))
+                      onPressed: () {
+                      // Use the full unfiltered list, not the search-filtered one
+                      final allPeople = ref.read(directoryStreamProvider).valueOrNull ?? [];
+                      final selected = allPeople
+                          .where((p) => _selectedPersonIds.contains(p.id))
                           .toList();
                       widget.onPersonsSelected!(selected);
                     },
