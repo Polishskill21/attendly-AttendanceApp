@@ -10,6 +10,7 @@ import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/localization/app_localizations.dart';
@@ -46,6 +47,15 @@ class _AddDailyState extends ConsumerState<AddDaily>{
   int _multiplier = 1;
   final TextEditingController _controller = TextEditingController();
 
+  static const Set<Category> _multiplierCategories = {
+    Category.parent,
+    Category.other,
+    Category.offer,
+  };
+
+  bool get _showMultiplier =>
+      selectedCategory != null && _multiplierCategories.contains(selectedCategory);
+
   @override
   void dispose() {
     _commentController.dispose();
@@ -80,6 +90,8 @@ class _AddDailyState extends ConsumerState<AddDaily>{
       _commentController.clear();
       _categoryController.clear();
       selectedCategory = null;
+      _multiplier = 1;
+      _controller.text = '1';
       selectedDate = widget.initialDate ?? getScopedDate(dbYear: dbYear);
       _dateController.text = DateFormat('dd.MM.yyyy').format(selectedDate!);
     });
@@ -108,7 +120,20 @@ class _AddDailyState extends ConsumerState<AddDaily>{
     List<String> failedPersons = [];
     List<String> duplicatePersons = [];
 
-    int currentMultiplier = (selectedCategory == Category.parent || selectedCategory == Category.other) ? _multiplier : 1;
+    // Read what the user actually sees in the field (it can be empty or 0)
+    // and never submit less than 1 - a 0 would silently insert nothing while
+    // still reporting success.
+    int currentMultiplier = 1;
+    if (_showMultiplier) {
+      final parsed = int.tryParse(_controller.text.trim()) ?? 1;
+      currentMultiplier = parsed < 1 ? 1 : parsed;
+      if (_multiplier != currentMultiplier || _controller.text != '$currentMultiplier') {
+        setState(() {
+          _multiplier = currentMultiplier;
+          _controller.text = '$currentMultiplier';
+        });
+      }
+    }
 
     try {
       helper.showLoadingDialog(context, localizations.save);
@@ -394,6 +419,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
                     setState(() {
                       selectedCategory = item?.category;
                       _multiplier = 1;
+                      _controller.text = '1';
                     });
                   },
                   dropdownMenuEntries: getCategoryItems(context).map<DropdownMenuEntry<CategoryItem>>((CategoryItem menu) {
@@ -425,7 +451,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
                       : null,
                 ),
 
-                if (selectedCategory == Category.parent || selectedCategory == Category.other) ...[
+                if (_showMultiplier) ...[
                   SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
                   Text(
                     localizations.numberOfEntries,
@@ -461,6 +487,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
                                 controller: _controller,
                                 textAlign: TextAlign.center,
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 style: TextStyle(
                                   fontSize: ResponsiveUtils.getBodyFontSize(context),
                                   fontWeight: FontWeight.bold,
