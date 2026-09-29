@@ -15,7 +15,7 @@ class CategoryItem{
 List<CategoryItem> getCategoryItems(BuildContext context) {
   final localizations = AppLocalizations.of(context);
   return [
-    CategoryItem(1, localizations.open, Category.open, FontAwesomeIcons.clipboardUser),
+    CategoryItem(1, localizations.open, Category.open, FontAwesomeIcons.clipboardUser.data),
     CategoryItem(2, localizations.offers, Category.offer, Icons.local_offer_outlined),
     CategoryItem(3, localizations.parent,Category.parent, Icons.person_2_outlined),
     CategoryItem(4, localizations.other, Category.other, Icons.pending_outlined)
@@ -25,7 +25,7 @@ List<CategoryItem> getCategoryItems(BuildContext context) {
 // Keep the old list for backward compatibility but deprecate it
 @Deprecated("Keep the old list for backward compatibility but deprecate it")
 List<CategoryItem> categoryItems = [
-  CategoryItem(1, "Open", Category.open, FontAwesomeIcons.clipboardUser),
+  CategoryItem(1, "Open", Category.open, FontAwesomeIcons.clipboardUser.data),
   CategoryItem(2, "Offer", Category.offer, Icons.local_offer_outlined),
   CategoryItem(3, "Parent", Category.parent, Icons.person_2_outlined),
   CategoryItem(4, "Other", Category.other, Icons.pending_outlined)
