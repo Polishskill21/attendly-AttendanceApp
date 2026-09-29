@@ -2,6 +2,7 @@
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/data/repo/directory_repository.dart';
+import 'package:attendly/frontend/widgets/alphabet_index_bar.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_add_page.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
@@ -15,6 +16,7 @@ import 'package:attendly/frontend/widgets/custom_expansion_widget.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/localization/app_localizations.dart';
+import 'package:anchored_list/anchored_list.dart';
 
 class DirectoryPage extends ConsumerStatefulWidget {
   final Function(List<DirectoryPeopleData>)? onPersonsSelected;
@@ -44,6 +46,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
   int _expandedIndex = -1;
   bool _isManualRefreshing = false;
   late final StateController<String> _searchQueryNotifier;
+  final AnchoredListController _listController = AnchoredListController();
 
   // Store selected person IDs instead of indices
   final Set<int> _selectedPersonIds = {};
@@ -308,33 +311,70 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
                           fontWeight: FontWeight.bold)),
                 );
               }
-            return _PersonListView(
-                people: people,
-                isSelectionMode: widget.isSelectionMode,
-                selectedPersonIds: _selectedPersonIds,
-                expandedIndex: _expandedIndex,
-                onPersonTap: (person) {
-                  if (widget.isSelectionMode) {
-                    setState(() {
-                      final id = person.id;
-                      if (_selectedPersonIds.contains(id)) {
-                        _selectedPersonIds.remove(id);
-                      } else {
-                        _selectedPersonIds.add(id);
+              // First-letter -> index map, built from the list in its current
+              // (ascending or descending) order, so the jump target is always
+              // correct regardless of sort direction.
+              final letterIndexMap = buildLetterIndexMap<DirectoryPeopleData>(
+                people,
+                (p) => p.name,
+              );
+
+              return Stack(
+              children: [
+                Positioned.fill(
+                  child: _PersonListView(
+                    people: people,
+                    isSelectionMode: widget.isSelectionMode,
+                    selectedPersonIds: _selectedPersonIds,
+                    expandedIndex: _expandedIndex,
+                    listController: _listController,
+                    onPersonTap: (person) {
+                      if (widget.isSelectionMode) {
+                        setState(() {
+                          final id = person.id;
+                          if (_selectedPersonIds.contains(id)) {
+                            _selectedPersonIds.remove(id);
+                          } else {
+                            _selectedPersonIds.add(id);
+                          }
+                        });
                       }
-                    });
-                  }
-                },
-                onExpansionChanged: (index, expanded) {
-                  setState(() => _expandedIndex = expanded ? index : -1);
-                },
-                onDeletePress: (person) => _deletePerson(person),
-                onEditPress: (person) => _editPerson(person),
-                buildPersonDetails: (person) => _helper.buildPersonDetails(
-                    people, people.indexOf(person), localizations, context),
-                isTablet: isTablet,
-                repo: ref.read(directoryRepositoryProvider),
-                helper: _helper,
+                    },
+                    onExpansionChanged: (index, expanded) {
+                      setState(() => _expandedIndex = expanded ? index : -1);
+                    },
+                    onDeletePress: (person) => _deletePerson(person),
+                    onEditPress: (person) => _editPerson(person),
+                    buildPersonDetails: (person) => _helper.buildPersonDetails(
+                        people, people.indexOf(person), localizations, context),
+                    isTablet: isTablet,
+                    repo: ref.read(directoryRepositoryProvider),
+                    helper: _helper,
+                  ),
+                ),
+                if (people.length > 1)
+                  Positioned(
+                    right: 0,
+                    top: 8,
+                    bottom: ResponsiveUtils.getButtonHeight(context) + 48 + MediaQuery.of(context).padding.bottom,
+                    child: AlphabetIndexBar(
+                        isTablet: isTablet,
+                        availableLetters: letterIndexMap.keys.toSet(),
+                        onLetterSelected: (letter, {required bool isDragging}) {
+                          final index = letterIndexMap[letter];
+                          if (index == null) return;
+                          if (_expandedIndex != -1) {
+                            setState(() => _expandedIndex = -1);
+                          }
+
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            _listController.jumpToIndex(index, alignment: 0.0);
+                          });
+                        }
+                    ),
+                  ),
+              ],
               );
             },
           ),
@@ -394,6 +434,7 @@ class _PersonListView extends StatelessWidget {
   final bool isTablet;
   final DirectoryRepository? repo;
   final HelperAllPerson helper;
+  final AnchoredListController listController;
 
   const _PersonListView({
     required this.people,
@@ -407,17 +448,22 @@ class _PersonListView extends StatelessWidget {
     required this.buildPersonDetails,
     required this.repo,
     required this.helper,
+    required this.listController,
     this.isTablet = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
+    return AnchoredList.builder(
+      controller: listController,
       itemCount: people.length,
+      addRepaintBoundaries: true,
+      addAutomaticKeepAlives: false,
       padding: EdgeInsets.only(
         left: ResponsiveUtils.getListPadding(context).left,
-        right: ResponsiveUtils.getListPadding(context).right,
+        // A bit of extra right padding so rows don't sit under the
+        // alphabet index bar overlaid on top of the list.
+        right: ResponsiveUtils.getListPadding(context).right + 24,
         top: 0,
         bottom: ResponsiveUtils.getButtonHeight(context) +
             40 +

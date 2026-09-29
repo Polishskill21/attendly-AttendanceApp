@@ -120,7 +120,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
             ),
       ),
     );
-    
+
     if (result == true) {
       _toggleEditMode();
     }
@@ -232,17 +232,18 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
               : CustomDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
         title: localizations.dailyLogs,
-        showRefresh: true, 
-        isLoading: asyncFilteredData.isLoading || 
-                   asyncFilteredData.isRefreshing || 
-                   asyncFilteredData.isReloading || 
-                   _isManualRefreshing,
+        showRefresh: true,
+        isLoading:
+            asyncFilteredData.isLoading ||
+            asyncFilteredData.isRefreshing ||
+            asyncFilteredData.isReloading ||
+            _isManualRefreshing,
         onRefresh: () async {
           setState(() => _isManualRefreshing = true);
 
           debugPrint("Invalidating daily stream");
           refreshDailyEntries();
-          
+
           await Future.delayed(const Duration(milliseconds: 400));
           if (mounted) setState(() => _isManualRefreshing = false);
         },
@@ -355,11 +356,14 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (ctx) => AddDaily(
-                                initialDate: selectedDate,
-                                preselectedPersons: [{'id': person.personId, 'name': person.name}],
-                                isTablet: widget.isTablet,
-                              ),
+                              builder:
+                                  (ctx) => AddDaily(
+                                    initialDate: selectedDate,
+                                    preselectedPersons: [
+                                      {'id': person.personId, 'name': person.name},
+                                    ],
+                                    isTablet: widget.isTablet,
+                                  ),
                             ),
                           );
                           // Removed refresh checking
@@ -368,7 +372,9 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (ctx) => EditCategoryPage(record: record, isTablet: widget.isTablet),
+                              builder:
+                                  (ctx) =>
+                                      EditCategoryPage(record: record, isTablet: widget.isTablet),
                             ),
                           );
                         },
@@ -627,10 +633,7 @@ class _PersonList extends StatelessWidget {
                         ),
                       ),
                       if (isEditMode)
-                        Checkbox(
-                          value: isSelected, 
-                          onChanged: (_) => onToggleSelection(person),
-                        ),
+                        Checkbox(value: isSelected, onChanged: (_) => onToggleSelection(person)),
                     ],
                   ),
                   const Divider(),
@@ -641,12 +644,10 @@ class _PersonList extends StatelessWidget {
                         localizedCategoryLabel(context, record.category),
                         style: TextStyle(fontSize: bodyFontSize),
                       ),
-                      subtitle: record.comment != null 
-                          ? Text(
-                              record.comment!,
-                              style: TextStyle(fontSize: bodyFontSize - 2),
-                            ) 
-                          : null,
+                      subtitle:
+                          record.comment != null
+                              ? Text(record.comment!, style: TextStyle(fontSize: bodyFontSize - 2))
+                              : null,
                       trailing:
                           isEditMode
                               ? null

@@ -199,6 +199,63 @@ void main() {
       expect(entry.description, 'Special Event');
     });
 
+    test('insertDailyEntry with multiplier N inserts N entries with consecutive recordIDs and counts N in the weekly stats', () async {
+      final pId = await setupPerson(name: 'Multiplier User'); // born 2010-01-01 -> age 16 on the date below
+      final date = DateTime(2026, 05, 20); // Wednesday
+      final monday = DateTime(2026, 05, 18);
+
+      await db.insertDao.insertDailyEntry(
+        personId: pId,
+        date: date,
+        category: Category.other,
+        multiplier: 3,
+      );
+
+      final entries = await db.readDao.getDailyEntriesByPersonId(pId);
+      expect(entries.length, 3);
+      expect(entries.every((e) => e.category == Category.other), true);
+      expect((entries.map((e) => e.recordId).toList()..sort()), [1, 2, 3]);
+
+      final weekly = await db.readDao.watchWeeklyEntryByDate(monday).first;
+      expect(weekly, isNotNull);
+      expect(weekly!.age_14_17, 3);
+    });
+
+    test('insertDailyEntry with multiplier continues recordIDs after existing entries of the same day', () async {
+      final pId = await setupPerson(name: 'Continue IDs User');
+      final date = DateTime(2026, 05, 20);
+
+      await db.insertDao.insertDailyEntry(personId: pId, date: date, category: Category.offer);
+      await db.insertDao.insertDailyEntry(personId: pId, date: date, category: Category.parent, multiplier: 2);
+
+      final entries = await db.readDao.getDailyEntriesByPersonId(pId);
+      expect((entries.map((e) => e.recordId).toList()..sort()), [1, 2, 3]);
+    });
+
+    for (final invalid in [0, -1, -100]) {
+      test('insertDailyEntry rejects multiplier $invalid and writes nothing', () async {
+        final pId = await setupPerson(name: 'Invalid Multiplier User');
+        final date = DateTime(2026, 05, 20);
+        final monday = DateTime(2026, 05, 18);
+
+        await expectLater(
+          () => db.insertDao.insertDailyEntry(
+            personId: pId,
+            date: date,
+            category: Category.other,
+            multiplier: invalid,
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+
+        final entries = await db.readDao.getDailyEntriesByPersonId(pId);
+        expect(entries, isEmpty);
+
+        final weekly = await db.readDao.watchWeeklyEntryByDate(monday).first;
+        expect(weekly, isNull, reason: 'no weekly row should be created for a rejected insert');
+      });
+    }
+
     test('insertDailyEntry rolls back EVERYTHING if an error occurs mid-transaction', () async {
       final pId = await setupPerson(name: 'Rollback User');
       final date = DateTime(2026, 01, 01);
