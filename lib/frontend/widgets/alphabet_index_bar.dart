@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 Map<String, int> buildLetterIndexMap<T>(
   List<T> items,
   String Function(T item) nameOf,
-) {
+) { 
   final map = <String, int>{};
   for (var i = 0; i < items.length; i++) {
     final letter = firstLetterBucket(nameOf(items[i]));
@@ -70,6 +70,16 @@ class AlphabetIndexBar extends StatefulWidget {
 
 class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
   String? _activeLetter;
+  String? _lastNotifiedLetter;
+  DateTime _lastNotifyTime = DateTime.fromMillisecondsSinceEpoch(0);
+
+  // Minimum gap between list jumps while dragging. The bubble/label still
+  // updates on every letter the finger crosses (cheap - local state only).
+  // Only the itemScrollController jump itself is throttled, since firing
+  // that on every single letter during a fast swipe is what was flooding
+  // the frame pipeline (screen flash) and starving the bubble of a frame
+  // to actually paint in.
+  static const _dragJumpThrottle = Duration(milliseconds: 70);
 
   void _handleTouchAt(Offset localPosition, double itemHeight, {required bool isDragging}) {
     if (itemHeight <= 0) return;
@@ -78,7 +88,29 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
     final letter = widget.letters[index];
     if (letter == _activeLetter) return;
     setState(() => _activeLetter = letter);
-    widget.onLetterSelected(_nearestAvailable(letter), isDragging: isDragging);
+    _notify(letter, isDragging: isDragging);
+  }
+
+  void _notify(String letter, {required bool isDragging}) {
+    final resolved = _nearestAvailable(letter);
+    if (resolved == _lastNotifiedLetter) return;
+    final now = DateTime.now();
+    if (isDragging && now.difference(_lastNotifyTime) < _dragJumpThrottle) {
+      return;
+    }
+    _lastNotifiedLetter = resolved;
+    _lastNotifyTime = now;
+    widget.onLetterSelected(resolved, isDragging: isDragging);
+  }
+
+  void _endTouch() {
+    // Always land exactly where the finger left off, even if the last
+    // in-drag notification above was throttled away.
+    if (_activeLetter != null) {
+      _notify(_activeLetter!, isDragging: false);
+    }
+    setState(() => _activeLetter = null);
+    _lastNotifiedLetter = null;
   }
 
   String _nearestAvailable(String letter) {
@@ -125,11 +157,11 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
                   _handleTouchAt(d.localPosition, itemHeight, isDragging: true),
               onVerticalDragUpdate: (d) =>
                   _handleTouchAt(d.localPosition, itemHeight, isDragging: true),
-              onVerticalDragEnd: (_) => setState(() => _activeLetter = null),
-              onVerticalDragCancel: () => setState(() => _activeLetter = null),
+              onVerticalDragEnd: (_) => _endTouch(),
+              onVerticalDragCancel: () => _endTouch(),
               onTapDown: (d) =>
                   _handleTouchAt(d.localPosition, itemHeight, isDragging: false),
-              onTapUp: (_) => setState(() => _activeLetter = null),
+              onTapUp: (_) => _endTouch(),
               child: Container(
                 width: barWidth,
                 color: Colors.transparent,

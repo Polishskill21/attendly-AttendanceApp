@@ -16,7 +16,7 @@ import 'package:attendly/frontend/widgets/custom_expansion_widget.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/localization/app_localizations.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:anchored_list/anchored_list.dart';
 
 class DirectoryPage extends ConsumerStatefulWidget {
   final Function(List<DirectoryPeopleData>)? onPersonsSelected;
@@ -46,7 +46,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
   int _expandedIndex = -1;
   bool _isManualRefreshing = false;
   late final StateController<String> _searchQueryNotifier;
-  final ItemScrollController _itemScrollController = ItemScrollController();
+  final AnchoredListController _listController = AnchoredListController();
 
   // Store selected person IDs instead of indices
   final Set<int> _selectedPersonIds = {};
@@ -327,7 +327,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
                     isSelectionMode: widget.isSelectionMode,
                     selectedPersonIds: _selectedPersonIds,
                     expandedIndex: _expandedIndex,
-                    itemScrollController: _itemScrollController,
+                    listController: _listController,
                     onPersonTap: (person) {
                       if (widget.isSelectionMode) {
                         setState(() {
@@ -367,19 +367,10 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
                             setState(() => _expandedIndex = -1);
                           }
 
-                          if (isDragging) {
-                            _itemScrollController.jumpTo(
-                              index: index,
-                              alignment: 0.0,
-                            );
-                          } else {
-                            _itemScrollController.scrollTo(
-                              index: index,
-                              alignment: 0.0,
-                              duration: const Duration(milliseconds: 180),
-                              curve: Curves.easeOutCubic,
-                            );
-                          }
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            _listController.jumpToIndex(index, alignment: 0.0);
+                          });
                         }
                     ),
                   ),
@@ -443,7 +434,7 @@ class _PersonListView extends StatelessWidget {
   final bool isTablet;
   final DirectoryRepository? repo;
   final HelperAllPerson helper;
-  final ItemScrollController itemScrollController;
+  final AnchoredListController listController;
 
   const _PersonListView({
     required this.people,
@@ -457,15 +448,17 @@ class _PersonListView extends StatelessWidget {
     required this.buildPersonDetails,
     required this.repo,
     required this.helper,
-    required this.itemScrollController,
+    required this.listController,
     this.isTablet = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ScrollablePositionedList.builder(
-      itemScrollController: itemScrollController,
+    return AnchoredList.builder(
+      controller: listController,
       itemCount: people.length,
+      addRepaintBoundaries: true,
+      addAutomaticKeepAlives: false,
       padding: EdgeInsets.only(
         left: ResponsiveUtils.getListPadding(context).left,
         // A bit of extra right padding so rows don't sit under the
