@@ -464,9 +464,6 @@ class $DailyEntryTable extends DailyEntry
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES directory_people (id)',
-    ),
   );
   @override
   late final GeneratedColumnWithTypeConverter<Category, String> category =
@@ -1954,41 +1951,6 @@ typedef $$DirectoryPeopleTableUpdateCompanionBuilder =
       Value<String?> migrationBackground,
     });
 
-final class $$DirectoryPeopleTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $DirectoryPeopleTable,
-          DirectoryPeopleData
-        > {
-  $$DirectoryPeopleTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static MultiTypedResultKey<$DailyEntryTable, List<DailyEntryData>>
-  _dailyEntryRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.dailyEntry,
-    aliasName: $_aliasNameGenerator(
-      db.directoryPeople.id,
-      db.dailyEntry.personId,
-    ),
-  );
-
-  $$DailyEntryTableProcessedTableManager get dailyEntryRefs {
-    final manager = $$DailyEntryTableTableManager(
-      $_db,
-      $_db.dailyEntry,
-    ).filter((f) => f.personId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_dailyEntryRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
-
 class $$DirectoryPeopleTableFilterComposer
     extends Composer<_$AppDatabase, $DirectoryPeopleTable> {
   $$DirectoryPeopleTableFilterComposer({
@@ -2029,31 +1991,6 @@ class $$DirectoryPeopleTableFilterComposer
     column: $table.migrationBackground,
     builder: (column) => ColumnFilters(column),
   );
-
-  Expression<bool> dailyEntryRefs(
-    Expression<bool> Function($$DailyEntryTableFilterComposer f) f,
-  ) {
-    final $$DailyEntryTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.dailyEntry,
-      getReferencedColumn: (t) => t.personId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DailyEntryTableFilterComposer(
-            $db: $db,
-            $table: $db.dailyEntry,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$DirectoryPeopleTableOrderingComposer
@@ -2124,31 +2061,6 @@ class $$DirectoryPeopleTableAnnotationComposer
     column: $table.migrationBackground,
     builder: (column) => column,
   );
-
-  Expression<T> dailyEntryRefs<T extends Object>(
-    Expression<T> Function($$DailyEntryTableAnnotationComposer a) f,
-  ) {
-    final $$DailyEntryTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.dailyEntry,
-      getReferencedColumn: (t) => t.personId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DailyEntryTableAnnotationComposer(
-            $db: $db,
-            $table: $db.dailyEntry,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$DirectoryPeopleTableTableManager
@@ -2162,9 +2074,16 @@ class $$DirectoryPeopleTableTableManager
           $$DirectoryPeopleTableAnnotationComposer,
           $$DirectoryPeopleTableCreateCompanionBuilder,
           $$DirectoryPeopleTableUpdateCompanionBuilder,
-          (DirectoryPeopleData, $$DirectoryPeopleTableReferences),
+          (
+            DirectoryPeopleData,
+            BaseReferences<
+              _$AppDatabase,
+              $DirectoryPeopleTable,
+              DirectoryPeopleData
+            >,
+          ),
           DirectoryPeopleData,
-          PrefetchHooks Function({bool dailyEntryRefs})
+          PrefetchHooks Function()
         > {
   $$DirectoryPeopleTableTableManager(
     _$AppDatabase db,
@@ -2224,43 +2143,11 @@ class $$DirectoryPeopleTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$DirectoryPeopleTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({dailyEntryRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (dailyEntryRefs) db.dailyEntry],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (dailyEntryRefs)
-                    await $_getPrefetchedData<
-                      DirectoryPeopleData,
-                      $DirectoryPeopleTable,
-                      DailyEntryData
-                    >(
-                      currentTable: table,
-                      referencedTable: $$DirectoryPeopleTableReferences
-                          ._dailyEntryRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$DirectoryPeopleTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).dailyEntryRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.personId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -2275,9 +2162,16 @@ typedef $$DirectoryPeopleTableProcessedTableManager =
       $$DirectoryPeopleTableAnnotationComposer,
       $$DirectoryPeopleTableCreateCompanionBuilder,
       $$DirectoryPeopleTableUpdateCompanionBuilder,
-      (DirectoryPeopleData, $$DirectoryPeopleTableReferences),
+      (
+        DirectoryPeopleData,
+        BaseReferences<
+          _$AppDatabase,
+          $DirectoryPeopleTable,
+          DirectoryPeopleData
+        >,
+      ),
       DirectoryPeopleData,
-      PrefetchHooks Function({bool dailyEntryRefs})
+      PrefetchHooks Function()
     >;
 typedef $$DailyEntryTableCreateCompanionBuilder =
     DailyEntryCompanion Function({
@@ -2297,30 +2191,6 @@ typedef $$DailyEntryTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<int> rowid,
     });
-
-final class $$DailyEntryTableReferences
-    extends BaseReferences<_$AppDatabase, $DailyEntryTable, DailyEntryData> {
-  $$DailyEntryTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $DirectoryPeopleTable _personIdTable(_$AppDatabase db) =>
-      db.directoryPeople.createAlias(
-        $_aliasNameGenerator(db.dailyEntry.personId, db.directoryPeople.id),
-      );
-
-  $$DirectoryPeopleTableProcessedTableManager get personId {
-    final $_column = $_itemColumn<int>('person_id')!;
-
-    final manager = $$DirectoryPeopleTableTableManager(
-      $_db,
-      $_db.directoryPeople,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_personIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$DailyEntryTableFilterComposer
     extends Composer<_$AppDatabase, $DailyEntryTable> {
@@ -2342,6 +2212,11 @@ class $$DailyEntryTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
+  ColumnFilters<int> get personId => $composableBuilder(
+    column: $table.personId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<Category, Category, String> get category =>
       $composableBuilder(
         column: $table.category,
@@ -2352,29 +2227,6 @@ class $$DailyEntryTableFilterComposer
     column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
-
-  $$DirectoryPeopleTableFilterComposer get personId {
-    final $$DirectoryPeopleTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personId,
-      referencedTable: $db.directoryPeople,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DirectoryPeopleTableFilterComposer(
-            $db: $db,
-            $table: $db.directoryPeople,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$DailyEntryTableOrderingComposer
@@ -2396,6 +2248,11 @@ class $$DailyEntryTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get personId => $composableBuilder(
+    column: $table.personId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get category => $composableBuilder(
     column: $table.category,
     builder: (column) => ColumnOrderings(column),
@@ -2405,29 +2262,6 @@ class $$DailyEntryTableOrderingComposer
     column: $table.description,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$DirectoryPeopleTableOrderingComposer get personId {
-    final $$DirectoryPeopleTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personId,
-      referencedTable: $db.directoryPeople,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DirectoryPeopleTableOrderingComposer(
-            $db: $db,
-            $table: $db.directoryPeople,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$DailyEntryTableAnnotationComposer
@@ -2445,6 +2279,9 @@ class $$DailyEntryTableAnnotationComposer
   GeneratedColumnWithTypeConverter<DateTime, String> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
+  GeneratedColumn<int> get personId =>
+      $composableBuilder(column: $table.personId, builder: (column) => column);
+
   GeneratedColumnWithTypeConverter<Category, String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
 
@@ -2452,29 +2289,6 @@ class $$DailyEntryTableAnnotationComposer
     column: $table.description,
     builder: (column) => column,
   );
-
-  $$DirectoryPeopleTableAnnotationComposer get personId {
-    final $$DirectoryPeopleTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personId,
-      referencedTable: $db.directoryPeople,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DirectoryPeopleTableAnnotationComposer(
-            $db: $db,
-            $table: $db.directoryPeople,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$DailyEntryTableTableManager
@@ -2488,9 +2302,12 @@ class $$DailyEntryTableTableManager
           $$DailyEntryTableAnnotationComposer,
           $$DailyEntryTableCreateCompanionBuilder,
           $$DailyEntryTableUpdateCompanionBuilder,
-          (DailyEntryData, $$DailyEntryTableReferences),
+          (
+            DailyEntryData,
+            BaseReferences<_$AppDatabase, $DailyEntryTable, DailyEntryData>,
+          ),
           DailyEntryData,
-          PrefetchHooks Function({bool personId})
+          PrefetchHooks Function()
         > {
   $$DailyEntryTableTableManager(_$AppDatabase db, $DailyEntryTable table)
     : super(
@@ -2541,51 +2358,11 @@ class $$DailyEntryTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$DailyEntryTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({personId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (personId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.personId,
-                            referencedTable: $$DailyEntryTableReferences
-                                ._personIdTable(db),
-                            referencedColumn:
-                                $$DailyEntryTableReferences
-                                    ._personIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -2600,9 +2377,12 @@ typedef $$DailyEntryTableProcessedTableManager =
       $$DailyEntryTableAnnotationComposer,
       $$DailyEntryTableCreateCompanionBuilder,
       $$DailyEntryTableUpdateCompanionBuilder,
-      (DailyEntryData, $$DailyEntryTableReferences),
+      (
+        DailyEntryData,
+        BaseReferences<_$AppDatabase, $DailyEntryTable, DailyEntryData>,
+      ),
       DailyEntryData,
-      PrefetchHooks Function({bool personId})
+      PrefetchHooks Function()
     >;
 typedef $$WeeklyEntryTableCreateCompanionBuilder =
     WeeklyEntryCompanion Function({

@@ -247,7 +247,8 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
               ),
         actions: [
            IconButton(
-            icon: Icon(isAscending
+            icon: FaIcon(
+              isAscending
                 ? FontAwesomeIcons.arrowDownZA
                 : FontAwesomeIcons.arrowDownAZ),
             onPressed: _toggleSort,
