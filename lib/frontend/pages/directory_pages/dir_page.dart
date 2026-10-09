@@ -10,6 +10,7 @@ import 'package:attendly/provider/database_provider.dart';
 import 'package:attendly/provider/directory_repo_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/pages/directory_pages/dir_edit_page.dart';
 import 'package:attendly/frontend/widgets/custom_expansion_widget.dart';
@@ -139,8 +140,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
       String msg = e.toString();
       if (e is custom_db_exceptions.DatabaseOperationException) {
         msg = localizations.unexpectedErrorContactCreator;
-        debugPrint(e.toString());
-        if (e.stackTrace != null) debugPrintStack(stackTrace: e.stackTrace);
+        AppLogger.e("Directory", "Database operation failed", e, e.stackTrace);
       }
       _helper.showErrorMessage(context, msg);
     } catch (e, stackTrace) {
@@ -229,7 +229,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
         onRefresh: () async {
           setState(() => _isManualRefreshing = true);
           
-          debugPrint("Invalidating dir stream");
+          AppLogger.d("Directory", "Invalidating dir stream");
           ref.invalidate(directoryStreamProvider);
           
           await Future.delayed(const Duration(milliseconds: 400));

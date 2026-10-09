@@ -668,4 +668,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get openDefaultDatabase => 'Standarddatenbank öffnen';
+
+  // Logs (debug menu / splash secret menu)
+  @override
+  String get recentLogs => 'Letzte Protokolle';
+
+  @override
+  String get logsCopiedToClipboard => 'Protokolle in die Zwischenablage kopiert';
 }

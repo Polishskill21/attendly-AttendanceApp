@@ -1,10 +1,12 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class StorageManager {
+  static const String _tag = "Storage";
+
   /// Gets the custom external storage directory for the app.
   /// Handles legacy and modern Android storage permissions safely.
   static Future<Directory?> getExternalDocumentsDir() {
@@ -19,12 +21,15 @@ class StorageManager {
   static Future<Directory?> _resolveExternalDocumentsDir() async {
     try {
       bool isGranted = await _requestStoragePermission();
-      if (!isGranted) return null;
+      if (!isGranted) {
+        AppLogger.e(_tag, "Storage permission not granted, storage directory unavailable");
+        return null;
+      }
 
       final List<Directory>? extDocumentsDirs = await getExternalStorageDirectories();
       
       if (extDocumentsDirs == null || extDocumentsDirs.isEmpty) {
-        debugPrint("No external storage directories found.");
+        AppLogger.e(_tag, "No external storage directories found");
         return null;
       }
 
@@ -33,7 +38,7 @@ class StorageManager {
       final int androidIndex = path.indexOf('/Android/');
       
       if (androidIndex == -1) {
-        debugPrint("Unexpected path structure: $path");
+        AppLogger.e(_tag, "Unexpected external storage path structure: $path");
         return null;
       }
       
@@ -41,12 +46,14 @@ class StorageManager {
       final Directory documentsDir = Directory(p.join(basePath, "Documents", "AttendlyDb"));
 
       if (!await documentsDir.exists()) {
+        AppLogger.i(_tag, "Creating storage directory ${documentsDir.path}");
         await documentsDir.create(recursive: true);
       }
-      
+
+      await AppLogger.attachLogDirectory(documentsDir);
       return documentsDir;
     } catch (e, stackTrace) {
-      debugPrint("Error in getExternalDirectory: $e\n$stackTrace");
+      AppLogger.e(_tag, "Resolving the storage directory failed", e, stackTrace);
       return null;
     }
   }
@@ -64,8 +71,8 @@ class StorageManager {
           .toList();
 
       return dbFiles;
-    } catch (e) {
-      debugPrint("Error listing DB files: $e");
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Listing database files in ${dir.path} failed", e, stackTrace);
       return [];
     }
   }
@@ -84,10 +91,10 @@ class StorageManager {
     // If both are permanently denied, direct the user to app settings
     if (await Permission.manageExternalStorage.isPermanentlyDenied || 
         await Permission.storage.isPermanentlyDenied) {
-      debugPrint("Storage permission permanently denied. Redirecting to settings.");
+      AppLogger.w(_tag, "Storage permission permanently denied, opening app settings");
       await openAppSettings();
     } else {
-      debugPrint("Storage permission denied by user.");
+      AppLogger.w(_tag, "Storage permission denied by user");
     }
     
     return false;

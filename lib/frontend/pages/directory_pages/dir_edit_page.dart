@@ -6,6 +6,7 @@ import 'package:attendly/provider/directory_repo_provider.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 // import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
@@ -155,7 +156,7 @@ class _EditPageState extends ConsumerState<EditPage>{
           companion.migrationBackground.present;
 
       if (!hasChanges) {
-        debugPrint("No changes detected, skipping update.");
+        AppLogger.d("Directory", "No changes detected, skipping update.");
         if (mounted) Navigator.of(context).pop(false);
         return;
       }

@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:attendly/frontend/widgets/changelog_helper.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:attendly/global/global_function_collection.dart';
 import 'package:attendly/frontend/widgets/migration_dialog.dart';
 import 'package:attendly/main_app.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:attendly/localization/app_localizations.dart';
@@ -27,6 +29,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
+  static const String _tag = 'Startup';
+
   late Future<_StartupResult> _startupFuture;
   late AnimationController _animationController;
   late Animation<double> _animation;
@@ -100,6 +104,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     final notifier = ref.read(databaseManagerProvider.notifier);
 
     if (_showReportedError) {
+      AppLogger.w(_tag, "Showing error screen for a reported database error");
       _startupError = widget.dbError;
       return _StartupResult.failed;
     }
@@ -107,10 +112,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     try {
       // ── Case A: user picked a specific DB file from the list ───────────────
       if (widget.selectedDb != null) {
+        AppLogger.i(_tag, "Startup: switching to selected database ${widget.selectedDb!.path}");
         await notifier.openDatabase(file: widget.selectedDb, onMigrationStarted: _onSchemaMigrationStarted);
         return _StartupResult.ready;
       }
 
+      AppLogger.i(_tag, "Startup: opening default database");
 
       // ── Case B: normal startup ─────────────────────────────────────────────
       // Also creates settings.json with defaults if it does not exist yet.
@@ -118,11 +125,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
       // ── Case C: fresh install, no database exists yet ─────────────────────
       if (await notifier.needsInitialSetup()) {
+        AppLogger.i(_tag, "Startup: no database yet, showing setup screen");
         return _StartupResult.needsSetup;
       }
 
       if (rolloverNeeded && mounted) {
         final choice = await _showYearChangeDialog();
+        AppLogger.i(_tag, "Year change dialog: user chose ${choice?.name ?? 'nothing'}");
 
         if (choice == YearChangeChoice.create) {
           await _handleYearRollover();
@@ -135,8 +144,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
       }
 
       return _StartupResult.ready;
-    } catch (e) {
-      debugPrint("Database init failed: $e");
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Startup failed, showing error screen", e, stackTrace);
       _startupError = e;
       return _StartupResult.failed;
     }
@@ -209,12 +218,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
 
   void _retryInitialization() {
+    AppLogger.i(_tag, "User tapped retry");
     _showReportedError = false;
     _startupError = null;
     setState(() => _startupFuture = _initializeApp());
   }
 
   void _openDefaultDatabase() {
+    AppLogger.i(_tag, "User chose to open the default database");
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const SplashScreen()),
     );
@@ -223,8 +234,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   /// [withWarning] asks for confirmation first; used when an existing database failed to open.
   void _createNewDatabase({bool withWarning = false}) async {
     if (_isCreatingNewDb) return;
-    if (withWarning && !(await _showCreateNewDbWarningDialog() ?? false)) return;
+    if (withWarning && !(await _showCreateNewDbWarningDialog() ?? false)) {
+      AppLogger.i(_tag, "User cancelled creating a new database");
+      return;
+    }
     if (!mounted) return;
+    AppLogger.i(_tag, "User requested a new database${withWarning ? ' after an open failure' : ' (initial setup)'}");
     setState(() => _isCreatingNewDb = true);
  
     try {
@@ -234,8 +249,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
           MaterialPageRoute(builder: (_) => const MainApp()),
         );
       }
-    } catch (e) {
-      debugPrint("Error creating new DB: $e");
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Creating a new database failed", e, stackTrace);
       if (mounted) {
         _showSimpleErrorDialog(
             AppLocalizations.of(context).failedToCreateNewDatabase);
@@ -324,14 +339,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
           .performYearRolloverAndOpen();
       await safeCloseDialog(); 
       
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Year rollover failed, asking user to retry", e, stackTrace);
       await safeCloseDialog();
 
       if (mounted) {
         final retry = await _showCreateDbErrorDialog(e.toString()) ?? false;
         if (retry) {
+          AppLogger.i(_tag, "User retries the year rollover");
           return _handleYearRollover();
         }
+        AppLogger.i(_tag, "User cancelled the rollover, falling back to the old database");
         try {
           await ref.read(databaseManagerProvider.notifier).openDatabaseWithBanner();
         } catch (_) {
@@ -366,9 +384,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     final jsonContent = await ref
         .read(databaseManagerProvider.notifier)
         .getSettingsJsonContent();
-    final isTablet = ResponsiveUtils.isTablet(context);
     if (!mounted) return;
+    final isTablet = ResponsiveUtils.isTablet(context);
     final localizations = AppLocalizations.of(context);
+    final logPath = AppLogger.logFilePath;
+    final logs = AppLogger.recentLines.join('\n');
+    final sectionStyle = TextStyle(
+        fontSize: isTablet ? 18.0 : 16.0, fontWeight: FontWeight.bold);
+    final monoStyle = TextStyle(
+        fontFamily: 'monospace', fontSize: isTablet ? 14.0 : 12.0);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -377,12 +402,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
                 fontSize: isTablet ? 22.0 : 18.0,
                 fontWeight: FontWeight.bold)),
         content: SingleChildScrollView(
-          child: Text(jsonContent,
-              style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: isTablet ? 16.0 : 14.0)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SelectableText(jsonContent,
+                  style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: isTablet ? 16.0 : 14.0)),
+              const Divider(height: 32),
+              Text(localizations.recentLogs, style: sectionStyle),
+              if (logPath != null)
+                Text(logPath,
+                    style: monoStyle.copyWith(color: Colors.grey.shade600)),
+              const SizedBox(height: 8),
+              SelectableText(logs, style: monoStyle),
+            ],
+          ),
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(
+                  text: 'settings.json:\n$jsonContent\n\n'
+                      'Log file: ${logPath ?? 'not available'}\n$logs'));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(localizations.logsCopiedToClipboard)),
+              );
+            },
+            child: Text(localizations.copyToClipboard,
+                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
+          ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(localizations.cancel,

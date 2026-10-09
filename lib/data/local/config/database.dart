@@ -11,7 +11,7 @@ import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/data/local/tables/weekly_entry_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart' show debugPrint, debugPrintStack;
+import 'package:attendly/global/app_logger.dart';
 
 part 'database.g.dart';
 
@@ -20,6 +20,8 @@ part 'database.g.dart';
   daos: [ReadDao, UpdateDao, InsertDao, DeleteDao]
 )
 class AppDatabase extends _$AppDatabase{
+  static const String _tag = "Database";
+
   final Future<void> Function()? onMigrationStarted;
 
   AppDatabase(super.executor, {this.onMigrationStarted});
@@ -41,38 +43,52 @@ class AppDatabase extends _$AppDatabase{
   MigrationStrategy get migration {
     return MigrationStrategy(
       onUpgrade: (m, from, to) async {
+        AppLogger.i(_tag, "Schema migration started: v$from -> v$to");
         if (onMigrationStarted != null) {
           await onMigrationStarted!();
         }
 
-        await transaction(() async {
-          if (from < 2) {
-            debugPrint("Migrating table to v2: Renaming tables and columns");
-            
-            await m.renameTable(directoryPeople, 'all_people');
-
-            await m.renameColumn(dailyEntry, 'dates', dailyEntry.date);
-            await m.renameColumn(dailyEntry, 'id', dailyEntry.personId);
-
-            await m.renameColumn(weeklyEntry, 'dates', weeklyEntry.weekDate);
-
-
-            debugPrint("Migrating table to v2: Adjusting date formatting");
-            
-            await customStatement("UPDATE directory_people SET birthday = birthday || 'T00:00:00.000' WHERE birthday NOT LIKE '%T%'");
-            await customStatement("UPDATE daily_entry SET date = date || 'T00:00:00.000' WHERE date NOT LIKE '%T%'");
-            await customStatement("UPDATE weekly_entry SET week_date = week_date || 'T00:00:00.000' WHERE week_date NOT LIKE '%T%'");
-
-            debugPrint("Migrating table to v2: Rebuilding for new name constraints");
-            
-            await m.alterTable(TableMigration(directoryPeople));
-          }
-        });
+        final stopwatch = Stopwatch()..start();
+        try {
+          await _runMigration(m, from);
+        } catch (e, stackTrace) {
+          AppLogger.e(_tag, "Schema migration v$from -> v$to failed, transaction rolled back", e, stackTrace);
+          rethrow;
+        }
+        AppLogger.i(_tag, "Schema migration v$from -> v$to finished in ${stopwatch.elapsedMilliseconds} ms");
       },
       beforeOpen: (details) async {
+        AppLogger.i(_tag, "Database opened: schema v${details.versionNow}"
+            "${details.wasCreated ? ' (newly created)' : details.hadUpgrade ? ' (upgraded from v${details.versionBefore})' : ''}");
         await customStatement('PRAGMA foreign_keys = ON');
       },
     );
+  }
+
+  Future<void> _runMigration(Migrator m, int from) async {
+    await transaction(() async {
+      if (from < 2) {
+        AppLogger.i(_tag, "Migrating table to v2: Renaming tables and columns");
+
+        await m.renameTable(directoryPeople, 'all_people');
+
+        await m.renameColumn(dailyEntry, 'dates', dailyEntry.date);
+        await m.renameColumn(dailyEntry, 'id', dailyEntry.personId);
+
+        await m.renameColumn(weeklyEntry, 'dates', weeklyEntry.weekDate);
+
+
+        AppLogger.i(_tag, "Migrating table to v2: Adjusting date formatting");
+
+        await customStatement("UPDATE directory_people SET birthday = birthday || 'T00:00:00.000' WHERE birthday NOT LIKE '%T%'");
+        await customStatement("UPDATE daily_entry SET date = date || 'T00:00:00.000' WHERE date NOT LIKE '%T%'");
+        await customStatement("UPDATE weekly_entry SET week_date = week_date || 'T00:00:00.000' WHERE week_date NOT LIKE '%T%'");
+
+        AppLogger.i(_tag, "Migrating table to v2: Rebuilding for new name constraints");
+
+        await m.alterTable(TableMigration(directoryPeople));
+      }
+    });
   }
 
   Future<void> forceOpen() async {
@@ -85,31 +101,31 @@ class AppDatabase extends _$AppDatabase{
       await customStatement(sqlAttachDB, [oldDbPath]);
 
       try {
-        debugPrint("Performing a copy");
+        AppLogger.i(_tag, "Copying 'directory_people' from $oldDbPath");
         await transaction(() async {
           String sqlCopyData = "INSERT INTO main.directory_people SELECT * FROM old_db.directory_people;";
           await customStatement(sqlCopyData);
-          
+
         });
-        
-        debugPrint("Successfully rolled over 'directory_people' table to new year database.");
-        
+
+        final copied = await customSelect("SELECT COUNT(*) AS c FROM main.directory_people").getSingle();
+        AppLogger.i(_tag, "Rolled over ${copied.read<int>('c')} people into the new year database");
+
       } finally {
         String sqlDetachDB = "DETACH DATABASE old_db;";
         await customStatement(sqlDetachDB);
       }
 
     } catch (e, stackTrace) {
-      debugPrint("Error performing year rollover inside DB: $e");
-      debugPrintStack(stackTrace: stackTrace);
+      AppLogger.e(_tag, "Copying people from $oldDbPath failed", e, stackTrace);
       rethrow;
     }
   }
 
-  /// First call the 
+  /// First call the
   static QueryExecutor openConnection(File dbPath) {
     return LazyDatabase(() async {
-      return NativeDatabase.createInBackground(dbPath);
+      return NativeDatabase.createInBackground(dbPath, logStatements: AppLogger.logSqlStatements);
     });
   }
 }

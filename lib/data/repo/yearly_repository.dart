@@ -1,9 +1,12 @@
 
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
+import 'package:attendly/global/app_logger.dart';
 
 
 class YearlyStatsRepository {
+  static const String _tag = 'YearlyStatsRepository';
+
   final AppDatabase db;
 
   YearlyStatsRepository(this.db);
@@ -13,6 +16,7 @@ class YearlyStatsRepository {
     try {
       return await db.readDao.getYearStats();
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to fetch yearly statistics", e, stack);
       throw DatabaseOperationException(
         "Failed to fetch yearly statistics",
         originalException: e is Exception ? e : Exception(e.toString()),
@@ -26,6 +30,7 @@ class YearlyStatsRepository {
     try {
       return await db.readDao.getWeekCount();
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to count recorded weeks", e, stack);
       throw DatabaseOperationException(
         "Failed to count recorded weeks",
         originalException: e is Exception ? e : null,

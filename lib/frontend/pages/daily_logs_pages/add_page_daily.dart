@@ -9,6 +9,7 @@ import 'package:attendly/provider/daily_repo_provider.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:attendly/frontend/selection_options/category_item.dart';
@@ -153,13 +154,12 @@ class _AddDailyState extends ConsumerState<AddDaily>{
 
         } on custom_db_exceptions.DuplicateDailyEntryException catch (_) {
           duplicatePersons.add(person['name']);
-          debugPrint("failed to add ${person['name']} since is in the category");
+          AppLogger.d("Daily", "Person ${person['id']} already has this category, skipped");
           
         } catch (e, stackTrace) {
           failCount++;
           failedPersons.add("${person['name']}: Unexpected error - $e");
-          debugPrint("Unexpected error adding ${person['name']}: $e");
-          debugPrintStack(stackTrace: stackTrace);
+          AppLogger.e("Daily", "Unexpected error adding person ${person['id']}", e, stackTrace);
         }
       }
 
@@ -196,8 +196,6 @@ class _AddDailyState extends ConsumerState<AddDaily>{
     //   return false;
     } catch (e, stackTrace) {
       if(mounted) helper.hideLoadingDialog(context);
-      debugPrint('Unexpected error during form submission: $e');
-      debugPrintStack(stackTrace: stackTrace);
       helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
       return false;
     }

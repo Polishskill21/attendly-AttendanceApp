@@ -1,8 +1,11 @@
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
+import 'package:attendly/global/app_logger.dart';
 
 
 class WeeklyRepository {
+  static const String _tag = 'WeeklyRepository';
+
   final AppDatabase db;
 
   WeeklyRepository(this.db);
@@ -14,6 +17,7 @@ class WeeklyRepository {
     try {
       return db.readDao.watchWeeklyEntryByDate(date);
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to fetch weekly data for ${date.toIso8601String()}", e, stack);
       throw DatabaseOperationException(
         "Failed to fetch weekly data for ${date.toIso8601String()}",
         originalException: e is Exception ? e : Exception(e.toString()),
@@ -27,6 +31,7 @@ class WeeklyRepository {
     try {
       return db.readDao.watchAllWeeklyEntries();
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to fetch the list of weekly entries", e, stack);
       throw DatabaseOperationException(
         "Failed to fetch the list of weekly entries",
         originalException: e is Exception ? e : Exception(e.toString()),
@@ -42,6 +47,7 @@ class WeeklyRepository {
     try {
       await db.updateDao.updateCountableStatus(date, isCountable);
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to update the status of the week", e, stack);
       throw DatabaseOperationException(
         "Failed to update the status of the week",
         originalException: e is Exception ? e : Exception(e.toString()),

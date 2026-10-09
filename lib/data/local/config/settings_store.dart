@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:attendly/data/local/config/storage_manager.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:attendly/global/global_function_collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 /// Single owner of settings.json.
@@ -13,6 +13,7 @@ import 'package:path/path.dart' as p;
 /// keys are filled with defaults instead of throwing.
 class SettingsStore {
   static const String fileName = "settings.json";
+  static const String _tag = "Settings";
 
   static Future<void> _queue = Future.value();
 
@@ -27,7 +28,10 @@ class SettingsStore {
   static Future<Map<String, dynamic>?> load() {
     return _synchronized(() async {
       final dir = await StorageManager.getExternalDocumentsDir();
-      if (dir == null) return null;
+      if (dir == null) {
+        AppLogger.e(_tag, "Cannot load settings.json: storage directory not accessible");
+        return null;
+      }
       return _readWithDefaults(dir);
     });
   }
@@ -37,9 +41,13 @@ class SettingsStore {
   static Future<bool> update(Map<String, dynamic> values) {
     return _synchronized(() async {
       final dir = await StorageManager.getExternalDocumentsDir();
-      if (dir == null) return false;
+      if (dir == null) {
+        AppLogger.e(_tag, "Cannot save $values: storage directory not accessible");
+        return false;
+      }
       final data = await _readWithDefaults(dir);
       data.addAll(values);
+      AppLogger.i(_tag, "Updating settings.json: $values");
       await _fileIn(dir).writeAsString(jsonEncode(data));
       return true;
     });
@@ -57,8 +65,8 @@ class SettingsStore {
         try {
           final decoded = jsonDecode(content);
           if (decoded is Map<String, dynamic>) data = decoded;
-        } on FormatException catch (e) {
-          debugPrint("settings.json is corrupted, restoring defaults: $e");
+        } on FormatException catch (e, stackTrace) {
+          AppLogger.e(_tag, "settings.json is corrupted, restoring defaults. Content was: $content", e, stackTrace);
         }
       }
     }
@@ -71,15 +79,21 @@ class SettingsStore {
       'language':     'en',
     };
 
-    bool needsSave = !await file.exists();
+    final fileExists = await file.exists();
+    final filledKeys = <String>[];
     defaults.forEach((key, value) {
       if (data[key] == null) {
         data[key] = value;
-        needsSave = true;
+        filledKeys.add(key);
       }
     });
 
-    if (needsSave) {
+    if (!fileExists || filledKeys.isNotEmpty) {
+      if (!fileExists) {
+        AppLogger.i(_tag, "settings.json not found, creating it at ${file.path}");
+      } else {
+        AppLogger.w(_tag, "settings.json was missing keys $filledKeys, filled with defaults");
+      }
       await file.writeAsString(jsonEncode(data));
     }
     return data;
