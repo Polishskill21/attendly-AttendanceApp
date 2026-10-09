@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 
@@ -73,44 +76,74 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
   String? _lastNotifiedLetter;
   DateTime _lastNotifyTime = DateTime.fromMillisecondsSinceEpoch(0);
 
+  // The finger currently driving the bar. Extra fingers are ignored.
+  int? _activePointer;
+
+  // Delivers the last letter of a drag once the throttle window is over,
+  // so the list still follows when the finger stops on a throttled letter.
+  Timer? _trailingJump;
+
   // Minimum gap between list jumps while dragging. The bubble/label still
   // updates on every letter the finger crosses (cheap - local state only).
-  // Only the itemScrollController jump itself is throttled, since firing
-  // that on every single letter during a fast swipe is what was flooding
-  // the frame pipeline (screen flash) and starving the bubble of a frame
-  // to actually paint in.
+  // Only the list jump itself is throttled, since firing that on every
+  // single letter during a fast swipe floods the frame pipeline.
   static const _dragJumpThrottle = Duration(milliseconds: 70);
 
-  void _handleTouchAt(Offset localPosition, double itemHeight, {required bool isDragging}) {
+  // How long the letter bubble stays visible after the finger lifts, so
+  // a quick tap is still readable.
+  static const _bubbleLinger = Duration(milliseconds: 200);
+  Timer? _hideBubble;
+
+  @override
+  void dispose() {
+    _trailingJump?.cancel();
+    _hideBubble?.cancel();
+    super.dispose();
+  }
+
+  void _handleTouchAt(Offset localPosition, double itemHeight) {
     if (itemHeight <= 0) return;
     final rawIndex = (localPosition.dy / itemHeight).floor();
     final index = rawIndex.clamp(0, widget.letters.length - 1);
     final letter = widget.letters[index];
     if (letter == _activeLetter) return;
     setState(() => _activeLetter = letter);
-    _notify(letter, isDragging: isDragging);
+    _notify(letter, isDragging: true);
   }
 
   void _notify(String letter, {required bool isDragging}) {
     final resolved = _nearestAvailable(letter);
     if (resolved == _lastNotifiedLetter) return;
     final now = DateTime.now();
-    if (isDragging && now.difference(_lastNotifyTime) < _dragJumpThrottle) {
+    final sinceLast = now.difference(_lastNotifyTime);
+    if (isDragging && sinceLast < _dragJumpThrottle) {
+      _trailingJump?.cancel();
+      _trailingJump = Timer(_dragJumpThrottle - sinceLast, () {
+        if (mounted && _activeLetter != null) {
+          _notify(_activeLetter!, isDragging: false);
+        }
+      });
       return;
     }
+    _trailingJump?.cancel();
     _lastNotifiedLetter = resolved;
     _lastNotifyTime = now;
     widget.onLetterSelected(resolved, isDragging: isDragging);
   }
 
   void _endTouch() {
+    _activePointer = null;
+    _trailingJump?.cancel();
     // Always land exactly where the finger left off, even if the last
     // in-drag notification above was throttled away.
     if (_activeLetter != null) {
       _notify(_activeLetter!, isDragging: false);
     }
-    setState(() => _activeLetter = null);
     _lastNotifiedLetter = null;
+    _hideBubble?.cancel();
+    _hideBubble = Timer(_bubbleLinger, () {
+      if (mounted) setState(() => _activeLetter = null);
+    });
   }
 
   String _nearestAvailable(String letter) {
@@ -151,17 +184,32 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            GestureDetector(
+            // Raw pointer events instead of a GestureDetector: a tap and a
+            // drag recognizer on the same widget both fired for a quick tap
+            // (drag down -> drag cancel -> tap down -> tap up), which hid the
+            // bubble again in the same frame and jumped the list twice.
+            Listener(
               behavior: HitTestBehavior.opaque,
-              onVerticalDragDown: (d) =>
-                  _handleTouchAt(d.localPosition, itemHeight, isDragging: true),
-              onVerticalDragUpdate: (d) =>
-                  _handleTouchAt(d.localPosition, itemHeight, isDragging: true),
-              onVerticalDragEnd: (_) => _endTouch(),
-              onVerticalDragCancel: () => _endTouch(),
-              onTapDown: (d) =>
-                  _handleTouchAt(d.localPosition, itemHeight, isDragging: false),
-              onTapUp: (_) => _endTouch(),
+              onPointerDown: (e) {
+                if (_activePointer != null) return;
+                _activePointer = e.pointer;
+                // A new touch replaces a bubble that is still lingering,
+                // even when it lands on the same letter again.
+                _hideBubble?.cancel();
+                _activeLetter = null;
+                _handleTouchAt(e.localPosition, itemHeight);
+              },
+              onPointerMove: (e) {
+                if (e.pointer == _activePointer) {
+                  _handleTouchAt(e.localPosition, itemHeight);
+                }
+              },
+              onPointerUp: (e) {
+                if (e.pointer == _activePointer) _endTouch();
+              },
+              onPointerCancel: (e) {
+                if (e.pointer == _activePointer) _endTouch();
+              },
               child: Container(
                 width: barWidth,
                 color: Colors.transparent,
@@ -194,7 +242,10 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
             if (_activeLetter != null)
               Positioned(
                 right: bubbleRightOffset,
-                top: (widget.letters.indexOf(_activeLetter!) * itemHeight) - (bubbleSize / 2),
+                // Centred on the letter, but kept inside the bar so the
+                // bubble for 'A' or '#' is not clipped by the page.
+                top: ((widget.letters.indexOf(_activeLetter!) + 0.5) * itemHeight - bubbleSize / 2)
+                    .clamp(0.0, math.max(0.0, constraints.maxHeight - bubbleSize)),
                 child: IgnorePointer(
                   child: Container(
                     width: bubbleSize,
