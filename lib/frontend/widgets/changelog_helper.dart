@@ -1,4 +1,5 @@
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -15,7 +16,7 @@ class ChangelogHelper {
     final currentVersion = packageInfo.version;
     final lastSeenVersion = prefs.getString(_versionKey);
 
-    debugPrint('Changelog check — current: $currentVersion, lastSeen: $lastSeenVersion');
+    AppLogger.d('Changelog', 'Changelog check — current: $currentVersion, lastSeen: $lastSeenVersion');
 
     if (lastSeenVersion != currentVersion) {
       if (context.mounted) {
@@ -36,8 +37,8 @@ class ChangelogHelper {
     String markdownContent;
     try {
       markdownContent = await rootBundle.loadString('assets/changelogs/$version.md');
-    } catch (e) {
-      debugPrint("Error could not open $e");
+    } catch (e, stackTrace) {
+      AppLogger.w('Changelog', 'Could not load changelog for version $version', e, stackTrace);
       return; 
     }
     if (context.mounted) {

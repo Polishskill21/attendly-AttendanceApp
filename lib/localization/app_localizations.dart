@@ -309,4 +309,8 @@ abstract class AppLocalizations {
   String get createNewDatabaseWarningTitle;
   String createNewDatabaseWarning(String year);
   String get openDefaultDatabase;
+
+  // Logs (debug menu / splash secret menu)
+  String get recentLogs;
+  String get logsCopiedToClipboard;
 }

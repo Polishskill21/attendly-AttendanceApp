@@ -1,4 +1,5 @@
 import 'package:attendly/data/local/config/database.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
@@ -121,7 +122,7 @@ class CustomExpansionState extends State<CustomExpansion> {
                     else ...[
                       IconButton(
                         onPressed: () {
-                          debugPrint("Editing ${widget.index}");
+                          AppLogger.d("UI", "Editing ${widget.index}");
                           widget.onEditPress();
                         },
                         icon: Icon(Icons.edit, 

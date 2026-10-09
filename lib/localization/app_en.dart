@@ -675,4 +675,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openDefaultDatabase => 'Open default database';
+
+  // Logs (debug menu / splash secret menu)
+  @override
+  String get recentLogs => 'Recent logs';
+
+  @override
+  String get logsCopiedToClipboard => 'Logs copied to clipboard';
 }

@@ -6,6 +6,7 @@ import 'package:attendly/frontend/selection_options/category_item.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/provider/daily_repo_provider.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,8 +96,8 @@ class _SearchDailyLogsPageState extends ConsumerState<SearchDailyLogsPage> {
       });
       return;
     }
-    catch (e) {
-      debugPrint('Search failed: $e');
+    catch (e, stackTrace) {
+      AppLogger.e('Search', 'Search failed', e, stackTrace);
     } finally {
       setState(() {
         _isLoading = false;

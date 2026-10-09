@@ -4,6 +4,7 @@ import 'package:attendly/data/local/config/database_manager.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
 import 'package:attendly/data/local/config/i_database_manager.dart';
 import 'package:attendly/frontend/app_database_state.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
  
  
@@ -88,7 +89,9 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
     await _manager.closeDatabase();
   }
 
-  void reportDatabaseError(Object error) {
+  void reportDatabaseError(Object error, [StackTrace? stackTrace]) {
+    AppLogger.e('Database', 'A page reported a database error, showing the error screen '
+        '(db: ${state.currentDbPath ?? 'none'})', error, stackTrace);
     state = AppDatabaseState(dbError: error); // manager=null, isReady=false
   }
 }

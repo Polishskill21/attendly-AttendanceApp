@@ -1,8 +1,11 @@
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
+import 'package:attendly/global/app_logger.dart';
 
 
 class DirectoryRepository {
+  static const String _tag = 'DirectoryRepository';
+
   final AppDatabase db;
 
   DirectoryRepository(this.db);
@@ -13,7 +16,8 @@ class DirectoryRepository {
   Stream<List<DirectoryPeopleData>> watchAllPerson({bool ascending = true}) {
     try {
       return db.readDao.watchAllPerson(ascending);
-    } catch (e) {
+    } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to fetch directory", e, stack);
       throw DatabaseOperationException("Failed to fetch directory", originalException: e is Exception ? e : null);
     }
   }
@@ -39,6 +43,7 @@ class DirectoryRepository {
     }on DatabaseException {
       rethrow; 
     } catch (e, stack) {
+      AppLogger.e(_tag, "Could not add person", e, stack);
       throw DatabaseOperationException(
         "Could not add person", 
         originalException: e is Exception ? e : Exception(e.toString()),
@@ -58,6 +63,7 @@ class DirectoryRepository {
     } on DuplicatePersonException {
       rethrow;
     } catch (e, stack) {
+      AppLogger.e(_tag, "Update failed for person $id", e, stack);
       throw DatabaseOperationException(
         "Update failed", 
         originalException: e is Exception ? e : null, 
@@ -75,6 +81,7 @@ class DirectoryRepository {
     } on PersonNotFoundException {
       rethrow;
     } catch (e, stack) {
+      AppLogger.e(_tag, "Deletion failed for person $id", e, stack);
       throw DatabaseOperationException(
         "Deletion failed dir person", 
         originalException: e is Exception ? e : null, 
