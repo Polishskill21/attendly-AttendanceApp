@@ -355,7 +355,9 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
                 ),
                 if (people.length > 1)
                   Positioned(
-                    right: 0,
+                    // Kept slightly away from the screen edge so Android's
+                    // back gesture does not steal touches on the bar.
+                    right: 10,
                     top: 8,
                     bottom: ResponsiveUtils.getButtonHeight(context) + 48 + MediaQuery.of(context).padding.bottom,
                     child: AlphabetIndexBar(
@@ -364,10 +366,14 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
                         onLetterSelected: (letter, {required bool isDragging}) {
                           final index = letterIndexMap[letter];
                           if (index == null) return;
-                          if (_expandedIndex != -1) {
-                            setState(() => _expandedIndex = -1);
+                          if (_expandedIndex == -1) {
+                            _listController.jumpToIndex(index, alignment: 0.0);
+                            return;
                           }
 
+                          // Collapse the open card first, then jump once the
+                          // list has been rebuilt without it.
+                          setState(() => _expandedIndex = -1);
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             if (!mounted) return;
                             _listController.jumpToIndex(index, alignment: 0.0);
@@ -464,7 +470,7 @@ class _PersonListView extends StatelessWidget {
         left: ResponsiveUtils.getListPadding(context).left,
         // A bit of extra right padding so rows don't sit under the
         // alphabet index bar overlaid on top of the list.
-        right: ResponsiveUtils.getListPadding(context).right + 24,
+        right: ResponsiveUtils.getListPadding(context).right + 24 + 10,
         top: 0,
         bottom: ResponsiveUtils.getButtonHeight(context) +
             40 +
