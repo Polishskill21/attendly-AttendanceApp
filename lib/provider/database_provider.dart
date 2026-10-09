@@ -18,6 +18,11 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   Future<bool> checkForYearRollover() {
     return _manager.checkForYearRollover();
   }
+
+  /// True on a fresh install where no database has been created yet.
+  Future<bool> needsInitialSetup() {
+    return _manager.needsInitialSetup();
+  }
  
   /// Opens the default DB (path comes from settings.json inside the manager).
   /// Marks state as ready when done.

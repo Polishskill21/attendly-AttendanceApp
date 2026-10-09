@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:attendly/frontend/widgets/changelog_helper.dart';
+import 'package:attendly/global/global_function_collection.dart';
 import 'package:attendly/frontend/widgets/migration_dialog.dart';
 import 'package:attendly/main_app.dart';
 import 'package:attendly/provider/database_provider.dart';
@@ -12,6 +13,9 @@ import 'package:attendly/frontend/utils/responsive_utils.dart';
 
 enum YearChangeChoice { create, later }
 
+/// What the splash screen shows once startup has finished.
+enum _StartupResult { ready, needsSetup, failed }
+
 class SplashScreen extends ConsumerStatefulWidget {
   final File? selectedDb;
   final Object? dbError;
@@ -23,11 +27,15 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
-  late Future<bool> _dbFuture;
+  late Future<_StartupResult> _startupFuture;
   late AnimationController _animationController;
   late Animation<double> _animation;
   int _longPressCounter = 0;
   bool _isCreatingNewDb = false;
+
+  /// Error reported by a page while the app was running; shown once, cleared on retry.
+  late bool _showReportedError;
+  Object? _startupError;
 
   Future<void> Function()? _closeSchemaMigrationDialog;
 
@@ -41,7 +49,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     _animation = Tween<double>(begin: 0.95, end: 1.10).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _dbFuture = _initializeApp();
+    _showReportedError = widget.dbError != null;
+    _startupFuture = _initializeApp();
   }
 
   @override
@@ -64,15 +73,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     }
   }
 
-  Future<bool> _initializeApp() async {
+  Future<_StartupResult> _initializeApp() async {
     final results = await Future.wait([
       _initializeDatabase(),
       Future.delayed(const Duration(milliseconds: 1300)),
     ]);
-    
-    final dbSuccess = results[0] as bool;
 
-    if (!dbSuccess) return false;
+    final result = results[0] as _StartupResult;
+
+    if (result != _StartupResult.ready) return result;
 
     if (mounted && !ref.read(databaseManagerProvider).isTemporaryDb) {
       await ChangelogHelper.presentChangelogIfNew(context);
@@ -83,28 +92,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
         MaterialPageRoute(builder: (_) => const MainApp()),
       );
     }
-    
-    return true;
+
+    return _StartupResult.ready;
   }
 
-  Future<bool> _initializeDatabase() async {
+  Future<_StartupResult> _initializeDatabase() async {
     final notifier = ref.read(databaseManagerProvider.notifier);
 
-    if (widget.dbError != null) return false;
+    if (_showReportedError) {
+      _startupError = widget.dbError;
+      return _StartupResult.failed;
+    }
 
     try {
       // ── Case A: user picked a specific DB file from the list ───────────────
       if (widget.selectedDb != null) {
         await notifier.openDatabase(file: widget.selectedDb, onMigrationStarted: _onSchemaMigrationStarted);
-        return true;
+        return _StartupResult.ready;
       }
- 
+
+
       // ── Case B: normal startup ─────────────────────────────────────────────
+      // Also creates settings.json with defaults if it does not exist yet.
       final rolloverNeeded = await notifier.checkForYearRollover();
- 
+
+      // ── Case C: fresh install, no database exists yet ─────────────────────
+      if (await notifier.needsInitialSetup()) {
+        return _StartupResult.needsSetup;
+      }
+
       if (rolloverNeeded && mounted) {
         final choice = await _showYearChangeDialog();
- 
+
         if (choice == YearChangeChoice.create) {
           await _handleYearRollover();
         } else {
@@ -114,11 +133,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
       } else {
         await notifier.openDatabase(onMigrationStarted: _onSchemaMigrationStarted);
       }
- 
-      return true;
+
+      return _StartupResult.ready;
     } catch (e) {
       debugPrint("Database init failed: $e");
-      return false;
+      _startupError = e;
+      return _StartupResult.failed;
     }
     finally{
       await _safeCloseSchemaMigrationDialog();
@@ -189,17 +209,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
 
   void _retryInitialization() {
-    if (widget.dbError != null) {
-      
-      ref.read(databaseManagerProvider.notifier).closeDatabase();
-      return;
-    }
-    setState(() => _dbFuture = _initializeApp());
+    _showReportedError = false;
+    _startupError = null;
+    setState(() => _startupFuture = _initializeApp());
   }
 
-  
-  void _createNewDatabase() async {
+  void _openDefaultDatabase() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const SplashScreen()),
+    );
+  }
+
+  /// [withWarning] asks for confirmation first; used when an existing database failed to open.
+  void _createNewDatabase({bool withWarning = false}) async {
     if (_isCreatingNewDb) return;
+    if (withWarning && !(await _showCreateNewDbWarningDialog() ?? false)) return;
+    if (!mounted) return;
     setState(() => _isCreatingNewDb = true);
  
     try {
@@ -300,8 +325,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
       await safeCloseDialog(); 
       
     } catch (e) {
-      await safeCloseDialog(); 
-      
+      await safeCloseDialog();
+
       if (mounted) {
         final retry = await _showCreateDbErrorDialog(e.toString()) ?? false;
         if (retry) {
@@ -468,6 +493,46 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   //   );
   // }
 
+  Future<bool?> _showCreateNewDbWarningDialog() {
+    final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.orange, size: isTablet ? 32 : 24),
+          SizedBox(width: isTablet ? 12 : 8),
+          Expanded(
+            child: Text(localizations.createNewDatabaseWarningTitle,
+                style: TextStyle(
+                    fontSize: isTablet ? 22.0 : 18.0,
+                    fontWeight: FontWeight.bold)),
+          ),
+        ]),
+        content: SingleChildScrollView(
+          child: Text(
+            localizations.createNewDatabaseWarning(yearToString(getCurrentYear())),
+            style: TextStyle(fontSize: isTablet ? 18.0 : 16.0),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(localizations.cancel,
+                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(localizations.createNew,
+                style: TextStyle(fontSize: isTablet ? 18.0 : 16.0)),
+          ),
+        ],
+        contentPadding: EdgeInsets.all(isTablet ? 24.0 : 16.0),
+      ),
+    );
+  }
+
   Future<bool?> _showCreateDbErrorDialog(String error) async {
     final localizations = AppLocalizations.of(context);
     final isTablet = ResponsiveUtils.isTablet(context);
@@ -509,159 +574,233 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final iconSize = isTablet ? 130.0 : 100.0;
-    
-    return FutureBuilder<bool>(
-      future: _dbFuture,
+    return FutureBuilder<_StartupResult>(
+      future: _startupFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ScaleTransition(
-                    scale: _animation,
-                    child: FaIcon(FontAwesomeIcons.childReaching,
-                        size: iconSize, color: Theme.of(context).primaryColor),
-                  ),
-                  SizedBox(height: isTablet ? 30 : 20),
-                  Text(AppLocalizations.of(context).attendly,
-                      style: TextStyle(
-                          fontSize: isTablet ? 34 : 28,
-                          fontWeight: FontWeight.bold)),
-                  SizedBox(height: isTablet ? 40 : 30),
-                  SizedBox(
-                    width: isTablet ? 40 : 30,
-                    height: isTablet ? 40 : 30,
-                    child: CircularProgressIndicator(
-                        strokeWidth: isTablet ? 4.0 : 3.0),
-                  ),
-                  SizedBox(height: isTablet ? 30 : 20),
-                  Text(AppLocalizations.of(context).initializing,
-                      style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: isTablet ? 20 : 16)),
-                ],
-              ),
-            ),
-          );
+          return _buildLoadingView(context);
         }
 
-        // If DB failed to open
-        if (snapshot.data == null || snapshot.data == false) {
-          final localizations = AppLocalizations.of(context);
-          return Scaffold(
-            body: Center(
-              child: Padding(
-                padding: EdgeInsets.all(isTablet ? 30.0 : 20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onLongPress: () {
-                        _longPressCounter++;
-                        if (_longPressCounter >= 2) {
-                          _showSecretMenu();
-                          _longPressCounter = 0;
-                        }
-                      },
-                      child: Icon(
-                        Icons.error_outline,
-                        size: isTablet ? 100 : 80,
-                        color: Colors.red
-                      ),
-                    ),
-                    SizedBox(height: isTablet ? 30 : 20),
-                    Text(
-                      localizations.databaseSwitchFailed,
-                      style: TextStyle(
-                        fontSize: isTablet ? 28 : 24,
-                        fontWeight: FontWeight.bold
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: isTablet ? 40 : 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: _retryInitialization,
-                          label: Text(
-                            localizations.retry,
-                            style: TextStyle(
-                              fontSize: isTablet ? 18 : 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                          icon: Icon(Icons.refresh,
-                              color: Colors.white,
-                              size: isTablet ? 24 : 20),
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isTablet ? 24 : 16,
-                              vertical: isTablet ? 16 : 12,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: isTablet ? 20 : 12),
-                        ElevatedButton.icon(
-                          onPressed: _isCreatingNewDb ? null : _createNewDatabase,
-                          label: _isCreatingNewDb
-                              ? SizedBox(
-                                  height: isTablet ? 24 : 20,
-                                  width: isTablet ? 24 : 20,
-                                  child: const CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.0,
-                                  ),
-                                )
-                              : Text(
-                                  localizations.createNew,
-                                  style: TextStyle(
-                                    fontSize: isTablet ? 18 : 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                          icon: _isCreatingNewDb
-                              ? const SizedBox.shrink()
-                              : FaIcon(
-                                  FontAwesomeIcons.database,
-                                  size: isTablet ? 22 : 18,
-                                  color: Colors.white
-                                ),
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isTablet ? 24 : 16,
-                              vertical: isTablet ? 16 : 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+        switch (snapshot.data) {
+          case _StartupResult.needsSetup:
+            return _buildSetupView(context);
+          case _StartupResult.failed:
+          case null:
+            return _buildFailedView(context);
+          case _StartupResult.ready:
+            return Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: const Center(child: CircularProgressIndicator()),
+            );
+        }
+      },
+    );
+  }
+
+  Widget _buildLoadingView(BuildContext context) {
+    final isTablet = ResponsiveUtils.isTablet(context);
+    final iconSize = isTablet ? 130.0 : 100.0;
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ScaleTransition(
+              scale: _animation,
+              child: FaIcon(FontAwesomeIcons.childReaching,
+                  size: iconSize, color: Theme.of(context).primaryColor),
+            ),
+            SizedBox(height: isTablet ? 30 : 20),
+            Text(AppLocalizations.of(context).attendly,
+                style: TextStyle(
+                    fontSize: isTablet ? 34 : 28,
+                    fontWeight: FontWeight.bold)),
+            SizedBox(height: isTablet ? 40 : 30),
+            SizedBox(
+              width: isTablet ? 40 : 30,
+              height: isTablet ? 40 : 30,
+              child: CircularProgressIndicator(
+                  strokeWidth: isTablet ? 4.0 : 3.0),
+            ),
+            SizedBox(height: isTablet ? 30 : 20),
+            Text(AppLocalizations.of(context).initializing,
+                style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: isTablet ? 20 : 16)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// First launch: no database exists yet, so offer to create one.
+  Widget _buildSetupView(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+
+    return _buildStatusScaffold(
+      context,
+      icon: FaIcon(FontAwesomeIcons.childReaching,
+          size: isTablet ? 100 : 80, color: Theme.of(context).primaryColor),
+      title: localizations.noDatabaseTitle,
+      message: localizations.noDatabaseMessage,
+      actions: [
+        _buildCreateDbButton(context, localizations.createDatabase,
+            () => _createNewDatabase()),
+      ],
+    );
+  }
+
+  /// Opening the default or a selected database failed.
+  Widget _buildFailedView(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final isTablet = ResponsiveUtils.isTablet(context);
+
+    return _buildStatusScaffold(
+      context,
+      icon: Icon(Icons.error_outline, size: isTablet ? 100 : 80, color: Colors.red),
+      title: localizations.databaseSwitchFailed,
+      message: localizations.databaseOpenFailedMessage,
+      details: _startupError?.toString(),
+      actions: [
+        ElevatedButton.icon(
+          onPressed: _isCreatingNewDb ? null : _retryInitialization,
+          label: Text(
+            localizations.retry,
+            style: TextStyle(
+              fontSize: isTablet ? 18 : 16,
+              color: Colors.white,
+            ),
+          ),
+          icon: Icon(Icons.refresh,
+              color: Colors.white,
+              size: isTablet ? 24 : 20),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 24 : 16,
+              vertical: isTablet ? 16 : 12,
+            ),
+          ),
+        ),
+        _buildCreateDbButton(context, localizations.createNew,
+            () => _createNewDatabase(withWarning: true)),
+        if (widget.selectedDb != null)
+          TextButton(
+            onPressed: _isCreatingNewDb ? null : _openDefaultDatabase,
+            child: Text(localizations.openDefaultDatabase,
+                style: TextStyle(fontSize: isTablet ? 18 : 16)),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatusScaffold(
+    BuildContext context, {
+    required Widget icon,
+    required String title,
+    required String message,
+    String? details,
+    required List<Widget> actions,
+  }) {
+    final isTablet = ResponsiveUtils.isTablet(context);
+
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(isTablet ? 30.0 : 20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onLongPress: () {
+                  _longPressCounter++;
+                  if (_longPressCounter >= 2) {
+                    _showSecretMenu();
+                    _longPressCounter = 0;
+                  }
+                },
+                child: icon,
+              ),
+              SizedBox(height: isTablet ? 30 : 20),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: isTablet ? 28 : 24,
+                  fontWeight: FontWeight.bold
                 ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: isTablet ? 16 : 12),
+              Text(
+                message,
+                style: TextStyle(fontSize: isTablet ? 18 : 16),
+                textAlign: TextAlign.center,
+              ),
+              if (details != null) ...[
+                SizedBox(height: isTablet ? 12 : 8),
+                Text(
+                  details,
+                  style: TextStyle(
+                    fontSize: isTablet ? 14 : 12,
+                    color: Colors.grey.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              SizedBox(height: isTablet ? 40 : 30),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: isTablet ? 20 : 12,
+                runSpacing: isTablet ? 16 : 12,
+                children: actions,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCreateDbButton(BuildContext context, String label, VoidCallback onPressed) {
+    final isTablet = ResponsiveUtils.isTablet(context);
+
+    return ElevatedButton.icon(
+      onPressed: _isCreatingNewDb ? null : onPressed,
+      label: _isCreatingNewDb
+          ? SizedBox(
+              height: isTablet ? 24 : 20,
+              width: isTablet ? 24 : 20,
+              child: const CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2.0,
+              ),
+            )
+          : Text(
+              label,
+              style: TextStyle(
+                fontSize: isTablet ? 18 : 16,
+                color: Colors.white,
               ),
             ),
-          );
-        }
-        
-        // WidgetsBinding.instance.addPostFrameCallback((_) {
-        //   if (!mounted) return;
-        //   Navigator.of(context).pushReplacement(
-        //     MaterialPageRoute(builder: (_) => const MainApp()),
-        //   );
-        // });
- 
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: const Center(child: CircularProgressIndicator()),
-        );
-      },
+      icon: _isCreatingNewDb
+          ? const SizedBox.shrink()
+          : FaIcon(
+              FontAwesomeIcons.database,
+              size: isTablet ? 22 : 18,
+              color: Colors.white
+            ),
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 24 : 16,
+          vertical: isTablet ? 16 : 12,
+        ),
+      ),
     );
   }
 }
