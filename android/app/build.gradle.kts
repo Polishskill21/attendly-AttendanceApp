@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // The Flutter Gradle Plugin must be applied after the Android Gradle plugin.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -39,8 +38,17 @@ flutter {
     source = "../.."
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+kotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+// On Windows, AGP's incremental jniLibs merge leaks a handle on the ABI folder it removes when the
+// target ABI changes (e.g. running on a 64-bit phone, then a 32-bit tablet). The folder stays locked
+// until the Gradle daemon exits and the build fails with AccessDeniedException. Never treating the
+// outputs as up to date forces a full (non-incremental) merge, which avoids that path. The merge only
+// copies libapp.so, so this is cheap.
+tasks.named { it.startsWith("merge") && it.endsWith("JniLibFolders") }.configureEach {
+    outputs.upToDateWhen { false }
 }
