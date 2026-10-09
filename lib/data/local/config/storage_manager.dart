@@ -7,7 +7,16 @@ import 'package:permission_handler/permission_handler.dart';
 class StorageManager {
   /// Gets the custom external storage directory for the app.
   /// Handles legacy and modern Android storage permissions safely.
-  static Future<Directory?> getExternalDocumentsDir() async {
+  static Future<Directory?> getExternalDocumentsDir() {
+    // Concurrent permission requests make permission_handler throw,
+    // so callers arriving while a lookup is running share its result.
+    return _pendingDirLookup ??= _resolveExternalDocumentsDir()
+        .whenComplete(() => _pendingDirLookup = null);
+  }
+
+  static Future<Directory?>? _pendingDirLookup;
+
+  static Future<Directory?> _resolveExternalDocumentsDir() async {
     try {
       bool isGranted = await _requestStoragePermission();
       if (!isGranted) return null;
