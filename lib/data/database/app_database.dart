@@ -33,7 +33,7 @@ class AppDatabase extends _$AppDatabase{
   );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   //PRAGMA user_version; to check which db schema version currently is, need to added it to the settings page to display
 
@@ -87,6 +87,13 @@ class AppDatabase extends _$AppDatabase{
         AppLogger.i(_tag, "Migrating table to v2: Rebuilding for new name constraints");
 
         await m.alterTable(TableMigration(directoryPeople));
+      }
+
+      if (from < 3) {
+        AppLogger.i(_tag, "Migrating to v3: Adding indexes on daily_entry");
+
+        await m.createIndex(dailyEntryDatePerson);
+        await m.createIndex(dailyEntryPerson);
       }
     });
   }

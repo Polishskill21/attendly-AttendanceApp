@@ -1914,6 +1914,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $DailyEntryTable dailyEntry = $DailyEntryTable(this);
   late final $WeeklyEntryTable weeklyEntry = $WeeklyEntryTable(this);
+  late final Index dailyEntryDatePerson = Index(
+    'daily_entry_date_person',
+    'CREATE INDEX daily_entry_date_person ON daily_entry (date, person_id)',
+  );
+  late final Index dailyEntryPerson = Index(
+    'daily_entry_person',
+    'CREATE INDEX daily_entry_person ON daily_entry (person_id)',
+  );
   late final ReadDao readDao = ReadDao(this as AppDatabase);
   late final UpdateDao updateDao = UpdateDao(this as AppDatabase);
   late final InsertDao insertDao = InsertDao(this as AppDatabase);
@@ -1926,6 +1934,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     directoryPeople,
     dailyEntry,
     weeklyEntry,
+    dailyEntryDatePerson,
+    dailyEntryPerson,
   ];
   @override
   DriftDatabaseOptions get options =>
