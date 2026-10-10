@@ -64,7 +64,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     if (isTablet) {
       return _buildTabletLayout();
     } else {

@@ -118,7 +118,7 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final iconSize = Responsive.of(context).iconSize();
     // Read the active db state from AppState
     final appState = ref.watch(databaseProvider); 
 
@@ -131,7 +131,7 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
           title: Text(
             localizations.debugSettings,
             style: TextStyle(
-              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontSize: Responsive.of(context).titleFontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -154,11 +154,11 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
-            bottom: ResponsiveUtils.getContentPadding(context).bottom +
+            bottom: Responsive.of(context).contentPadding.bottom +
                 MediaQuery.of(context).padding.bottom,
-            left: ResponsiveUtils.getContentPadding(context).left,
-            right: ResponsiveUtils.getContentPadding(context).right,
-            top: ResponsiveUtils.getContentPadding(context).top,
+            left: Responsive.of(context).contentPadding.left,
+            right: Responsive.of(context).contentPadding.right,
+            top: Responsive.of(context).contentPadding.top,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,34 +166,34 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
               Text(
                 localizations.settingsJsonContents,
                 style: TextStyle(
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               if (_settingsPath != null) ...[
                 SizedBox(
-                    height: ResponsiveUtils.isTablet(context) ? 12 : 8),
+                    height: Responsive.of(context).isTablet ? 12 : 8),
                 Text(
                   'Path: $_settingsPath',
                   style: TextStyle(
                     fontSize:
-                        ResponsiveUtils.getBodyFontSize(context) - 4,
+                        Responsive.of(context).bodyFontSize - 4,
                     fontFamily: 'monospace',
                     color: Colors.grey.shade600,
                   ),
                 ),
               ],
               SizedBox(
-                  height: ResponsiveUtils.isTablet(context) ? 24 : 16),
+                  height: Responsive.of(context).isTablet ? 24 : 16),
               if (_error != null)
                 Container(
                   padding:
-                      ResponsiveUtils.getContentPadding(context),
+                      Responsive.of(context).contentPadding,
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     border: Border.all(color: Colors.red.shade200),
                     borderRadius:
-                        ResponsiveUtils.getCardBorderRadius(context),
+                        Responsive.of(context).cardBorderRadius,
                   ),
                   child: Row(
                     children: [
@@ -201,14 +201,14 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                           color: Colors.red.shade600, size: iconSize),
                       SizedBox(
                           width:
-                              ResponsiveUtils.isTablet(context) ? 12 : 8),
+                              Responsive.of(context).isTablet ? 12 : 8),
                       Expanded(
                         child: Text(
                           _error!,
                           style: TextStyle(
                             color: Colors.red.shade700,
                             fontSize:
-                                ResponsiveUtils.getBodyFontSize(context) -
+                                Responsive.of(context).bodyFontSize -
                                     4,
                           ),
                         ),
@@ -217,19 +217,19 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                   ),
                 ),
               SizedBox(
-                  height: ResponsiveUtils.isTablet(context) ? 24 : 16),
+                  height: Responsive.of(context).isTablet ? 24 : 16),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Container(
                       width: double.infinity,
                       padding:
-                          ResponsiveUtils.getContentPadding(context),
+                          Responsive.of(context).contentPadding,
                       decoration: BoxDecoration(
                         color: Colors.grey.shade100,
                         border:
                             Border.all(color: Colors.grey.shade300),
                         borderRadius:
-                            ResponsiveUtils.getCardBorderRadius(context),
+                            Responsive.of(context).cardBorderRadius,
                       ),
                       child: SingleChildScrollView(
                         child: SelectableText(
@@ -239,21 +239,21 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                           style: TextStyle(
                             fontFamily: 'monospace',
                             fontSize:
-                                ResponsiveUtils.getBodyFontSize(context) -
+                                Responsive.of(context).bodyFontSize -
                                     6,
                           ),
                         ),
                       ),
                     ),
               Divider(
-                  height: ResponsiveUtils.isTablet(context) ? 40 : 32),
+                  height: Responsive.of(context).isTablet ? 40 : 32),
               Row(
                 children: [
                   Expanded(
                     child: Text(
                       localizations.recentLogs,
                       style: TextStyle(
-                        fontSize: ResponsiveUtils.getBodyFontSize(context),
+                        fontSize: Responsive.of(context).bodyFontSize,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -270,22 +270,22 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                   'Path: ${AppLogger.logFilePath}',
                   style: TextStyle(
                     fontSize:
-                        ResponsiveUtils.getBodyFontSize(context) - 4,
+                        Responsive.of(context).bodyFontSize - 4,
                     fontFamily: 'monospace',
                     color: Colors.grey.shade600,
                   ),
                 ),
               SizedBox(
-                  height: ResponsiveUtils.isTablet(context) ? 12 : 8),
+                  height: Responsive.of(context).isTablet ? 12 : 8),
               Container(
                 width: double.infinity,
-                height: ResponsiveUtils.isTablet(context) ? 400 : 300,
-                padding: ResponsiveUtils.getContentPadding(context),
+                height: Responsive.of(context).isTablet ? 400 : 300,
+                padding: Responsive.of(context).contentPadding,
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   border: Border.all(color: Colors.grey.shade300),
                   borderRadius:
-                      ResponsiveUtils.getCardBorderRadius(context),
+                      Responsive.of(context).cardBorderRadius,
                 ),
                 child: SingleChildScrollView(
                   reverse: true, // newest entries at the bottom, visible first
@@ -295,13 +295,13 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                       fontFamily: 'monospace',
                       color: Colors.black87,
                       fontSize:
-                          ResponsiveUtils.getBodyFontSize(context) - 8,
+                          Responsive.of(context).bodyFontSize - 8,
                     ),
                   ),
                 ),
               ),
               Divider(
-                  height: ResponsiveUtils.isTablet(context) ? 40 : 32),
+                  height: Responsive.of(context).isTablet ? 40 : 32),
               // DB path — from AppState instead of DBConnectionManager
               _buildInfoTile(
                 title: localizations.databasePath,
@@ -309,7 +309,7 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                 subtitle: appState.currentDbPath ??
                     localizations.notAvailable,
                 iconSize: iconSize,
-                isTablet: ResponsiveUtils.isTablet(context),
+                isTablet: Responsive.of(context).isTablet,
               ),
               // Connection status — AppState.isReady replaces db?.isOpen
               _buildInfoTile(
@@ -322,27 +322,26 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                     : localizations.disconnected,
                 iconColor: appState.isReady ? Colors.green : Colors.red,
                 iconSize: iconSize,
-                isTablet: ResponsiveUtils.isTablet(context),
+                isTablet: Responsive.of(context).isTablet,
               ),
               SizedBox(
-                  height: ResponsiveUtils.isTablet(context) ? 24 : 16),
+                  height: Responsive.of(context).isTablet ? 24 : 16),
               Row(
                 children: [
                   Icon(
                     Icons.info_outline,
-                    size: ResponsiveUtils.getIconSize(context,
-                        baseSize: 16),
+                    size: Responsive.of(context).iconSize(baseSize: 16),
                     color: Colors.grey.shade600,
                   ),
                   SizedBox(
                       width:
-                          ResponsiveUtils.isTablet(context) ? 12 : 8),
+                          Responsive.of(context).isTablet ? 12 : 8),
                   Expanded(
                     child: Text(
                       localizations.debugMenuDescription,
                       style: TextStyle(
                         fontSize:
-                            ResponsiveUtils.getBodyFontSize(context) - 6,
+                            Responsive.of(context).bodyFontSize - 6,
                         color: Colors.grey.shade600,
                       ),
                     ),
@@ -370,14 +369,14 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
       title: Text(
         title,
         style: TextStyle(
-          fontSize: ResponsiveUtils.getBodyFontSize(context),
+          fontSize: Responsive.of(context).bodyFontSize,
           fontWeight: FontWeight.w500,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: TextStyle(
-            fontSize: ResponsiveUtils.getBodyFontSize(context) - 6),
+            fontSize: Responsive.of(context).bodyFontSize - 6),
       ),
     );
   }

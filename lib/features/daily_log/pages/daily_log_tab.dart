@@ -207,8 +207,8 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
     final todayDateOnly = DateTime(now.year, now.month, now.day);
     final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
     final isTodayOrFuture = !selectedDateOnly.isBefore(todayDateOnly);
-    final arrowIconSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
-    final appBarIconSize = ResponsiveUtils.getIconSize(context);
+    final arrowIconSize = Responsive.of(context).iconSize(baseSize: 30);
+    final appBarIconSize = Responsive.of(context).iconSize();
 
     // Grab the list if available to check lengths
     final visiblePeople = asyncFilteredData.valueOrNull ?? [];
@@ -250,21 +250,21 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                         onPressed: () => Scaffold.of(context).openDrawer(),
                         icon: Icon(
                           Icons.menu,
-                          size: ResponsiveUtils.getIconSize(context, baseSize: 35),
+                          size: Responsive.of(context).iconSize(baseSize: 35),
                         ),
                       ),
                 ),
         actions: [
           if (!isEditMode)
             IconButton(
-              icon: Icon(Icons.edit, size: ResponsiveUtils.getIconSize(context, baseSize: 30)),
+              icon: Icon(Icons.edit, size: Responsive.of(context).iconSize(baseSize: 30)),
               onPressed: visiblePeople.isEmpty ? null : _toggleEditMode,
             ),
           if (isEditMode)
             IconButton(
               icon: Icon(
                 Icons.select_all,
-                size: ResponsiveUtils.getIconSize(context, baseSize: 28),
+                size: Responsive.of(context).iconSize(baseSize: 28),
               ),
               onPressed: visiblePeople.isEmpty ? null : () => _selectAll(visiblePeople),
             ),
@@ -276,8 +276,8 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.getListPadding(context).horizontal,
-                  vertical: ResponsiveUtils.getListPadding(context).vertical,
+                  horizontal: Responsive.of(context).listPadding.horizontal,
+                  vertical: Responsive.of(context).listPadding.vertical,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -297,7 +297,7 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                         "${selectedDate.day}.${selectedDate.month}.${selectedDate.year}",
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: ResponsiveUtils.getTitleFontSize(context),
+                          fontSize: Responsive.of(context).titleFontSize,
                         ),
                       ),
                     ),
@@ -377,27 +377,27 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   SizedBox(
-                    width: ResponsiveUtils.getButtonHeight(context) + 10,
-                    height: ResponsiveUtils.getButtonHeight(context) + 10,
+                    width: Responsive.of(context).buttonHeight + 10,
+                    height: Responsive.of(context).buttonHeight + 10,
                     child: FloatingActionButton(
                       heroTag: 'search_fab',
                       onPressed: _onSearchFabPressed,
                       child: Icon(
                         Icons.search,
-                        size: ResponsiveUtils.getIconSize(context, baseSize: 30),
+                        size: Responsive.of(context).iconSize(baseSize: 30),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
-                    width: ResponsiveUtils.getButtonHeight(context) + 25,
-                    height: ResponsiveUtils.getButtonHeight(context) + 25,
+                    width: Responsive.of(context).buttonHeight + 25,
+                    height: Responsive.of(context).buttonHeight + 25,
                     child: FloatingActionButton(
                       heroTag: 'add_fab',
                       onPressed: () => _onFabPressed(context),
                       child: Icon(
                         Icons.add,
-                        size: ResponsiveUtils.getIconSize(context, baseSize: 35),
+                        size: Responsive.of(context).iconSize(baseSize: 35),
                       ),
                     ),
                   ),
@@ -416,18 +416,18 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           TextButton.icon(
-            icon: Icon(Icons.add_task, size: ResponsiveUtils.getIconSize(context)),
+            icon: Icon(Icons.add_task, size: Responsive.of(context).iconSize()),
             label: Text(
               localizations.addCategory,
-              style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context)),
+              style: TextStyle(fontSize: Responsive.of(context).smallFontSize),
             ),
             onPressed: hasSelection ? _onBulkAddCategory : null,
           ),
           TextButton.icon(
-            icon: Icon(Icons.delete_sweep, size: ResponsiveUtils.getIconSize(context)),
+            icon: Icon(Icons.delete_sweep, size: Responsive.of(context).iconSize()),
             label: Text(
               '${localizations.delete} ($selectedCount)',
-              style: TextStyle(fontSize: ResponsiveUtils.getSmallFontSize(context)),
+              style: TextStyle(fontSize: Responsive.of(context).smallFontSize),
             ),
             onPressed: hasSelection ? _onBulkDelete : null,
             style: TextButton.styleFrom(foregroundColor: hasSelection ? Colors.red : Colors.grey),
@@ -466,7 +466,7 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final body = ResponsiveUtils.getBodyFontSize(context);
+    final body = Responsive.of(context).bodyFontSize;
     final selectedCat = ref.watch(dailyCategoryFilterProvider);
 
     // Sync controllers when providers are externally reset (e.g. on date change).
@@ -479,18 +479,18 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
     });
 
     return Padding(
-      padding: ResponsiveUtils.getListPadding(context),
+      padding: Responsive.of(context).listPadding,
       child: ExpansionTile(
         leading: const Icon(Icons.filter_list),
         title: Text(
           localizations.filterOptions,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.w600,
           ),
         ),
         tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
-        childrenPadding: ResponsiveUtils.getListPadding(context),
+        childrenPadding: Responsive.of(context).listPadding,
         children: [
           TextField(
             controller: _searchController,
@@ -500,7 +500,7 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
               labelStyle: TextStyle(fontSize: body + 2, color: Theme.of(context).primaryColor),
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                borderRadius: Responsive.of(context).cardBorderRadius,
               ),
               suffixIcon:
                   _searchController.text.isNotEmpty
@@ -574,16 +574,16 @@ class _PersonList extends StatelessWidget {
       return Center(
         child: Text(
           AppLocalizations.of(context).noEntriesForThisDay,
-          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+          style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
         ),
       );
     }
 
-    final bodyFontSize = ResponsiveUtils.getBodyFontSize(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final bodyFontSize = Responsive.of(context).bodyFontSize;
+    final iconSize = Responsive.of(context).iconSize();
 
     return ListView.builder(
-      padding: EdgeInsets.only(bottom: ResponsiveUtils.getButtonHeight(context) + 60),
+      padding: EdgeInsets.only(bottom: Responsive.of(context).buttonHeight + 60),
       itemCount: people.length,
       itemBuilder: (context, index) {
         final person = people[index];
@@ -596,12 +596,12 @@ class _PersonList extends StatelessWidget {
                 isSelected
                     ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
                     : BorderSide.none,
-            borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+            borderRadius: Responsive.of(context).cardBorderRadius,
           ),
           child: InkWell(
             onTap: isEditMode ? () => onToggleSelection(person) : null,
             child: Padding(
-              padding: ResponsiveUtils.getContentPadding(context),
+              padding: Responsive.of(context).contentPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -612,7 +612,7 @@ class _PersonList extends StatelessWidget {
                           person.name,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: ResponsiveUtils.getTitleFontSize(context),
+                            fontSize: Responsive.of(context).titleFontSize,
                           ),
                         ),
                       ),
@@ -666,7 +666,7 @@ class _PersonList extends StatelessWidget {
                       child: IconButton(
                         icon: Icon(
                           Icons.add_circle_outline,
-                          size: ResponsiveUtils.getIconSize(context, baseSize: 32),
+                          size: Responsive.of(context).iconSize(baseSize: 32),
                         ),
                         color: Theme.of(context).primaryColor,
                         onPressed: () => onAddCategory(person),

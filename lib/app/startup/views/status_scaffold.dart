@@ -22,7 +22,7 @@ class StatusScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
 
     return Scaffold(
       body: Center(
@@ -92,13 +92,13 @@ class StartupActionButton extends StatelessWidget {
   /// The database icon used by "Create database" / "Create new".
   static Widget databaseIcon(BuildContext context) => FaIcon(
         FontAwesomeIcons.database,
-        size: ResponsiveUtils.isTablet(context) ? 22 : 18,
+        size: Responsive.of(context).isTablet ? 22 : 18,
         color: Colors.white,
       );
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
 
     return ElevatedButton.icon(
       onPressed: isBusy ? null : onPressed,

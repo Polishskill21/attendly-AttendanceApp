@@ -16,7 +16,7 @@ class SettingsPage extends ConsumerWidget  {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final localizations = AppLocalizations.of(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final iconSize = Responsive.of(context).iconSize();
     final settings = ref.watch(settingsProvider);
 
     return PopScope(
@@ -28,7 +28,7 @@ class SettingsPage extends ConsumerWidget  {
           title: Text(
             localizations.settings,
             style: TextStyle(
-              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontSize: Responsive.of(context).titleFontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -54,7 +54,7 @@ class SettingsPage extends ConsumerWidget  {
                         SnackBar(
                           content: Text(
                             value ? localizations.darkModeOn : localizations.darkModeOff,
-                            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                            style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                           ),
                         ),
                       );
@@ -74,10 +74,10 @@ class SettingsPage extends ConsumerWidget  {
                         : localizations.english,
                     underline: const SizedBox(),
                     style: TextStyle(
-                      fontSize: ResponsiveUtils.getBodyFontSize(context),
+                      fontSize: Responsive.of(context).bodyFontSize,
                       color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
-                    iconSize: ResponsiveUtils.getIconSize(context),
+                    iconSize: Responsive.of(context).iconSize(),
                     onChanged: (String? newValue) {
                       if (newValue == null) return;
                       final locale = newValue == localizations.german
@@ -93,7 +93,7 @@ class SettingsPage extends ConsumerWidget  {
                             content: Text(
                               '${newLoc.languageSetTo} $newValue. ${newLoc.appRestartRequired}',
                               style: TextStyle(
-                                  fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                                  fontSize: Responsive.of(context).bodyFontSize),
                             ),
                           ));
                       });
@@ -104,7 +104,7 @@ class SettingsPage extends ConsumerWidget  {
                         value: value,
                         child: Text(
                           value,
-                          style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                          style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                         ),
                       );
                     }).toList(),
@@ -117,7 +117,7 @@ class SettingsPage extends ConsumerWidget  {
                   title: localizations.recalibrateData,
                   subtitle: localizations.recalibrateDataDesc,
                   icon: Icons.calculate_outlined,
-                  trailing: Icon(Icons.chevron_right, size: ResponsiveUtils.getIconSize(context)),
+                  trailing: Icon(Icons.chevron_right, size: Responsive.of(context).iconSize()),
                   onTap: () => _showRecalibrationDialog(context, ref)
                 ),
                 const Divider(height: 1),
@@ -126,22 +126,22 @@ class SettingsPage extends ConsumerWidget  {
                   title: localizations.help,
                   subtitle: localizations.openUserManual,
                   icon: Icons.help_outline,
-                  trailing: Icon(Icons.chevron_right, size: ResponsiveUtils.getIconSize(context)),
+                  trailing: Icon(Icons.chevron_right, size: Responsive.of(context).iconSize()),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) =>
-                        HelpPage(isTablet: ResponsiveUtils.isTablet(context)),
+                        HelpPage(isTablet: Responsive.of(context).isTablet),
                   )),
                 ),
                 const Divider(height: 1),
                 Padding(
-                  padding: ResponsiveUtils.getContentPadding(context),
+                  padding: Responsive.of(context).contentPadding,
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           localizations.debugInformation,
                           style: TextStyle(
-                            fontSize: ResponsiveUtils.getBodyFontSize(context),
+                            fontSize: Responsive.of(context).bodyFontSize,
                             fontWeight: FontWeight.bold,
                             color: Colors.grey,
                           ),
@@ -161,7 +161,7 @@ class SettingsPage extends ConsumerWidget  {
                   ),
                 ),
                 Padding(
-                  padding: ResponsiveUtils.getContentPadding(context),
+                  padding: Responsive.of(context).contentPadding,
                   child: Row(
                     children: [
                       Expanded(
@@ -179,7 +179,7 @@ class SettingsPage extends ConsumerWidget  {
                                   localizations.getAppsVerision(version),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                    fontSize: Responsive.of(context).bodyFontSize,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.grey,
                                   ),
@@ -199,7 +199,7 @@ class SettingsPage extends ConsumerWidget  {
                 //   title: "Test 2025 Migration",
                 //   subtitle: "Verify db_2025.db conversion logic",
                 //   icon: Icons.auto_fix_high_outlined,
-                //   trailing: Icon(Icons.play_arrow, color: Colors.green, size: ResponsiveUtils.getIconSize(context)),
+                //   trailing: Icon(Icons.play_arrow, color: Colors.green, size: Responsive.of(context).iconSize()),
                 //   onTap: _runMigrationTest,
                 // ),
               ],
@@ -226,16 +226,16 @@ class SettingsPage extends ConsumerWidget  {
       builder: (ctx) => AlertDialog(
         title: Text(localizations.confirmAction,
             style: TextStyle(
-                fontSize: ResponsiveUtils.getTitleFontSize(context),
+                fontSize: Responsive.of(context).titleFontSize,
                 fontWeight: FontWeight.bold)),
         content: Text(localizations.recalibrateConfirm,
-            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+            style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(localizations.cancel,
                 style: TextStyle(
-                    fontSize: ResponsiveUtils.getBodyFontSize(context) - 4)),
+                    fontSize: Responsive.of(context).bodyFontSize - 4)),
           ),
           TextButton(
             style: TextButton.styleFrom(
@@ -243,7 +243,7 @@ class SettingsPage extends ConsumerWidget  {
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(localizations.proceed,
                 style: TextStyle(
-                    fontSize: ResponsiveUtils.getBodyFontSize(context) - 4)),
+                    fontSize: Responsive.of(context).bodyFontSize - 4)),
           ),
         ],
       ),
@@ -273,16 +273,16 @@ class SettingsPage extends ConsumerWidget  {
     VoidCallback? onTap,
   }) {
     return ListTile(
-      contentPadding: ResponsiveUtils.getContentPadding(context),
-      leading: Icon(icon, size: ResponsiveUtils.getIconSize(context)),
+      contentPadding: Responsive.of(context).contentPadding,
+      leading: Icon(icon, size: Responsive.of(context).iconSize()),
       title: Text(title,
           style: TextStyle(
-              fontSize: ResponsiveUtils.getBodyFontSize(context),
+              fontSize: Responsive.of(context).bodyFontSize,
               fontWeight: FontWeight.w500)),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 2.0),
         child: Text(subtitle,
-            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+            style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
       ),
       trailing: trailing,
       onTap: onTap,

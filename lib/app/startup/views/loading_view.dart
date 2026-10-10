@@ -30,7 +30,7 @@ class _LoadingViewState extends State<LoadingView> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     final localizations = AppLocalizations.of(context);
 
     return Scaffold(

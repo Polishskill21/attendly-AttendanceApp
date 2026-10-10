@@ -48,8 +48,8 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final iconSize = Responsive.of(context).iconSize();
     
     final asyncWeeksList = ref.watch(allWeeksProvider);
     
@@ -58,7 +58,7 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
         title: Text(
           AppLocalizations.of(context).weeksWithData,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -91,8 +91,8 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
 
           return ListView.builder(
             padding: EdgeInsets.symmetric(
-              vertical: ResponsiveUtils.getListPadding(context).vertical,
-              horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+              vertical: Responsive.of(context).listPadding.vertical,
+              horizontal: Responsive.of(context).listPadding.horizontal,
             ),
             itemCount: weeksData.length,
             itemBuilder: (context, index) {
@@ -105,19 +105,19 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
               final isCurrentWeek = weekData.weekDate == widget.currentWeekDate;
 
               return Card(
-                elevation: ResponsiveUtils.getCardElevation(context),
+                elevation: Responsive.of(context).cardElevation,
                 margin: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.getListPadding(context).horizontal / 2, 
-                  vertical: ResponsiveUtils.getListPadding(context).vertical * 1.3,
+                  horizontal: Responsive.of(context).listPadding.horizontal / 2, 
+                  vertical: Responsive.of(context).listPadding.vertical * 1.3,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  borderRadius: Responsive.of(context).cardBorderRadius,
                   side: isCurrentWeek
                       ? BorderSide(color: Theme.of(context).primaryColor, width: isTablet ? 2.0 : 1.5)
                       : BorderSide.none,
                 ),
                 child: InkWell(
-                  borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  borderRadius: Responsive.of(context).cardBorderRadius,
                   onTap: () {
                     Navigator.of(context).pop({
                       'date': weekData.weekDate.toIso8601String(),
@@ -125,7 +125,7 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
                     });
                   },
                   child: Padding(
-                    padding: ResponsiveUtils.getContentPadding(context),
+                    padding: Responsive.of(context).contentPadding,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -137,7 +137,7 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
                                 displayStr,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold, 
-                                  fontSize: ResponsiveUtils.getBodyFontSize(context) + 2,
+                                  fontSize: Responsive.of(context).bodyFontSize + 2,
                                 ),
                               ),
                             ),
@@ -145,17 +145,17 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
                               icon: Icon(
                                 isCountable ? Icons.check_circle : Icons.cancel_outlined,
                                 color: isCountable ? Colors.green : Colors.red,
-                                size: ResponsiveUtils.getIconSize(context, baseSize: 34),
+                                size: Responsive.of(context).iconSize(baseSize: 34),
                               ),
                               tooltip: isCountable 
                                   ? AppLocalizations.of(context).excludeFromYearReport 
                                   : AppLocalizations.of(context).includeInYearReport,
                               onPressed: () => _toggleCountableWeek(weekData),
-                              padding: EdgeInsets.all(ResponsiveUtils.getContentPadding(context).vertical / 4),
+                              padding: EdgeInsets.all(Responsive.of(context).contentPadding.vertical / 4),
                             ),
                           ],
                         ),
-                        Divider(height: ResponsiveUtils.getListPadding(context).vertical * 3),
+                        Divider(height: Responsive.of(context).listPadding.vertical * 3),
                         _buildWeekDataDetails(weekData),
                       ],
                     ),
@@ -190,24 +190,24 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
           children: [
             Icon(
               Icons.groups, 
-              size: ResponsiveUtils.getIconSize(context, baseSize: 18), 
+              size: Responsive.of(context).iconSize(baseSize: 18), 
               color: Colors.blueGrey,
             ),
-            SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal / 2),
+            SizedBox(width: Responsive.of(context).listPadding.horizontal / 2),
             Text(
               '${localizations.totalVisitors}: $totalVisitors',
               style: TextStyle(
-                fontSize: ResponsiveUtils.getBodyFontSize(context), 
+                fontSize: Responsive.of(context).bodyFontSize, 
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
         if (keyStats.isNotEmpty) ...[
-          SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+          SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
           Wrap(
-            spacing: ResponsiveUtils.getListPadding(context).horizontal / 2,
-            runSpacing: ResponsiveUtils.getListPadding(context).vertical / 2,
+            spacing: Responsive.of(context).listPadding.horizontal / 2,
+            runSpacing: Responsive.of(context).listPadding.vertical / 2,
             children: keyStats.entries.map((entry) {
               return Chip(
                 avatar: CircleAvatar(
@@ -215,7 +215,7 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
                   child: Text(
                     entry.value.toString(),
                     style: TextStyle(
-                      fontSize: ResponsiveUtils.getBodyFontSize(context) - 6,
+                      fontSize: Responsive.of(context).bodyFontSize - 6,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -223,11 +223,11 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
                 ),
                 label: Text(
                   entry.key,
-                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+                  style: TextStyle(fontSize: Responsive.of(context).bodyFontSize - 4),
                 ),
                 backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 side: BorderSide.none,
-                padding: EdgeInsets.all(ResponsiveUtils.getContentPadding(context).vertical / 2),
+                padding: EdgeInsets.all(Responsive.of(context).contentPadding.vertical / 2),
               );
             }).toList(),
           ),

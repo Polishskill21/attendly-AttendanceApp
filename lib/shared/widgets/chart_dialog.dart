@@ -10,7 +10,7 @@ class ChartDialog {
     required Map<String, int> data
   }) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     
     return showDialog<void>(
       context: context,
@@ -83,7 +83,7 @@ class _PieChartState extends State<_PieChart> {
   @override
   Widget build(BuildContext context) {
     final total = widget.data.values.fold(0, (sum, item) => sum + item);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
 
     if (total == 0) {
       return Center(
@@ -129,7 +129,7 @@ class _PieChartState extends State<_PieChart> {
   List<PieChartSectionData> _getSections(int total) {
     final dataEntries =
         widget.data.entries.where((entry) => entry.value > 0).toList();
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
 
     return List.generate(dataEntries.length, (i) {
       final isTouched = i == touchedIndex;
@@ -162,7 +162,7 @@ class _PieChartState extends State<_PieChart> {
   Widget _buildLegend() {
     final dataEntries =
         widget.data.entries.where((entry) => entry.value > 0).toList();
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
     
     return Wrap(
       spacing: isTablet ? 20 : 16,

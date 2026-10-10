@@ -31,7 +31,7 @@ class RefreshableAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _RefreshableAppBarState extends State<RefreshableAppBar> {
   @override
   Widget build(BuildContext context) {
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
     final titleFontSize = isTablet ? 28.0 : 20.0;
     final iconSize = isTablet ? 32.0 : 24.0;
 

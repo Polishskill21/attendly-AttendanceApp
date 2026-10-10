@@ -44,7 +44,7 @@ class AppNavigationDrawer extends ConsumerWidget {
     final appState = ref.watch(databaseProvider);
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 32);
+    final iconSize = Responsive.of(context).iconSize(baseSize: 32);
 
     final int? validSelectedIndex = (selectedTab >= 0 && selectedTab <= 3) ? selectedTab : null;
 
@@ -173,7 +173,7 @@ class AppNavigationDrawer extends ConsumerWidget {
     final dbPath = appState.currentDbPath ?? localizations.noDatabaseOpen;
     final dbName = p.basename(dbPath);
     
-    final iconScale = ResponsiveUtils.getIconScaleFactor(context);
+    final iconScale = Responsive.of(context).iconScaleFactor;
 
     final textScale = isTablet ? 0.9 : 1.0;
 
@@ -292,7 +292,7 @@ class AppNavigationDrawer extends ConsumerWidget {
   }
 
   Widget _buildDrawerHeader(BuildContext context, DatabaseState appState, ThemeData theme, String dbName, AppLocalizations localizations) {
-    final isTablet = this.isTablet || ResponsiveUtils.isTablet(context);
+    final isTablet = this.isTablet || Responsive.of(context).isTablet;
     final textScale = isTablet ? 0.85 : 1.0;
     
     return Container(
@@ -341,7 +341,7 @@ class AppNavigationDrawer extends ConsumerWidget {
   }
 
   Widget _buildNewYearBanner(BuildContext context, AppLocalizations localizations, {bool isTablet = false}) {
-    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    final textScale = Responsive.of(context).textScaleFactor;
     
     return GestureDetector(
       onTap: () => _openDefaultDatabase(context),
@@ -400,7 +400,7 @@ class AppNavigationDrawer extends ConsumerWidget {
     final Color selectedColor = theme.colorScheme.primary;
     final Color defaultTextColor = theme.listTileTheme.textColor ?? theme.textTheme.bodyLarge?.color ?? Colors.black87;
     final Color defaultIconColor = theme.listTileTheme.iconColor ?? theme.iconTheme.color ?? Colors.grey;
-    final isTablet = this.isTablet || ResponsiveUtils.isTablet(context);
+    final isTablet = this.isTablet || Responsive.of(context).isTablet;
 
     return Container(
       margin: EdgeInsets.symmetric(

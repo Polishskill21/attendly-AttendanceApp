@@ -23,7 +23,7 @@ class AppTheme {
         iconTheme: const IconThemeData(color: Colors.deepPurple),
         titleTextStyle: const TextStyle(
           color: Colors.black,
-          // Removed fontSize so pages can size via ResponsiveUtils
+          // Removed fontSize so pages can size via Responsive
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -99,7 +99,7 @@ class AppTheme {
         iconTheme: const IconThemeData(color: Colors.deepPurple),
         titleTextStyle: const TextStyle(
           color: Colors.white,
-          // Removed fontSize so pages can size via ResponsiveUtils
+          // Removed fontSize so pages can size via Responsive
           fontWeight: FontWeight.bold,
         ),
       ),

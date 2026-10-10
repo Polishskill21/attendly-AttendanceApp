@@ -108,7 +108,7 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final iconSize = Responsive.of(context).iconSize();
     DateTime parsedDate = DateTime.parse(widget.record.date);
     String formattedDisplayDate = DateFormat('dd.MM.yyyy').format(parsedDate);
 
@@ -117,7 +117,7 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
         title: Text(
           localizations.editCategory,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -128,11 +128,11 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
-          vertical: ResponsiveUtils.getListPadding(context).vertical,
-          horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+          vertical: Responsive.of(context).listPadding.vertical,
+          horizontal: Responsive.of(context).listPadding.horizontal,
         ),
         child: Padding(
-          padding: ResponsiveUtils.getContentPadding(context),
+          padding: Responsive.of(context).contentPadding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -140,23 +140,23 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
                 '${localizations.date}: $formattedDisplayDate',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                 ),
               ),
-              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+              SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
               Text(
                 '${localizations.category}:', 
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                 ),
               ),
-              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
+              SizedBox(height: Responsive.of(context).listPadding.vertical / 2),
               DropdownMenu<CategoryOption>(
                 controller: _categoryController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectCategory,
-                textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                textStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                 initialSelection: getCategoryOptions(context)
                     .firstWhereOrNull((item) => item.category == _selectedCategory),
                 enableFilter: true,
@@ -170,17 +170,17 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
                   return DropdownMenuEntry<CategoryOption>(
                     value: menu,
                     label: menu.label,
-                    leadingIcon: menu.icon != null ? Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)) : null,
+                    leadingIcon: menu.icon != null ? Icon(menu.icon, size: Responsive.of(context).iconSize()) : null,
                     style: MenuItemButton.styleFrom(
-                      textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                      textStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                     ),
                   );
                 }).toList(),
-                menuHeight: ResponsiveUtils.isTablet(context) ? 300 : 250,
-                // width: MediaQuery.of(context).size.width - (ResponsiveUtils.isTablet(context) ? 48 : 32),
+                menuHeight: Responsive.of(context).isTablet ? 300 : 250,
+                // width: MediaQuery.of(context).size.width - (Responsive.of(context).isTablet ? 48 : 32),
                 inputDecorationTheme: InputDecorationTheme(
-                  border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
-                  contentPadding: ResponsiveUtils.getContentPadding(context),
+                  border: OutlineInputBorder(borderRadius: Responsive.of(context).cardBorderRadius),
+                  contentPadding: Responsive.of(context).contentPadding,
                 ),
                 trailingIcon: _selectedCategory != null
                     ? IconButton(
@@ -194,41 +194,41 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
                       )
                     : null,
               ),
-              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+              SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
               Text(
                 localizations.commentOptional, 
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                 ),
               ),
-              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
+              SizedBox(height: Responsive.of(context).listPadding.vertical / 2),
               TextField(
                 controller: _commentController,
                 maxLines: 1,
-                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
-                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                    borderRadius: Responsive.of(context).cardBorderRadius,
                   ),
-                  contentPadding: ResponsiveUtils.getContentPadding(context),
+                  contentPadding: Responsive.of(context).contentPadding,
                   hintText: localizations.enterComment,
-                  hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  hintStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                 ),
               ),
-              SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 3),
+              SizedBox(height: Responsive.of(context).listPadding.vertical * 3),
               Center(
                 child: ElevatedButton.icon(
                   onPressed: _submitChanges,
-                  icon: Icon(Icons.save, color: Colors.white, size: ResponsiveUtils.getIconSize(context, baseSize: 28)),
+                  icon: Icon(Icons.save, color: Colors.white, size: Responsive.of(context).iconSize(baseSize: 28)),
                   label: Text(
                     localizations.saveChanges,
-                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(
-                      horizontal: ResponsiveUtils.getContentPadding(context).horizontal,
-                      vertical: ResponsiveUtils.getContentPadding(context).vertical / 2,
+                      horizontal: Responsive.of(context).contentPadding.horizontal,
+                      vertical: Responsive.of(context).contentPadding.vertical / 2,
                     ),
                   ),
                 ),

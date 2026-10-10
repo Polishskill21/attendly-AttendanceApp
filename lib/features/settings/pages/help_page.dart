@@ -51,15 +51,15 @@ class _HelpPageState extends State<HelpPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final iconSize = Responsive.of(context).iconSize();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           loc.help,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -70,17 +70,17 @@ class _HelpPageState extends State<HelpPage> {
       ),
       body: Center(
         child: Padding(
-          padding: ResponsiveUtils.getContentPadding(context),
+          padding: Responsive.of(context).contentPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.picture_as_pdf, size: ResponsiveUtils.getIconSize(context, baseSize: 56), color: Theme.of(context).primaryColor),
+              Icon(Icons.picture_as_pdf, size: Responsive.of(context).iconSize(baseSize: 56), color: Theme.of(context).primaryColor),
               SizedBox(height: isTablet ? 20 : 16),
               Text(
                 loc.openUserManual,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -90,7 +90,7 @@ class _HelpPageState extends State<HelpPage> {
                   _lastError!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                    fontSize: Responsive.of(context).bodyFontSize,
                     color: Colors.red,
                   ),
                 ),
@@ -98,19 +98,19 @@ class _HelpPageState extends State<HelpPage> {
               SizedBox(height: isTablet ? 24 : 16),
               SizedBox(
                 width: isTablet ? 260 : 220,
-                height: ResponsiveUtils.getButtonHeight(context),
+                height: Responsive.of(context).buttonHeight,
                 child: ElevatedButton.icon(
                   onPressed: _opening ? null : _openExternally,
                   icon: _opening
                       ? SizedBox(
-                          width: ResponsiveUtils.getIconSize(context, baseSize: 18),
-                          height: ResponsiveUtils.getIconSize(context, baseSize: 18),
+                          width: Responsive.of(context).iconSize(baseSize: 18),
+                          height: Responsive.of(context).iconSize(baseSize: 18),
                           child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : Icon(Icons.open_in_new, size: ResponsiveUtils.getIconSize(context, baseSize: 20), color: Colors.white),
+                      : Icon(Icons.open_in_new, size: Responsive.of(context).iconSize(baseSize: 20), color: Colors.white),
                   label: Text(
                     loc.openUserManual,
-                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   ),
                 ),
               ),
@@ -119,7 +119,7 @@ class _HelpPageState extends State<HelpPage> {
                 loc.externalPdfAppHint,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: ResponsiveUtils.getBodyFontSize(context) - 2,
+                  fontSize: Responsive.of(context).bodyFontSize - 2,
                   color: Colors.grey,
                 ),
               ),

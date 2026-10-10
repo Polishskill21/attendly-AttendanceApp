@@ -40,15 +40,15 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final iconSize = Responsive.of(context).iconSize();
     
     return Scaffold(
       appBar: AppBar(
         title: Text(
           localizations.selectDatabase,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -93,8 +93,8 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
           final files = snapshot.data!;
           return ListView.builder(
             padding: EdgeInsets.symmetric(
-              vertical: ResponsiveUtils.getListPadding(context).vertical,
-              horizontal: ResponsiveUtils.getListPadding(context).horizontal,
+              vertical: Responsive.of(context).listPadding.vertical,
+              horizontal: Responsive.of(context).listPadding.horizontal,
             ),
             itemCount: files.length,
             itemBuilder: (context, index) {
@@ -103,20 +103,20 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
               final bool isCurrentDb = file.path == widget.currentDbPath;
 
               return Card(
-                elevation: ResponsiveUtils.getCardElevation(context),
+                elevation: Responsive.of(context).cardElevation,
                 margin: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.getListPadding(context).horizontal / 2,
-                  vertical: ResponsiveUtils.getListPadding(context).vertical / 2,
+                  horizontal: Responsive.of(context).listPadding.horizontal / 2,
+                  vertical: Responsive.of(context).listPadding.vertical / 2,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                  borderRadius: Responsive.of(context).cardBorderRadius,
                 ),
                 color: isCurrentDb ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
                 child: ListTile(
                   enabled: !isCurrentDb,
                   contentPadding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveUtils.getContentPadding(context).horizontal,
-                    vertical: ResponsiveUtils.getContentPadding(context).vertical / 2,
+                    horizontal: Responsive.of(context).contentPadding.horizontal,
+                    vertical: Responsive.of(context).contentPadding.vertical / 2,
                   ),
                   leading: Icon(
                     isCurrentDb ? Icons.check_circle : Icons.storage_rounded,
@@ -127,14 +127,14 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
                     fileName,
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      fontSize: ResponsiveUtils.getBodyFontSize(context),
+                      fontSize: Responsive.of(context).bodyFontSize,
                       color: isCurrentDb ? Colors.grey[600] : null,
                     ),
                   ),
                   subtitle: Text(
                     isCurrentDb ? localizations.currentlyLoaded : file.parent.path,
                     style: TextStyle(
-                      fontSize: ResponsiveUtils.getBodyFontSize(context) - 6,
+                      fontSize: Responsive.of(context).bodyFontSize - 6,
                       color: isCurrentDb ? Colors.grey[600] : null,
                     ),
                   ),

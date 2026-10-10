@@ -42,7 +42,7 @@ class ChangelogDialog {
       return; 
     }
     if (context.mounted) {
-      final isTablet = ResponsiveUtils.isTablet(context);
+      final isTablet = Responsive.of(context).isTablet;
       
       final double bodySize = isTablet ? 20.0 : 15.0; 
       final double codeSize = isTablet ? 20.0 : 15.0;

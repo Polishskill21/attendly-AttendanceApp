@@ -112,16 +112,16 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
-    final bodySize = ResponsiveUtils.getBodyFontSize(context);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
+    final iconSize = Responsive.of(context).iconSize();
+    final bodySize = Responsive.of(context).bodyFontSize;
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
           localizations.searchDailyLog,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -134,9 +134,9 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(
-              ResponsiveUtils.getContentPadding(context).left + 12,
-              ResponsiveUtils.getContentPadding(context).top + 8,
-              ResponsiveUtils.getContentPadding(context).right + 12,
+              Responsive.of(context).contentPadding.left + 12,
+              Responsive.of(context).contentPadding.top + 8,
+              Responsive.of(context).contentPadding.right + 12,
               0,
             ),
             child: Column(
@@ -157,13 +157,13 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                             )
                           : null,
                       border: OutlineInputBorder(
-                        borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                        borderRadius: Responsive.of(context).cardBorderRadius,
                       ),
-                      contentPadding: ResponsiveUtils.getContentPadding(context),
+                      contentPadding: Responsive.of(context).contentPadding,
                     ),
                   ),
                 if (_selectedSearchType.first == SearchType.nameAndDescription)
-                  SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                  SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
                 if (_selectedSearchType.first == SearchType.description ||
                     _selectedSearchType.first == SearchType.nameAndDescription)
                   TextField(
@@ -180,12 +180,12 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                             )
                           : null,
                       border: OutlineInputBorder(
-                        borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                        borderRadius: Responsive.of(context).cardBorderRadius,
                       ),
-                      contentPadding: ResponsiveUtils.getContentPadding(context),
+                      contentPadding: Responsive.of(context).contentPadding,
                     ),
                   ),
-                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -225,10 +225,10 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
                 DropdownMenu<CategoryOption?>(
                   controller: _categoryController,
-                  // width: MediaQuery.of(context).size.width - (ResponsiveUtils.getContentPadding(context).horizontal * 2),
+                  // width: MediaQuery.of(context).size.width - (Responsive.of(context).contentPadding.horizontal * 2),
                   expandedInsets: EdgeInsets.zero,
                   menuHeight: isTablet ? 300 : 250,
                   enableFilter: true,
@@ -252,9 +252,9 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                   }).toList(),
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(
-                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                      borderRadius: Responsive.of(context).cardBorderRadius,
                     ),
-                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                    contentPadding: Responsive.of(context).contentPadding,
                   ),
                   trailingIcon: _selectedCategory != null
                       ? IconButton(
@@ -266,14 +266,14 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                         )
                       : null,
                 ),
-                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2.5),
+                SizedBox(height: Responsive.of(context).listPadding.vertical * 2.5),
                 ElevatedButton.icon(
                   onPressed: _performSearch,
                   icon: Icon(Icons.search, size: iconSize, color: Colors.white),
                   label: Text(localizations.search, style: TextStyle(fontSize: bodySize)),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, ResponsiveUtils.getButtonHeight(context)),
-                    padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
+                    minimumSize: Size(double.infinity, Responsive.of(context).buttonHeight),
+                    padding: EdgeInsets.symmetric(vertical: Responsive.of(context).contentPadding.vertical / 2),
                   ),
                 ),
               ],
@@ -295,8 +295,8 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                       )
                     : ListView.builder(
                         padding: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.getContentPadding(context).left + 12,
-                          vertical: ResponsiveUtils.getListPadding(context).vertical,
+                          horizontal: Responsive.of(context).contentPadding.left + 12,
+                          vertical: Responsive.of(context).listPadding.vertical,
                         ),
                         itemCount: _groupedResults.keys.length,
                         itemBuilder: (context, index) {
@@ -311,26 +311,26 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                             children: [
                               Padding(
                                 padding: EdgeInsets.symmetric(
-                                  vertical: ResponsiveUtils.getListPadding(context).vertical,
+                                  vertical: Responsive.of(context).listPadding.vertical,
                                   horizontal: 8.0,
                                 ),
                                 child: Text(
                                   formattedDisplayDate,
                                   style: TextStyle(
-                                    fontSize: ResponsiveUtils.getTitleFontSize(context),
+                                    fontSize: Responsive.of(context).titleFontSize,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                               ...records.map((record) {
                                 return Card(
-                                  margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical / 2),
-                                  elevation: ResponsiveUtils.getCardElevation(context),
+                                  margin: EdgeInsets.only(bottom: Responsive.of(context).listPadding.vertical / 2),
+                                  elevation: Responsive.of(context).cardElevation,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                                    borderRadius: Responsive.of(context).cardBorderRadius,
                                   ),
                                   child: ListTile(
-                                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                                    contentPadding: Responsive.of(context).contentPadding,
                                     title: Text(
                                       record.personName ?? localizations.unknown,
                                       style: TextStyle(fontSize: bodySize, fontWeight: FontWeight.w600),

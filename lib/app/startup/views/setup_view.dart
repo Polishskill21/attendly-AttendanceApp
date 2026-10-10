@@ -16,7 +16,7 @@ class SetupView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
 
     return StatusScaffold(
       icon: FaIcon(FontAwesomeIcons.childReaching,

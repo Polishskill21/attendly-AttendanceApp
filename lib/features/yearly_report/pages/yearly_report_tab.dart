@@ -72,7 +72,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
                 builder: (context) => IconButton(
                   onPressed: () => Scaffold.of(context).openDrawer(),
                   icon: Icon(Icons.menu,
-                      size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                      size: Responsive.of(context).iconSize(baseSize: 35)),
                 ),
               ),
       ),
@@ -84,7 +84,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
             return Center(
               child: Text(
                 localizations.noDataForThisYear,
-                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
               ),
             );
           }
@@ -112,22 +112,22 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
         children: [
           Icon(
             Icons.error_outline,
-            size: ResponsiveUtils.getIconSize(context, baseSize: 60),
+            size: Responsive.of(context).iconSize(baseSize: 60),
             color: Colors.red,
           ),
-          SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 4),
+          SizedBox(height: Responsive.of(context).listPadding.vertical * 4),
           
           // Display the actual error message dynamically
           Text(
             displayMessage,
-            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+            style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
             textAlign: TextAlign.center,
           ),
           
-          SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+          SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
           ElevatedButton(
             onPressed: fetchYearStats, 
-            child: Text('Retry', style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+            child: Text('Retry', style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
           ),
         ],
       ),
@@ -149,10 +149,10 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        ResponsiveUtils.getListPadding(context).left,
-        ResponsiveUtils.getListPadding(context).top,
-        ResponsiveUtils.getListPadding(context).right,
-        ResponsiveUtils.getListPadding(context).bottom +
+        Responsive.of(context).listPadding.left,
+        Responsive.of(context).listPadding.top,
+        Responsive.of(context).listPadding.right,
+        Responsive.of(context).listPadding.bottom +
             MediaQuery.of(context).padding.bottom,
       ),
       child: Column(
@@ -257,24 +257,24 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
     return Card(
       color: Theme.of(context).cardTheme.color,
       margin: EdgeInsets.only(
-          bottom: ResponsiveUtils.getListPadding(context).vertical * 3),
-      elevation: ResponsiveUtils.getCardElevation(context),
+          bottom: Responsive.of(context).listPadding.vertical * 3),
+      elevation: Responsive.of(context).cardElevation,
       shape: RoundedRectangleBorder(
-          borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+          borderRadius: Responsive.of(context).cardBorderRadius),
       child: Padding(
-        padding: ResponsiveUtils.getContentPadding(context),
+        padding: Responsive.of(context).contentPadding,
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Icon(icon,
                 color: Theme.of(context).primaryColor,
-                size: ResponsiveUtils.getIconSize(context)),
+                size: Responsive.of(context).iconSize()),
             SizedBox(
-                width: ResponsiveUtils.getListPadding(context).horizontal),
+                width: Responsive.of(context).listPadding.horizontal),
             Expanded(
               child: Text(title,
                   style: TextStyle(
-                      fontSize: ResponsiveUtils.getTitleFontSize(context),
+                      fontSize: Responsive.of(context).titleFontSize,
                       fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2),
@@ -282,7 +282,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
             if (showChart && data.isNotEmpty)
               IconButton(
                 icon: Icon(Icons.pie_chart,
-                    size: ResponsiveUtils.getIconSize(context)),
+                    size: Responsive.of(context).iconSize()),
                 onPressed: () => ChartDialog.show(context,
                     title: title, data: data),
               ),
@@ -315,24 +315,24 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
     return Card(
       color: Theme.of(context).cardTheme.color,
       margin: EdgeInsets.only(
-          bottom: ResponsiveUtils.getListPadding(context).vertical * 4),
-      elevation: ResponsiveUtils.getCardElevation(context),
+          bottom: Responsive.of(context).listPadding.vertical * 4),
+      elevation: Responsive.of(context).cardElevation,
       shape: RoundedRectangleBorder(
-          borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+          borderRadius: Responsive.of(context).cardBorderRadius),
       child: Padding(
-        padding: ResponsiveUtils.getContentPadding(context),
+        padding: Responsive.of(context).contentPadding,
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Icon(icon,
                 color: Theme.of(context).primaryColor,
-                size: ResponsiveUtils.getIconSize(context)),
+                size: Responsive.of(context).iconSize()),
             SizedBox(
-                width: ResponsiveUtils.getListPadding(context).horizontal),
+                width: Responsive.of(context).listPadding.horizontal),
             Expanded(
               child: Text(title,
                   style: TextStyle(
-                      fontSize: ResponsiveUtils.getTitleFontSize(context),
+                      fontSize: Responsive.of(context).titleFontSize,
                       fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 2),
@@ -378,7 +378,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
           flex: 4,
           child: Text(gender,
               style: TextStyle(
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                   fontWeight: FontWeight.bold)),
         ),
         Expanded(
@@ -387,7 +387,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
             alignment: Alignment.centerRight,
             child: IconButton(
               icon: Icon(Icons.pie_chart,
-                  size: ResponsiveUtils.getIconSize(context)),
+                  size: Responsive.of(context).iconSize()),
               onPressed: (withCount + withoutCount > 0)
                   ? () => ChartDialog.show(
                         context,
@@ -418,14 +418,14 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
     final localizations = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.only(
-          bottom: ResponsiveUtils.getListPadding(context).vertical / 2),
+          bottom: Responsive.of(context).listPadding.vertical / 2),
       child: Row(children: [
         Expanded(
           flex: 4,
           child: Text(localizations.categoryAbbreviation,
               style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.getBodyFontSize(context))),
+                  fontSize: Responsive.of(context).bodyFontSize)),
         ),
         Expanded(
           flex: 2,
@@ -433,7 +433,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
             message: localizations.total,
             child: Center(
               child: Icon(Icons.groups_2_outlined,
-                  size: ResponsiveUtils.getIconSize(context, baseSize: 35),
+                  size: Responsive.of(context).iconSize(baseSize: 35),
                   color: Theme.of(context).primaryColor),
             ),
           ),
@@ -444,7 +444,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
             message: localizations.average,
             child: Center(
               child: Icon(Icons.show_chart,
-                  size: ResponsiveUtils.getIconSize(context),
+                  size: Responsive.of(context).iconSize(),
                   color: Theme.of(context).colorScheme.secondary),
             ),
           ),
@@ -456,10 +456,10 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
   Widget _buildDataRow(String label, dynamic value, int weekCount) {
     final total = value ?? 0;
     final avg = weekCount > 0 ? total / weekCount : 0.0;
-    final body = ResponsiveUtils.getBodyFontSize(context);
+    final body = Responsive.of(context).bodyFontSize;
     return Padding(
       padding: EdgeInsets.symmetric(
-          vertical: ResponsiveUtils.getListPadding(context).vertical / 2),
+          vertical: Responsive.of(context).listPadding.vertical / 2),
       child: Row(children: [
         Expanded(
             flex: 4, child: Text(label, style: TextStyle(fontSize: body))),

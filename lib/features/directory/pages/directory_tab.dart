@@ -155,8 +155,8 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final iconSize = Responsive.of(context).iconSize();
 
     final isAscending = ref.watch(directorySortAscendingProvider);
     final asyncPeople = ref.watch(filteredDirectoryProvider);
@@ -166,7 +166,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
         appBar: AppBar(
           title: Text(localizations.selectAPerson,
               style: TextStyle(
-                  fontSize: ResponsiveUtils.getTitleFontSize(context),
+                  fontSize: Responsive.of(context).titleFontSize,
                   fontWeight: FontWeight.bold)),
           leading: IconButton(
               icon: Icon(Icons.arrow_back, size: iconSize),
@@ -224,7 +224,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
                 builder: (context) => IconButton(
                   onPressed: () => Scaffold.of(context).openDrawer(),
                   // Bigger drawer icon
-                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                  icon: Icon(Icons.menu, size: Responsive.of(context).iconSize(baseSize: 35)),
                 ),
               ),
         actions: [
@@ -239,11 +239,11 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
       ),
       body: _buildBody(context, localizations, isTablet, asyncPeople),
       floatingActionButton: SizedBox(
-          width: ResponsiveUtils.getButtonHeight(context) + 25,
-          height: ResponsiveUtils.getButtonHeight(context) + 25,
+          width: Responsive.of(context).buttonHeight + 25,
+          height: Responsive.of(context).buttonHeight + 25,
           child: FloatingActionButton(
               onPressed: () => _onFabPressed(),
-              child: Icon(Icons.add, size: ResponsiveUtils.getIconSize(context, baseSize: 35))
+              child: Icon(Icons.add, size: Responsive.of(context).iconSize(baseSize: 35))
           )
         ),
     );
@@ -282,7 +282,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
                 return Center(
                   child: Text(localizations.noPersonFound,
                       style: TextStyle(
-                          fontSize: ResponsiveUtils.getBodyFontSize(context),
+                          fontSize: Responsive.of(context).bodyFontSize,
                           fontWeight: FontWeight.bold)),
                 );
               }
@@ -333,7 +333,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
                     // back gesture does not steal touches on the bar.
                     right: 10,
                     top: 8,
-                    bottom: ResponsiveUtils.getButtonHeight(context) + 48 + MediaQuery.of(context).padding.bottom,
+                    bottom: Responsive.of(context).buttonHeight + 48 + MediaQuery.of(context).padding.bottom,
                     child: AlphabetIndexBar(
                         isTablet: isTablet,
                         availableLetters: letterIndexMap.keys.toSet(),
@@ -380,20 +380,20 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     return Padding(
-      padding: ResponsiveUtils.getListPadding(context),
+      padding: Responsive.of(context).listPadding,
       child: TextField(
         controller: controller,
-        style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+        style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
         decoration: InputDecoration(
           labelText: localizations.searchForName,
           labelStyle:
-              TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-          contentPadding: ResponsiveUtils.getContentPadding(context),
+              TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+          contentPadding: Responsive.of(context).contentPadding,
           border: OutlineInputBorder(
-              borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+              borderRadius: Responsive.of(context).cardBorderRadius),
           suffixIcon: IconButton(
             icon: Icon(Icons.cancel,
-                size: ResponsiveUtils.getIconSize(context)),
+                size: Responsive.of(context).iconSize()),
             onPressed: onClear,
           ),
         ),
@@ -441,12 +441,12 @@ class _PersonListView extends StatelessWidget {
       addRepaintBoundaries: true,
       addAutomaticKeepAlives: false,
       padding: EdgeInsets.only(
-        left: ResponsiveUtils.getListPadding(context).left,
+        left: Responsive.of(context).listPadding.left,
         // A bit of extra right padding so rows don't sit under the
         // alphabet index bar overlaid on top of the list.
-        right: ResponsiveUtils.getListPadding(context).right + 24 + 10,
+        right: Responsive.of(context).listPadding.right + 24 + 10,
         top: 0,
-        bottom: ResponsiveUtils.getButtonHeight(context) +
+        bottom: Responsive.of(context).buttonHeight +
             40 +
             MediaQuery.of(context).padding.bottom,
       ),

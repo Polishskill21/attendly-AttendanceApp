@@ -127,7 +127,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
             : Builder(
                 builder: (context) => IconButton(
                   onPressed: () => Scaffold.of(context).openDrawer(),
-                  icon: Icon(Icons.menu, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+                  icon: Icon(Icons.menu, size: Responsive.of(context).iconSize(baseSize: 35)),
                 ),
               ),
         actions: [_buildStatusWidget(asyncWeekData)],
@@ -148,7 +148,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
                   ? Center(
                       child: Text(
                         localizations.noDataForThisWeek,
-                        style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                        style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                       )
                     )
                   : _buildReportView(weekData),
@@ -157,12 +157,12 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
         ],
       ),
       floatingActionButton: SizedBox(
-        width: ResponsiveUtils.getButtonHeight(context) + 25,
-        height: ResponsiveUtils.getButtonHeight(context) + 25,
+        width: Responsive.of(context).buttonHeight + 25,
+        height: Responsive.of(context).buttonHeight + 25,
         child: FloatingActionButton(
           onPressed: _showWeeksWithData,
           tooltip: localizations.showWeeksWithDataTooltip,
-          child: Icon(Icons.list_alt, size: ResponsiveUtils.getIconSize(context, baseSize: 35)),
+          child: Icon(Icons.list_alt, size: Responsive.of(context).iconSize(baseSize: 35)),
         ),
       ),
     );
@@ -192,7 +192,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
               key: ValueKey<bool>(isCountable),
               isCountable ? Icons.check_circle : Icons.cancel_outlined,
               color: isCountable ? Colors.green : Colors.red,
-              size: ResponsiveUtils.getIconSize(context, baseSize: 24),
+              size: Responsive.of(context).iconSize(baseSize: 24),
             ),
           ),
         );
@@ -231,8 +231,8 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
 
   Widget _buildWeekSelector(DateTime endDate) {
     final canGoForward = selectedWeekDate.isBefore(getFirstDateOfWeek(getScopedDate()));
-    final arrowSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
-    final listPad = ResponsiveUtils.getListPadding(context);
+    final arrowSize = Responsive.of(context).iconSize(baseSize: 30);
+    final listPad = Responsive.of(context).listPadding;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -250,7 +250,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
               "${DateFormat('dd.MM.yyyy').format(selectedWeekDate)} - ${DateFormat('dd.MM.yyyy').format(endDate)}",
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: ResponsiveUtils.getTitleFontSize(context),
+                fontSize: Responsive.of(context).titleFontSize,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -276,10 +276,10 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-        ResponsiveUtils.getListPadding(context).left,
-        ResponsiveUtils.getListPadding(context).top,
-        ResponsiveUtils.getListPadding(context).right,
-        ResponsiveUtils.getButtonHeight(context) + 40 + MediaQuery.of(context).padding.bottom,
+        Responsive.of(context).listPadding.left,
+        Responsive.of(context).listPadding.top,
+        Responsive.of(context).listPadding.right,
+        Responsive.of(context).buttonHeight + 40 + MediaQuery.of(context).padding.bottom,
       ),
       child: Column(
         children: [
@@ -353,23 +353,23 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
 
     return Card(
       color: cardColor,
-      margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical * 4),
-      elevation: ResponsiveUtils.getCardElevation(context),
-      shape: RoundedRectangleBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+      margin: EdgeInsets.only(bottom: Responsive.of(context).listPadding.vertical * 4),
+      elevation: Responsive.of(context).cardElevation,
+      shape: RoundedRectangleBorder(borderRadius: Responsive.of(context).cardBorderRadius),
       child: Padding(
-        padding: ResponsiveUtils.getContentPadding(context),
+        padding: Responsive.of(context).contentPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: iconColor, size: ResponsiveUtils.getIconSize(context)),
-                SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal / 2 + 4),
+                Icon(icon, color: iconColor, size: Responsive.of(context).iconSize()),
+                SizedBox(width: Responsive.of(context).listPadding.horizontal / 2 + 4),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: ResponsiveUtils.getTitleFontSize(context),
+                      fontSize: Responsive.of(context).titleFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -418,13 +418,13 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
               child: Text(
                 gender,
                 style: TextStyle(
-                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                  fontSize: Responsive.of(context).bodyFontSize,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
             IconButton(
-              icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
+              icon: Icon(Icons.pie_chart, size: Responsive.of(context).iconSize()),
               onPressed: (withCount + withoutCount > 0)
                   ? () => ChartDialog.show(
                         context,
@@ -454,29 +454,29 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
 
     return Card(
       color: cardColor,
-      margin: EdgeInsets.only(bottom: ResponsiveUtils.getListPadding(context).vertical * 3),
-      elevation: ResponsiveUtils.getCardElevation(context),
-      shape: RoundedRectangleBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
+      margin: EdgeInsets.only(bottom: Responsive.of(context).listPadding.vertical * 3),
+      elevation: Responsive.of(context).cardElevation,
+      shape: RoundedRectangleBorder(borderRadius: Responsive.of(context).cardBorderRadius),
       child: Padding(
-        padding: ResponsiveUtils.getContentPadding(context),
+        padding: Responsive.of(context).contentPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, color: theme.primaryColor, size: ResponsiveUtils.getIconSize(context)),
-                SizedBox(width: ResponsiveUtils.getListPadding(context).horizontal / 2  + 4),
+                Icon(icon, color: theme.primaryColor, size: Responsive.of(context).iconSize()),
+                SizedBox(width: Responsive.of(context).listPadding.horizontal / 2  + 4),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: ResponsiveUtils.getTitleFontSize(context),
+                      fontSize: Responsive.of(context).titleFontSize,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
+                  icon: Icon(Icons.pie_chart, size: Responsive.of(context).iconSize()),
                   onPressed: () => ChartDialog.show(
                     context,
                     title: title,
@@ -495,15 +495,15 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
 
   Widget _buildDataRow(String label, dynamic value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getListPadding(context).vertical / 2),
+      padding: EdgeInsets.symmetric(vertical: Responsive.of(context).listPadding.vertical / 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+          Text(label, style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
           Text(
             value.toString(),
             style: TextStyle(
-              fontSize: ResponsiveUtils.getBodyFontSize(context),
+              fontSize: Responsive.of(context).bodyFontSize,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).primaryColor,
             ),

@@ -1,58 +1,42 @@
 import 'package:flutter/material.dart';
 
-class ResponsiveUtils {
-  static bool isTablet(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final shortest = size.shortestSide;
-    // Treat devices with shortestSide >= 600dp as tablets
-    return shortest >= 600;
-  }
+/// Phone/tablet sizes, derived from the screen size only.
+///
+/// `Responsive.of(context)` depends on [MediaQuery.sizeOf], so widgets only
+/// rebuild when the size changes (not on keyboard or padding changes).
+class Responsive {
+  /// Devices whose shortest side is at least this wide are tablets.
+  static const double tabletBreakpoint = 600;
 
-  static double getTextScaleFactor(BuildContext context) {
-    return isTablet(context) ? 1.3 : 1.0;
-  }
+  final bool isTablet;
 
-  static double getIconScaleFactor(BuildContext context) {
-    return isTablet(context) ? 1.4 : 1.0;
-  }
+  const Responsive._(this.isTablet);
 
-  static EdgeInsets getContentPadding(BuildContext context) {
-    return isTablet(context)
-        ? const EdgeInsets.all(20.0)
-        : const EdgeInsets.all(16.0);
-  }
+  factory Responsive.of(BuildContext context) =>
+      Responsive._(MediaQuery.sizeOf(context).shortestSide >= tabletBreakpoint);
 
-  static double getTitleFontSize(BuildContext context) {
-    return isTablet(context) ? 28.0 : 20.0;
-  }
-  
-  static double getBodyFontSize(BuildContext context) {
-    return isTablet(context) ? 24.0 : 16.0;
-  }
+  double get textScaleFactor => isTablet ? 1.3 : 1.0;
 
-  static double getSmallFontSize(BuildContext context){
-    return isTablet(context) ? 17.0 : 12.0;
-  }
-  
-  static double getButtonHeight(BuildContext context) {
-    return isTablet(context) ? 60.0 : 48.0;
-  }
-  
-  static double getIconSize(BuildContext context, {double baseSize = 26.0}) {
-    return isTablet(context) ? baseSize * 1.4 : baseSize;
-  }
-  
-  static EdgeInsets getListPadding(BuildContext context) {
-    return isTablet(context)
-        ? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)
-        : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
-  }
-  
-  static double getCardElevation(BuildContext context) {
-    return isTablet(context) ? 4.0 : 2.0;
-  }
-  
-  static BorderRadius getCardBorderRadius(BuildContext context) {
-    return BorderRadius.circular(isTablet(context) ? 16.0 : 12.0);
-  }
+  double get iconScaleFactor => isTablet ? 1.4 : 1.0;
+
+  EdgeInsets get contentPadding =>
+      isTablet ? const EdgeInsets.all(20.0) : const EdgeInsets.all(16.0);
+
+  double get titleFontSize => isTablet ? 28.0 : 20.0;
+
+  double get bodyFontSize => isTablet ? 24.0 : 16.0;
+
+  double get smallFontSize => isTablet ? 17.0 : 12.0;
+
+  double get buttonHeight => isTablet ? 60.0 : 48.0;
+
+  double iconSize({double baseSize = 26.0}) => isTablet ? baseSize * 1.4 : baseSize;
+
+  EdgeInsets get listPadding => isTablet
+      ? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)
+      : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
+
+  double get cardElevation => isTablet ? 4.0 : 2.0;
+
+  BorderRadius get cardBorderRadius => BorderRadius.circular(isTablet ? 16.0 : 12.0);
 }

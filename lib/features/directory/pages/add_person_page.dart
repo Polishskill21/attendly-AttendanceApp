@@ -175,8 +175,8 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final iconSize = Responsive.of(context).iconSize();
     
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -187,7 +187,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
         title: Text(
           localizations.addPersonToTable,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -202,40 +202,40 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
         ),
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-            ResponsiveUtils.getContentPadding(context).left + 12,
-            ResponsiveUtils.getContentPadding(context).top + 8,
-            ResponsiveUtils.getContentPadding(context).right + 12,
+            Responsive.of(context).contentPadding.left + 12,
+            Responsive.of(context).contentPadding.top + 8,
+            Responsive.of(context).contentPadding.right + 12,
             0,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(localizations.childsName,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: Responsive.of(context).bodyFontSize)
               ),
               SizedBox(
                 width: double.infinity,
                 child: TextField(
                   controller: _nameController,
-                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   decoration: InputDecoration(
                     hintText: localizations.enterChildsName,
-                    hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                    hintStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+                    contentPadding: Responsive.of(context).contentPadding,
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.cancel, size: ResponsiveUtils.getIconSize(context)),
+                      icon: Icon(Icons.cancel, size: Responsive.of(context).iconSize()),
                       onPressed: () => _nameController.clear(),
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                      borderRadius: Responsive.of(context).cardBorderRadius,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
+              SizedBox(height: Responsive.of(context).contentPadding.vertical),
 
               Text(localizations.childsBirthday, 
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: Responsive.of(context).bodyFontSize)
               ),
               SizedBox(
                 width: double.infinity,
@@ -243,33 +243,33 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                   controller: _birthdayController,
                   readOnly: true,
                   onTap: () => _selectBirthday(context),
-                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   decoration: InputDecoration(
                     hintText: localizations.selectBirthday,
-                    hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                    hintStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+                    contentPadding: Responsive.of(context).contentPadding,
                     suffixIcon: Icon(
                     Icons.calendar_today, 
-                    size: ResponsiveUtils.getIconSize(context),
+                    size: Responsive.of(context).iconSize(),
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                      borderRadius: Responsive.of(context).cardBorderRadius,
                     ),
                   ),
                 ),
               ),
 
-              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
+              SizedBox(height: Responsive.of(context).contentPadding.vertical),
 
               Text(localizations.selectGender, 
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: Responsive.of(context).bodyFontSize)
               ),
                 DropdownMenu<GenderOption>(
                   controller: _genderController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectChildGender,
                   textStyle: TextStyle(
-                      fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                      fontSize: Responsive.of(context).bodyFontSize),
                   enableFilter: true,
                   requestFocusOnTap: false,
                   onSelected: (item) =>
@@ -283,8 +283,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                                 Icon(menu.icon, size: isTablet ? 24 : 20),
                             style: MenuItemButton.styleFrom(
                                 textStyle: TextStyle(
-                                    fontSize: ResponsiveUtils.getBodyFontSize(
-                                        context))),
+                                    fontSize: Responsive.of(context).bodyFontSize)),
                           ))
                       .toList(),
                   menuHeight: isTablet ? 300 : 250,
@@ -293,9 +292,9 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(
                         borderRadius:
-                            ResponsiveUtils.getCardBorderRadius(context)),
+                            Responsive.of(context).cardBorderRadius),
                     contentPadding:
-                        ResponsiveUtils.getContentPadding(context),
+                        Responsive.of(context).contentPadding,
                   ),
                   trailingIcon: selectedGender != null
                       ? IconButton(
@@ -308,17 +307,17 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                       : null,
                 ),
 
-              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
+              SizedBox(height: Responsive.of(context).contentPadding.vertical),
 
               Text(localizations.selectMigration, 
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: Responsive.of(context).bodyFontSize)
               ),
               DropdownMenu<MigrationOption>(
                   controller: _migrationController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectChildsMigrationBackground,
                   textStyle: TextStyle(
-                      fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                      fontSize: Responsive.of(context).bodyFontSize),
                   enableFilter: true,
                   requestFocusOnTap: false,
                   onSelected: (item) => setState(() {
@@ -334,8 +333,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                                 Icon(menu.icon, size: isTablet ? 24 : 20),
                             style: MenuItemButton.styleFrom(
                                 textStyle: TextStyle(
-                                    fontSize: ResponsiveUtils.getBodyFontSize(
-                                        context))),
+                                    fontSize: Responsive.of(context).bodyFontSize)),
                           ))
                       .toList(),
                   menuHeight: isTablet ? 200 : 150,
@@ -344,9 +342,9 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                   inputDecorationTheme: InputDecorationTheme(
                     border: OutlineInputBorder(
                         borderRadius:
-                            ResponsiveUtils.getCardBorderRadius(context)),
+                            Responsive.of(context).cardBorderRadius),
                     contentPadding:
-                        ResponsiveUtils.getContentPadding(context),
+                        Responsive.of(context).contentPadding,
                   ),
                   trailingIcon: selectedMigration != null
                       ? IconButton(
@@ -359,26 +357,26 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                       : null,
                 ),
 
-              SizedBox(height: ResponsiveUtils.getContentPadding(context).vertical),
+              SizedBox(height: Responsive.of(context).contentPadding.vertical),
 
               Text(localizations.homeCountry, 
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: Responsive.of(context).bodyFontSize)
               ),
               SizedBox(
                 width: double.infinity,
                 child: TextField(
                   controller: _homeCountryController,
-                  style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   decoration: InputDecoration(
                     hintText: localizations.enterChildsHomeCountry,
-                    hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                    hintStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+                    contentPadding: Responsive.of(context).contentPadding,
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.cancel, size: ResponsiveUtils.getIconSize(context)),
+                      icon: Icon(Icons.cancel, size: Responsive.of(context).iconSize()),
                       onPressed: () => _homeCountryController.clear(),
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                      borderRadius: Responsive.of(context).cardBorderRadius,
                     ),
                   ),
                 ),
@@ -390,21 +388,21 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                 children: [
                   OutlinedButton.icon(
                     onPressed: _resetFields,
-                    icon: Icon(Icons.refresh, size: ResponsiveUtils.getIconSize(context, baseSize: 26)),
-                    label: Text(localizations.reset, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+                    icon: Icon(Icons.refresh, size: Responsive.of(context).iconSize(baseSize: 26)),
+                    label: Text(localizations.reset, style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Theme.of(context).primaryColor,
                       side: BorderSide(color: Theme.of(context).primaryColor),
-                      padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
+                      padding: EdgeInsets.symmetric(vertical: Responsive.of(context).contentPadding.vertical / 2),
                     ),
                   ),
-                  SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),
+                  SizedBox(height: Responsive.of(context).isTablet ? 20 : 16),
                   ElevatedButton.icon(
                     onPressed: _submitForm,
-                    icon: Icon(Icons.check, size: ResponsiveUtils.getIconSize(context, baseSize: 28), color: Colors.white),
-                    label: Text(localizations.submit, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+                    icon: Icon(Icons.check, size: Responsive.of(context).iconSize(baseSize: 28), color: Colors.white),
+                    label: Text(localizations.submit, style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
+                      padding: EdgeInsets.symmetric(vertical: Responsive.of(context).contentPadding.vertical / 2),
                     ),
                   )
                 ],

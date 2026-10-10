@@ -20,7 +20,7 @@ class PermissionView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     final notifier = ref.read(appStartupProvider.notifier);
 
     return StatusScaffold(

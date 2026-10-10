@@ -15,7 +15,7 @@ class StartupDialogs {
 
   static Future<YearChangeChoice?> yearChange(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     return showDialog<YearChangeChoice>(
       context: context,
       barrierDismissible: false,
@@ -45,7 +45,7 @@ class StartupDialogs {
   /// Returns true when the user wants to retry the year rollover.
   static Future<bool?> rolloverFailed(BuildContext context, String error) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
 
     return showDialog<bool>(
       context: context,
@@ -88,7 +88,7 @@ class StartupDialogs {
   /// Asks before creating a new database after an existing one failed to open.
   static Future<bool?> confirmCreateNew(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
 
     return showDialog<bool>(
       context: context,
@@ -127,7 +127,7 @@ class StartupDialogs {
   }
 
   static void error(BuildContext context, String message) {
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -158,7 +158,7 @@ class StartupDialogs {
     final jsonContent = await ref.read(databaseProvider.notifier).getSettingsJsonContent();
     if (!context.mounted) return;
 
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     final localizations = AppLocalizations.of(context);
     final logPath = AppLogger.logFilePath;
     final logs = AppLogger.recentLines.join('\n');

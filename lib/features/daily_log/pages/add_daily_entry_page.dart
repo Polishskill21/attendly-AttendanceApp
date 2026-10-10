@@ -240,8 +240,8 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || ResponsiveUtils.isTablet(context);
-    final iconSize = ResponsiveUtils.getIconSize(context);
+    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final iconSize = Responsive.of(context).iconSize();
     
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -252,7 +252,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
           title: Text(
             localizations.addPersonToDailyTable,
             style: TextStyle(
-              fontSize: ResponsiveUtils.getTitleFontSize(context),
+              fontSize: Responsive.of(context).titleFontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -263,13 +263,13 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
-            bottom: ResponsiveUtils.getContentPadding(context).bottom + MediaQuery.of(context).padding.bottom,
+            bottom: Responsive.of(context).contentPadding.bottom + MediaQuery.of(context).padding.bottom,
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(
-              ResponsiveUtils.getContentPadding(context).left + 12,
-              ResponsiveUtils.getContentPadding(context).top + 8,
-              ResponsiveUtils.getContentPadding(context).right + 12,
+              Responsive.of(context).contentPadding.left + 12,
+              Responsive.of(context).contentPadding.top + 8,
+              Responsive.of(context).contentPadding.right + 12,
               0,
             ),
             child: Column(
@@ -278,13 +278,13 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                 Text(localizations.selectPerson,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                    fontSize: Responsive.of(context).bodyFontSize,
                   )
                 ),
                 Card(
-                  elevation: ResponsiveUtils.getCardElevation(context) + 2,
+                  elevation: Responsive.of(context).cardElevation + 2,
                   shape: RoundedRectangleBorder(
-                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                    borderRadius: Responsive.of(context).cardBorderRadius,
                   ),
                   child: InkWell(
                     onTap: (widget.preselectedPersons?.isNotEmpty ?? false) ? null : () async {
@@ -313,17 +313,17 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                         });
                       }
                     },
-                    borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                    borderRadius: Responsive.of(context).cardBorderRadius,
                     child: Padding(
-                      padding: ResponsiveUtils.getContentPadding(context),
+                      padding: Responsive.of(context).contentPadding,
                       child: Row(
                         children: [
                           Icon(
                             selectedPersons.isEmpty ? Icons.person_add : Icons.group,
-                            size: ResponsiveUtils.getIconSize(context, baseSize: 40),
+                            size: Responsive.of(context).iconSize(baseSize: 40),
                             color: selectedPersons.isEmpty ? Colors.grey : Colors.blue,
                           ),
-                          SizedBox(width: ResponsiveUtils.getContentPadding(context).horizontal / 2),
+                          SizedBox(width: Responsive.of(context).contentPadding.horizontal / 2),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,19 +333,19 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                                     ? localizations.tapToSelectPersons
                                     : localizations.personsSelected(selectedPersons.length),
                                   style: TextStyle(
-                                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                    fontSize: Responsive.of(context).bodyFontSize,
                                     fontWeight: FontWeight.bold,
                                     color: selectedPersons.isEmpty ? Colors.grey : Theme.of(context).textTheme.bodyLarge?.color,
                                   ),
                                 ),
                                 if (selectedPersons.isNotEmpty) ...[
-                                  SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
+                                  SizedBox(height: Responsive.of(context).listPadding.vertical / 2),
                                   Text(
                                     selectedPersons.map((p) => p['name']).join(', '),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: ResponsiveUtils.getBodyFontSize(context) - 2,
+                                      fontSize: Responsive.of(context).bodyFontSize - 2,
                                       color: Colors.grey[600],
                                     ),
                                   ),
@@ -368,12 +368,12 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                   ),
                 ),
 
-                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
 
                 Text(localizations.selectDateTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                    fontSize: Responsive.of(context).bodyFontSize,
                   )
                 ),
                 SizedBox(
@@ -382,35 +382,35 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                     controller: _dateController,
                     readOnly: true,
                     onTap: _selectDate,
-                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                     decoration: InputDecoration(
                       hintText: "YYYY-MM-dd",
-                      hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                      contentPadding: ResponsiveUtils.getContentPadding(context),
+                      hintStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+                      contentPadding: Responsive.of(context).contentPadding,
                       suffixIcon: IconButton(
                         icon: Icon(Icons.calendar_today, size: iconSize),
                         onPressed: _selectDate,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                        borderRadius: Responsive.of(context).cardBorderRadius,
                       ),
                     ),
                   ),
                 ),
 
-                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
 
                 Text(localizations.selectCategoryTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                    fontSize: Responsive.of(context).bodyFontSize,
                   )
                 ),
                 DropdownMenu<CategoryOption>(
                   controller: _categoryController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectCategory,
-                  textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                  textStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   enableFilter: true,
                   requestFocusOnTap: false,
                   onSelected: (CategoryOption? item) {
@@ -424,17 +424,17 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                     return DropdownMenuEntry<CategoryOption>(
                       value: menu,
                       label: menu.label,
-                      leadingIcon: menu.icon != null ? Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)) : null,
+                      leadingIcon: menu.icon != null ? Icon(menu.icon, size: Responsive.of(context).iconSize()) : null,
                       style: MenuItemButton.styleFrom(
-                        textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                        textStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                       ),
                     );
                   }).toList(),
                   menuHeight: isTablet ? 300 : 250,
                   // width: MediaQuery.of(context).size.width - (isTablet ? 60 : 40),
                   inputDecorationTheme: InputDecorationTheme(
-                    border: OutlineInputBorder(borderRadius: ResponsiveUtils.getCardBorderRadius(context)),
-                    contentPadding: ResponsiveUtils.getContentPadding(context),
+                    border: OutlineInputBorder(borderRadius: Responsive.of(context).cardBorderRadius),
+                    contentPadding: Responsive.of(context).contentPadding,
                   ),
                   trailingIcon: selectedCategory != null
                       ? IconButton(
@@ -450,12 +450,12 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                 ),
 
                 if (_showMultiplier) ...[
-                  SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                  SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
                   Text(
                     localizations.numberOfEntries,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: ResponsiveUtils.getBodyFontSize(context),
+                      fontSize: Responsive.of(context).bodyFontSize,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -487,7 +487,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                                 keyboardType: TextInputType.number,
                                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 style: TextStyle(
-                                  fontSize: ResponsiveUtils.getBodyFontSize(context),
+                                  fontSize: Responsive.of(context).bodyFontSize,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 decoration: const InputDecoration(
@@ -521,12 +521,12 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                   ),
                 ],
 
-                SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
+                SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
 
                 Text(localizations.descriptionOptional,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: ResponsiveUtils.getBodyFontSize(context),
+                    fontSize: Responsive.of(context).bodyFontSize,
                   )
                 ),
                 SizedBox(
@@ -534,44 +534,44 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                   child: TextField(
                     controller: _commentController,
                     maxLines: 1,
-                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                     decoration: InputDecoration(
                       hintText: localizations.enterDescriptionOptional,
-                      hintStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                      contentPadding: ResponsiveUtils.getContentPadding(context),
+                      hintStyle: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+                      contentPadding: Responsive.of(context).contentPadding,
                       suffixIcon: IconButton(
                         icon: Icon(Icons.cancel, size: iconSize),
                         onPressed: () => _commentController.clear(),
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: ResponsiveUtils.getCardBorderRadius(context),
+                        borderRadius: Responsive.of(context).cardBorderRadius,
                       ),
                     ),
                   ),
                 ),
 
-                SizedBox(height: ResponsiveUtils.getButtonHeight(context)),
+                SizedBox(height: Responsive.of(context).buttonHeight),
 
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     OutlinedButton.icon(
                       onPressed: _resetFields,
-                      icon: Icon(Icons.refresh, size: ResponsiveUtils.getIconSize(context, baseSize: 26)),
-                      label: Text(localizations.reset, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+                      icon: Icon(Icons.refresh, size: Responsive.of(context).iconSize(baseSize: 26)),
+                      label: Text(localizations.reset, style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).primaryColor,
                         side: BorderSide(color: Theme.of(context).primaryColor),
-                        padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
+                        padding: EdgeInsets.symmetric(vertical: Responsive.of(context).contentPadding.vertical / 2),
                       ),
                     ),
-                    SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 1.5),
+                    SizedBox(height: Responsive.of(context).listPadding.vertical * 1.5),
                     ElevatedButton.icon(
                       onPressed: () => _submitForm(),
-                      icon: Icon(Icons.check, size: ResponsiveUtils.getIconSize(context, baseSize: 28), color: Colors.white),
-                      label: Text(localizations.submit, style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context))),
+                      icon: Icon(Icons.check, size: Responsive.of(context).iconSize(baseSize: 28), color: Colors.white),
+                      label: Text(localizations.submit, style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.getContentPadding(context).vertical / 2),
+                        padding: EdgeInsets.symmetric(vertical: Responsive.of(context).contentPadding.vertical / 2),
                       ),
                     )
                   ],

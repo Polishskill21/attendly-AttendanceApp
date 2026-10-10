@@ -169,9 +169,9 @@ class _AlphabetIndexBarState extends State<AlphabetIndexBar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
 
-    // Responsive dimensions driven by ResponsiveUtils
+    // Responsive dimensions driven by Responsive
     final barWidth = isTablet ? 38.0 : 24.0;
     final normalFontSize = isTablet ? 16.0 : 11.0;
     final activeFontSize = isTablet ? 20.0 : 14.0;

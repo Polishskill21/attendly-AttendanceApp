@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 
 class AppDialogs {
   Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async {
-    final isTablet = ResponsiveUtils.isTablet(context);
+    final isTablet = Responsive.of(context).isTablet;
     
     return await showDialog<bool>(
       context: context,
@@ -19,14 +19,14 @@ class AppDialogs {
         title: Text(
           header,
           style: TextStyle(
-            fontSize: ResponsiveUtils.getTitleFontSize(context),
+            fontSize: Responsive.of(context).titleFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           message, 
           style: TextStyle(
-            fontSize: ResponsiveUtils.getBodyFontSize(context),
+            fontSize: Responsive.of(context).bodyFontSize,
           )
         ),
         actions: [
@@ -34,7 +34,7 @@ class AppDialogs {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               localizations.cancel,
-              style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+              style: TextStyle(fontSize: Responsive.of(context).bodyFontSize - 4),
             ),
           ),
           ElevatedButton(
@@ -52,7 +52,7 @@ class AppDialogs {
             ),
             child: Text(
               localizations.delete,
-              style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 4),
+              style: TextStyle(fontSize: Responsive.of(context).bodyFontSize - 4),
             ),
           ),
         ],
@@ -62,8 +62,8 @@ class AppDialogs {
   
   Future<void> showSubmitMessage(BuildContext context, String message) async {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    final isTablet = Responsive.of(context).isTablet;
+    final textScale = Responsive.of(context).textScaleFactor;
     
     return showDialog<void>(
       context: context,
@@ -75,13 +75,13 @@ class AppDialogs {
           title: Icon(
             Icons.check_circle,
             color: Colors.green,
-            size: ResponsiveUtils.getIconSize(context, baseSize: 56),
+            size: Responsive.of(context).iconSize(baseSize: 56),
           ),
           content: Text(
             message,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: ResponsiveUtils.getBodyFontSize(context),
+              fontSize: Responsive.of(context).bodyFontSize,
             ),
           ),
           actions: <Widget>[
@@ -108,8 +108,8 @@ class AppDialogs {
 
   Future<void> showInfoMessageDialog(BuildContext context, String message) async {
     final localizations = AppLocalizations.of(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    final isTablet = Responsive.of(context).isTablet;
+    final textScale = Responsive.of(context).textScaleFactor;
 
     return showDialog<void>(
       context: context,
@@ -121,13 +121,13 @@ class AppDialogs {
           title: Icon(
             Icons.info_outline,
             color: Colors.blue,
-            size: ResponsiveUtils.getIconSize(context, baseSize: 56),
+            size: Responsive.of(context).iconSize(baseSize: 56),
           ),
           content: Text(
             message,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: ResponsiveUtils.getBodyFontSize(context),
+              fontSize: Responsive.of(context).bodyFontSize,
             ),
           ),
           actions: <Widget>[
@@ -145,8 +145,8 @@ class AppDialogs {
   }
 
   void showResetMessage(BuildContext context, String message) {
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    final isTablet = Responsive.of(context).isTablet;
+    final textScale = Responsive.of(context).textScaleFactor;
     
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -214,7 +214,7 @@ class AppDialogs {
             child: SingleChildScrollView(
               child: SelectableText(
                 message ?? localizations.unknownError,
-                style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 2),
+                style: TextStyle(fontSize: Responsive.of(context).bodyFontSize - 2),
               ),
             ),
           ),
@@ -251,8 +251,8 @@ class AppDialogs {
     final displayBirthdayFormated = DateFormat('dd.MM.yyyy').format(displayBirthday);
 
     final age = _calculateAge(displayBirthday);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final textScale = ResponsiveUtils.getTextScaleFactor(context);
+    final isTablet = Responsive.of(context).isTablet;
+    final textScale = Responsive.of(context).textScaleFactor;
     final fontSize = isTablet ? 22.0 * textScale : 20.0;
 
     try{
@@ -287,8 +287,8 @@ class AppDialogs {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 30);
-        final gap = ResponsiveUtils.getListPadding(context).horizontal / 2;
+        final iconSize = Responsive.of(context).iconSize(baseSize: 30);
+        final gap = Responsive.of(context).listPadding.horizontal / 2;
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
           elevation: 8.0,
@@ -297,16 +297,16 @@ class AppDialogs {
             children: [
               Icon(Icons.error_outline, color: Colors.red, size: iconSize),
               SizedBox(width: gap),
-              Flexible(child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context)))),
+              Flexible(child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: Responsive.of(context).bodyFontSize))),
             ],
           ),
           content: SelectableText(
             message,
-            style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+            style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
           ),
           actions: <Widget>[
             ElevatedButton(
-              child: Text('OK', style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context) - 2)),
+              child: Text('OK', style: TextStyle(fontSize: Responsive.of(context).bodyFontSize - 2)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -322,7 +322,7 @@ class AppDialogs {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        final gap = ResponsiveUtils.getListPadding(context).horizontal / 2;
+        final gap = Responsive.of(context).listPadding.horizontal / 2;
         return PopScope(
           canPop: false,
           child: AlertDialog(
@@ -333,7 +333,7 @@ class AppDialogs {
                 Expanded(
                   child: Text(
                     message,
-                    style: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
+                    style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
                   ),
                 ),
               ],
