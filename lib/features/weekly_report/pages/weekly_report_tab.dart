@@ -10,11 +10,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
 import 'package:attendly/app/shell/app_navigation_drawer.dart';
-// import 'package:attendly/shared/dialogs/app_dialogs.dart';
 import 'package:attendly/shared/widgets/chart_dialog.dart'; 
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
-
 
 class WeeklyReportTab extends ConsumerStatefulWidget {
   final int selectedTab;
@@ -33,11 +31,9 @@ class WeeklyReportTab extends ConsumerStatefulWidget {
 }
 
 class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
-  // final AppDialogs _helper = AppDialogs();
   late DateTime selectedWeekDate;
   bool _statusChanged = false;
   bool _isManualRefreshing = false;
-
 
   @override
   void initState() {
@@ -87,14 +83,6 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
     setState(() => selectedWeekDate = selectedWeekDate.add(Duration(days: days)));
   }
 
-  // void _updateCountableStatus(bool isCountable) {
-  //   if (_weekData != null) {
-  //     setState(() {
-  //       _weekData = _weekData!.copyWith(countable: isCountable);
-  //     });
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -103,23 +91,6 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
     // Watch the specific week's data
     final asyncWeekData = ref.watch(weeklyReportProvider(selectedWeekDate));
 
-    // Handle errors globally via listener
-    // ref.listen<AsyncValue<WeeklyEntryData?>>(
-    //   weeklyReportProvider(selectedWeekDate),
-    //   (previous, next) {
-    //     if (next is AsyncError) {
-    //       if (next.error is custom_db_exceptions.DbConnectionException) {
-    //         DbConnectionValidator.handleConnectionError(context);
-    //       } else {
-    //         _helper.showErrorMessage(
-    //           context, 
-    //           'Failed to load week data: ${next.error.toString()}', 
-    //           stackTrace: next.stackTrace,
-    //         );
-    //       }
-    //     }
-    //   },
-    // );
     ref.listen<AsyncValue<WeeklyEntryData?>>(
       weeklyReportProvider(selectedWeekDate),
       (previous, next) {
@@ -167,12 +138,6 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
           Expanded(
             child: asyncWeekData.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              // error: (error, _) => Center(
-              //   child: ElevatedButton(
-              //     onPressed: () => fetchWeekData(selectedWeekDate),
-              //     child: const Text("Retry"),
-              //   )
-              // ),
               error: (error, _) {
                 if (error is custom_db_exceptions.DatabaseNotReadyException) {
                   return const Center(child: CircularProgressIndicator());
@@ -238,7 +203,6 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
       ),
     );
   }
-
 
   Future<void> _showWeeksWithData() async {
     _statusChanged = false;

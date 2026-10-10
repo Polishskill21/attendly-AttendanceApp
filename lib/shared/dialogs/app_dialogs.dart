@@ -7,7 +7,6 @@ import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/shared/widgets/error_dialog.dart';
 import 'package:intl/intl.dart';
 
-
 class AppDialogs {
   Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async {
     final isTablet = ResponsiveUtils.isTablet(context);
@@ -250,9 +249,6 @@ class AppDialogs {
     final person = data[index];
     final displayBirthday = person.birthday;
     final displayBirthdayFormated = DateFormat('dd.MM.yyyy').format(displayBirthday);
-
-    // DateTime parsedDate = DateTime.parse(birthday!);
-    // final displayBirthday = DateFormat('dd.MM.yyyy').format(parsedDate);
 
     final age = _calculateAge(displayBirthday);
     final isTablet = ResponsiveUtils.isTablet(context);

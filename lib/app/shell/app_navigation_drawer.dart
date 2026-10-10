@@ -30,14 +30,6 @@ class AppNavigationDrawer extends ConsumerWidget {
     );
   }
 
-  // Future<void> _handleReturnToMainDb(BuildContext context, WidgetRef ref) async {
-  //   Navigator.of(context).pushAndRemoveUntil(
-  //     MaterialPageRoute(builder: (_) => const SplashScreen()),
-  //     (Route<dynamic> route) => false,
-  //   );
-  //   await ref.read(databaseProvider.notifier).closeDatabase();
-  // }
-
   Future<void> _handleReturnToMainDb(BuildContext context, WidgetRef ref) async {
     await ref.read(databaseProvider.notifier).closeDatabase();
     if (!context.mounted) return;

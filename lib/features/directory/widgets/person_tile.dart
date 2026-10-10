@@ -50,8 +50,6 @@ class _PersonTileState extends State<PersonTile> {
         ? theme.primaryColor
         : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
 
-    // Use ResponsiveUtils for sizing
-    //final idFontSize = ResponsiveUtils.getTitleFontSize(context);
     final nameFontSize = ResponsiveUtils.getTitleFontSize(context);
     final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 34);
     final smallIconSize = ResponsiveUtils.getIconSize(context, baseSize: 28);

@@ -96,13 +96,6 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
 
   Widget _buildErrorState(Object error, StackTrace stackTrace) {
 
-    // // Check for your specific custom exceptions
-    // if (error is custom_db_exceptions.DatabaseOperationException) {
-    //   displayMessage = error.message;
-    // } else if (error is custom_db_exceptions.DbConnectionException) {
-    //   displayMessage = "Database connection lost. Please try again.";
-    // }
-
     if (error is custom_db_exceptions.DatabaseNotReadyException) {
       return const Center(child: CircularProgressIndicator());
     }

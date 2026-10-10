@@ -1,5 +1,4 @@
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
-// import 'package:attendly/features/daily_log/data/daily_repository.dart';
 import 'package:attendly/features/search/pages/daily_log_search_page.dart';
 import 'package:attendly/features/daily_log/models/person_with_categories.dart';
 import 'package:attendly/shared/options/category_label.dart';
@@ -35,7 +34,6 @@ class DailyLogTab extends ConsumerStatefulWidget {
 }
 
 class _DailyLogTabState extends ConsumerState<DailyLogTab> {
-  // late DailyRepository _repo;
   final AppDialogs _helper = AppDialogs();
   bool _isManualRefreshing = false;
 
@@ -196,17 +194,6 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
     final isEditMode = ref.watch(dailyEditModeProvider);
     final selectedPeople = ref.watch(dailySelectedPeopleProvider);
 
-    // Error listening side-effect
-    // ref.listen<AsyncValue<List<PersonWithCategories>>>(dailyRawLogsProvider, (prev, next) {
-    //   if (next is AsyncError) {
-    //     if (next.error is custom_db_exceptions.DbConnectionException) {
-    //       DbConnectionValidator.handleConnectionError(context);
-    //     } else {
-    //       _helper.showErrorMessage(context, 'Failed to load: ${next.error}');
-    //     }
-    //   }
-    // });
-
     ref.listen<AsyncValue<List<PersonWithCategories>?>>(dailyRawLogsProvider, (prev, next) {
       if (next is AsyncError) {
         final error = next.error;
@@ -336,9 +323,6 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                 child: asyncFilteredData.when(
                   skipLoadingOnReload: true,
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  // error: (_, __) => Center(
-                  //   child: ElevatedButton(onPressed: refreshDailyEntries, child: const Text("Retry"))
-                  // ),
                   error: (error, stacktrace) {
                     if (error is custom_db_exceptions.DatabaseNotReadyException) {
                       return const Center(child: CircularProgressIndicator());
@@ -367,7 +351,6 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                                   ),
                             ),
                           );
-                          // Removed refresh checking
                         },
                         onEditCategory: (record) {
                           Navigator.push(

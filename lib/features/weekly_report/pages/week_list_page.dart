@@ -28,17 +28,12 @@ class WeekListPage extends ConsumerStatefulWidget {
 class _WeekListPageState extends ConsumerState<WeekListPage> {
   final AppDialogs _helper = AppDialogs();
 
-
   Future<void> _toggleCountableWeek(WeeklyEntryData week) async {
     final repo = ref.read(weeklyRepositoryProvider);
     final newValue = !week.countable;
 
     try {
       await repo.updateCountableStatus(week.weekDate, newValue);
-      
-      // ref.invalidate(allWeeksProvider);
-      
-      // ref.invalidate(weeklyReportProvider(week.dates));
 
       widget.onStatusChanged?.call(week.weekDate, newValue);
 
@@ -72,16 +67,6 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      // body: asyncWeeksList.when(
-      //   loading: () => const Center(child: CircularProgressIndicator()),
-      //   error: (error, _) => Center(
-      //     child: Text(
-      //       'An error occurred: $error',
-      //       style: TextStyle(fontSize: isTablet ? 18 : 16, fontWeight: FontWeight.w500),
-      //     )
-      //   ),
-      //   data: (weeksData) {
-      //     if (weeksData.isEmpty) {
       body: asyncWeeksList.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) {
