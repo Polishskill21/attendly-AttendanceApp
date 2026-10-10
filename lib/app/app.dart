@@ -34,17 +34,19 @@ class AttendlyApp extends ConsumerWidget {
       ],
       theme:     AppTheme.buildLightTheme(),
       darkTheme: AppTheme.buildDarkTheme(),
+      // One system bar style for every screen, including the startup views
+      // without an AppBar. Updated by Flutter only when it changes.
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        SystemChrome.setSystemUIOverlayStyle(
-          (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
             statusBarColor: Colors.transparent,
             systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
             systemNavigationBarIconBrightness:
                 isDark ? Brightness.light : Brightness.dark,
           ),
+          child: child!,
         );
-        return child!;
       },
       home: const StartupGate(),
     );

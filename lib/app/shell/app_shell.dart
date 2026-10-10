@@ -5,7 +5,6 @@ import 'package:attendly/features/yearly_report/pages/yearly_report_tab.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/app/shell/app_navigation_drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class AppShell extends StatefulWidget {
   
@@ -65,18 +64,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isTablet = ResponsiveUtils.isTablet(context);
-    
-    SystemChrome.setSystemUIOverlayStyle(
-      (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Theme.of(context).scaffoldBackgroundColor,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
-      ),
-    );
-    
     if (isTablet) {
       return _buildTabletLayout();
     } else {
