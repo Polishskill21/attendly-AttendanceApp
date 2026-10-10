@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:attendly/app/startup/app_startup_notifier.dart';
@@ -106,6 +107,25 @@ void main() {
 
       expect(current(), isA<StartupNeedsPermission>());
     });
+  });
+
+  test('a resume while the permission request is open does not open the database twice', () async {
+    permission
+      ..current = PermissionState.denied
+      ..afterRequest = PermissionState.granted
+      ..requestGate = Completer<void>();
+    await started();
+
+    final granting = notifier().grantPermission();
+    // The user allowed access in the system settings; returning to the app
+    // resumes it before the request completes.
+    permission.current = PermissionState.granted;
+    await notifier().recheckPermission();
+    permission.requestGate!.complete();
+    await granting;
+
+    expect(current(), isA<StartupReady>());
+    expect(manager.calls.where((call) => call == 'openDatabase'), hasLength(1));
   });
 
   group('first launch', () {

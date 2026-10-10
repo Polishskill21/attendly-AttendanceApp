@@ -21,6 +21,20 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
 
   DateTime? _migrationStartedAt;
 
+  /// Startup actions run one at a time. Coming back from the Android 11+
+  /// "All files access" screen completes the permission request and resumes
+  /// the app at the same moment; without this, both opened the database and
+  /// the second open closed the first one in the middle of its migration.
+  Future<void> _queue = Future.value();
+  int _running = 0;
+
+  Future<void> _serialized(Future<void> Function() action) {
+    _running++;
+    final result = _queue.then((_) => action()).whenComplete(() => _running--);
+    _queue = result.then((_) {}, onError: (_) {});
+    return result;
+  }
+
   DatabaseNotifier get _database => ref.read(databaseProvider.notifier);
   StoragePermissionService get _permission => ref.read(storagePermissionServiceProvider);
 
@@ -39,7 +53,7 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
 
   // ── Permission ────────────────────────────────────────────────────────────
 
-  Future<void> grantPermission() async {
+  Future<void> grantPermission() => _serialized(() async {
     final result = await _permission.request();
     if (result == PermissionState.granted) {
       state = const AsyncLoading();
@@ -49,19 +63,23 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
         permanentlyDenied: result == PermissionState.permanentlyDenied,
       ));
     }
-  }
+  });
 
   Future<void> openPermissionSettings() => _permission.openSettings();
 
   /// Called when the app comes back to the foreground, e.g. from the system
   /// settings where the user may have granted the permission.
   Future<void> recheckPermission() async {
-    if (state.valueOrNull is! StartupNeedsPermission) return;
-    if (await _permission.status() != PermissionState.granted) return;
+    // A permission request or another startup step is already running.
+    if (_running > 0) return;
+    return _serialized(() async {
+      if (state.valueOrNull is! StartupNeedsPermission) return;
+      if (await _permission.status() != PermissionState.granted) return;
 
-    AppLogger.i(_tag, 'Storage permission granted in the system settings');
-    state = const AsyncLoading();
-    state = AsyncData(await _start());
+      AppLogger.i(_tag, 'Storage permission granted in the system settings');
+      state = const AsyncLoading();
+      state = AsyncData(await _start());
+    });
   }
 
   // ── Database ──────────────────────────────────────────────────────────────
@@ -69,7 +87,7 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
   /// Creates the database for the current year (first launch, or "create
   /// new" after a failure). On failure the previous screen stays and the
   /// error is rethrown so the view can show it.
-  Future<void> createDatabase() async {
+  Future<void> createDatabase() => _serialized(() async {
     final previous = state;
     AppLogger.i(_tag, 'User requested a new database');
     state = const AsyncLoading<StartupState>().copyWithPrevious(previous);
@@ -81,9 +99,9 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
       state = previous;
       rethrow;
     }
-  }
+  });
 
-  Future<void> confirmRollover() async {
+  Future<void> confirmRollover() => _serialized(() async {
     AppLogger.i(_tag, 'Year change: user chose to create the new database');
     await _onMigrationStarted();
     try {
@@ -94,10 +112,10 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
       _migrationStartedAt = null;
       state = AsyncData(StartupRolloverFailed(e));
     }
-  }
+  });
 
   /// Keeps the old year's database for now and shows the new-year banner.
-  Future<void> declineRollover() async {
+  Future<void> declineRollover() => _serialized(() async {
     AppLogger.i(_tag, 'Year change: user stays on the old database');
     state = const AsyncLoading();
     try {
@@ -107,7 +125,7 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
       AppLogger.e(_tag, 'Opening the old database failed', e, stackTrace);
       state = AsyncData(StartupFailed(e));
     }
-  }
+  });
 
   Future<void> retry() async {
     AppLogger.i(_tag, 'User tapped retry');
@@ -119,15 +137,15 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
 
   /// Opens the database configured in settings.json, running the year and
   /// first-launch checks again.
-  Future<void> openDefault() async {
+  Future<void> openDefault() => _serialized(() async {
     AppLogger.i(_tag, 'Opening the default database');
     state = const AsyncLoading();
     await _closeQuietly();
     state = AsyncData(await _openDefault());
-  }
+  });
 
   /// Switches to a database picked in the database list.
-  Future<void> openDatabaseFile(File file) async {
+  Future<void> openDatabaseFile(File file) => _serialized(() async {
     AppLogger.i(_tag, 'Startup: switching to selected database ${file.path}');
     state = const AsyncLoading();
     try {
@@ -139,7 +157,7 @@ class AppStartupNotifier extends AsyncNotifier<StartupState> {
       _migrationStartedAt = null;
       state = AsyncData(StartupFailed(e, selectedDb: file));
     }
-  }
+  });
 
   // ── Internals ─────────────────────────────────────────────────────────────
 
