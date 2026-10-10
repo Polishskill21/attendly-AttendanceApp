@@ -642,6 +642,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String getAppsVerision(String version) => "Version number $version";
 
   @override
+  String databaseSchemaVersion(int version) => "Database schema $version";
+
+  @override
   String get trueValue => "true";
 
   @override

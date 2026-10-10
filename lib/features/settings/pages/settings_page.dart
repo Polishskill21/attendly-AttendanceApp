@@ -165,28 +165,33 @@ class SettingsPage extends ConsumerWidget  {
                   child: Row(
                     children: [
                       Expanded(
-                        child: FutureBuilder<PackageInfo>(
-                          future: PackageInfo.fromPlatform(),
-                          builder: (context, snapshot) {
-                            final version =
-                                snapshot.hasData ? snapshot.data!.version : '...';
-                            return InkWell(
-                              onTap: () => ChangelogDialog.showDirectly(context),
-                              borderRadius: BorderRadius.circular(8),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                child: Text(
-                                  localizations.getAppsVerision(version),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: Responsive.of(context).bodyFontSize,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey,
+                        child: Column(
+                          children: [
+                            FutureBuilder<PackageInfo>(
+                              future: PackageInfo.fromPlatform(),
+                              builder: (context, snapshot) {
+                                final version =
+                                    snapshot.hasData ? snapshot.data!.version : '...';
+                                return InkWell(
+                                  onTap: () => ChangelogDialog.showDirectly(context),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    child: Text(
+                                      localizations.getAppsVerision(version),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: Responsive.of(context).bodyFontSize,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
+                                );
+                              },
+                            ),
+                            const _SchemaVersionText(),
+                          ],
                         ),
                       ),
                     ],
@@ -289,3 +294,23 @@ class SettingsPage extends ConsumerWidget  {
   }
 }
 
+
+/// The schema version of the open database, below the app version.
+class _SchemaVersionText extends ConsumerWidget {
+  const _SchemaVersionText();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final version = ref.watch(databaseSchemaVersionProvider).valueOrNull;
+    if (version == null) return const SizedBox.shrink();
+
+    return Text(
+      AppLocalizations.of(context).databaseSchemaVersion(version),
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: Responsive.of(context).bodyFontSize - 4,
+        color: Colors.grey,
+      ),
+    );
+  }
+}

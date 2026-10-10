@@ -115,3 +115,9 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
   
   return state.manager!.databaseConnection;
 });
+
+/// The schema version of the open database file, e.g. for the settings page.
+/// Fails with [DatabaseNotReadyException] while no database is open.
+final databaseSchemaVersionProvider = FutureProvider.autoDispose<int>((ref) {
+  return ref.watch(appDatabaseProvider).readSchemaVersion();
+});

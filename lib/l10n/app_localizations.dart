@@ -19,6 +19,7 @@ abstract class AppLocalizations {
   String get appRestartRequired;
   String get debugInformation;
   String getAppsVerision(String verion);
+  String databaseSchemaVersion(int version);
   String get databasePath;
   String get connectionStatus;
   String get connected;

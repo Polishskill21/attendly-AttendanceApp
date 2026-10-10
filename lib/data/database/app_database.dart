@@ -106,6 +106,13 @@ class AppDatabase extends _$AppDatabase{
     await customSelect('SELECT 1').getSingle();
   }
 
+  /// The schema version saved in the database file (PRAGMA user_version).
+  /// Equals [schemaVersion] once the migrations have run.
+  Future<int> readSchemaVersion() async {
+    final row = await customSelect('PRAGMA user_version').getSingle();
+    return row.read<int>('user_version');
+  }
+
   Future<void> copyPersonDirFromOldDatabase(String oldDbPath) async {
     try {
       String sqlAttachDB = "ATTACH DATABASE ? AS old_db;";

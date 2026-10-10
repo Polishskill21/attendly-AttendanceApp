@@ -635,6 +635,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String getAppsVerision(String version) => "Versionsnummer $version";
 
   @override
+  String databaseSchemaVersion(int version) => "Datenbankschema $version";
+
+  @override
   String get trueValue => "Wahr";
 
   @override
