@@ -1,135 +1,144 @@
-import 'package:attendly/data/database/app_database.dart';
 import 'package:attendly/core/logging/app_logger.dart';
-import 'package:flutter/material.dart';
-import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/data/tables/enums/gender.dart';
+import 'package:attendly/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class PersonTile extends StatefulWidget {
-  final List<DirectoryPeopleData> allPeopleList;
+/// A person in the directory list: name, edit/delete (or a check mark in
+/// selection mode), and the details when expanded.
+class PersonTile extends StatelessWidget {
+  final DirectoryPeopleData person;
   final bool isExpanded;
-  final int index;
   final ValueChanged<bool>? onExpansionChanged;
   final VoidCallback onTap;
   final VoidCallback onDeletePress;
   final VoidCallback onEditPress;
-  final List<Widget> buildChildren;
   final bool isSelected;
   final bool isSelectionMode;
 
   const PersonTile({
     super.key,
-    required this.allPeopleList,
-    required this.index,
+    required this.person,
     required this.isExpanded,
     this.onExpansionChanged,
     required this.onTap,
     required this.onDeletePress,
     required this.onEditPress,
-    required this.buildChildren,
     this.isSelected = false,
     this.isSelectionMode = false,
   });
 
-  @override
-  State<PersonTile> createState() => _PersonTileState();
-}
+  static int _ageOn(DateTime today, DateTime birthDate) {
+    var age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age > 0 ? age : 0;
+  }
 
-class _PersonTileState extends State<PersonTile> {
+  List<Widget> _buildDetails(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final responsive = Responsive.of(context);
+    final birthday = DateFormat('dd.MM.yyyy').format(person.birthday);
+    final age = _ageOn(DateTime.now(), person.birthday);
+    final style = TextStyle(
+      fontSize: responsive.isTablet ? 22.0 * responsive.textScaleFactor : 20.0,
+    );
+
+    return [
+      Text("• ${localizations.birthday}: $birthday ($age)", style: style),
+      Text("• ${localizations.gender}: ${person.gender.localizedName(localizations)}", style: style),
+      Text(
+        "• ${localizations.migration}: ${person.migration ? localizations.trueValue : localizations.falseValue}",
+        style: style,
+      ),
+      if (person.migration)
+        Text("• ${localizations.country}: ${person.migrationBackground ?? 'N/A'}", style: style),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isTablet = Responsive.of(context).isTablet;
+    final responsive = Responsive.of(context);
+    final isTablet = responsive.isTablet;
 
-    final cardColor = widget.isSelected
+    final cardColor = isSelected
         ? theme.primaryColor.withAlpha(15)
-        : Theme.of(context).cardTheme.color;
-    final textColor = widget.isSelected
+        : theme.cardTheme.color;
+    final textColor = isSelected
         ? theme.primaryColor
-        : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black;
+        : theme.textTheme.bodyLarge?.color ?? Colors.black;
 
-    final nameFontSize = Responsive.of(context).titleFontSize;
-    final iconSize = Responsive.of(context).iconSize(baseSize: 34);
-    final smallIconSize = Responsive.of(context).iconSize(baseSize: 28);
-    final edgeInsets = Responsive.of(context).listPadding;
-    final innerPad = Responsive.of(context).contentPadding;
-    final baseElevation = Responsive.of(context).cardElevation;
-    final cardElevation = widget.isSelected ? baseElevation + 1 : baseElevation;
-    final radius = Responsive.of(context).cardBorderRadius;
+    final iconSize = responsive.iconSize(baseSize: 34);
+    final smallIconSize = responsive.iconSize(baseSize: 28);
+    final innerPad = responsive.contentPadding;
+    final baseElevation = responsive.cardElevation;
+    final radius = responsive.cardBorderRadius;
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: edgeInsets.vertical / 2),
+      padding: EdgeInsets.symmetric(vertical: responsive.listPadding.vertical / 2),
       child: Card(
-        key: ValueKey(widget.allPeopleList[widget.index].id),
+        key: ValueKey(person.id),
         color: cardColor,
-        elevation: cardElevation,
-        shadowColor: widget.isSelected
+        elevation: isSelected ? baseElevation + 1 : baseElevation,
+        shadowColor: isSelected
             ? theme.primaryColor.withValues(alpha:0.4)
             : Colors.black26,
         shape: RoundedRectangleBorder(
           borderRadius: radius,
-          side: widget.isSelected
+          side: isSelected
               ? BorderSide(color: theme.primaryColor, width: isTablet ? 2.0 : 1.5)
               : BorderSide(color: Colors.grey.shade200, width: isTablet ? 1.5 : 1),
         ),
         child: Column(
           children: [
             InkWell(
-              onTap: widget.onTap,
+              onTap: onTap,
               borderRadius: radius,
               child: Padding(
-              padding: innerPad,
+                padding: innerPad,
                 child: Row(
                   children: [
-                    // Text(
-                    //   widget.allPeopleList[widget.index]["id"].toString(),
-                    //   style: TextStyle(
-                    //     fontSize: idFontSize,
-                    //     color: textColor,
-                    //     fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
-                    //   ),
-                    //   overflow: TextOverflow.ellipsis,
-                    //   softWrap: false,
-                    // ),
-                    // SizedBox(width: innerPad.horizontal / 2),
                     Expanded(
                       child: Text(
-                        widget.allPeopleList[widget.index].name,
+                        person.name,
                         style: TextStyle(
-                          fontSize: nameFontSize,
+                          fontSize: responsive.titleFontSize,
                           color: textColor,
-                          fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),
                     IconButton(
                       icon: Icon(
-                        widget.isExpanded ? Icons.expand_less : Icons.expand_more,
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
                         size: smallIconSize,
                       ),
-                      onPressed: () {
-                        widget.onExpansionChanged?.call(!widget.isExpanded);
-                      },
+                      onPressed: () => onExpansionChanged?.call(!isExpanded),
                     ),
-                    if (widget.isSelectionMode)
-                      widget.isSelected
+                    if (isSelectionMode)
+                      isSelected
                           ? Icon(Icons.check_circle, color: theme.primaryColor, size: iconSize)
                           : Icon(Icons.radio_button_unchecked, color: Colors.grey, size: iconSize)
                     else ...[
                       IconButton(
                         onPressed: () {
-                          AppLogger.d("UI", "Editing ${widget.index}");
-                          widget.onEditPress();
+                          AppLogger.d("UI", "Editing person ${person.id}");
+                          onEditPress();
                         },
-                        icon: Icon(Icons.edit, 
-                        color: Colors.blueGrey, size: smallIconSize),
+                        icon: Icon(Icons.edit,
+                            color: Colors.blueGrey, size: smallIconSize),
                         iconSize: smallIconSize,
                       ),
                       IconButton(
-                        onPressed: widget.onDeletePress,
-                        icon: Icon(Icons.delete, 
-                        color: Colors.redAccent, 
-                        size: smallIconSize),
+                        onPressed: onDeletePress,
+                        icon: Icon(Icons.delete,
+                            color: Colors.redAccent,
+                            size: smallIconSize),
                         iconSize: smallIconSize,
                       ),
                     ]
@@ -145,27 +154,15 @@ class _PersonTileState extends State<PersonTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.zero,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: widget.buildChildren.isNotEmpty
-                              ? widget.buildChildren
-                              : [
-                                  Text(
-                                    localizations.noData,
-                                    style: TextStyle(
-                                      fontSize: Responsive.of(context).bodyFontSize,
-                                    ),
-                                  )
-                                ],
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: _buildDetails(context),
                       ),
                     ),
                   ],
                 ),
               ),
-              crossFadeState: widget.isExpanded
+              crossFadeState: isExpanded
                   ? CrossFadeState.showSecond
                   : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 300),

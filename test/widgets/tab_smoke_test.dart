@@ -101,5 +101,17 @@ void main() {
       expect(find.text('Ben'), findsOneWidget);
       await unmount(tester);
     });
+
+    testWidgets('expanding a person shows the details', (tester) async {
+      await tester.runAsync(() => addTestPerson(db, 'Anna', birthday: DateTime(2010, 3, 4)));
+
+      await pumpShell(tester, AppTab.directory);
+      await tester.tap(find.byIcon(Icons.expand_more));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('${l10n.birthday}: 04.03.2010'), findsOneWidget);
+      expect(find.textContaining('${l10n.gender}: ${l10n.male}'), findsOneWidget);
+      await unmount(tester);
+    });
   });
 }

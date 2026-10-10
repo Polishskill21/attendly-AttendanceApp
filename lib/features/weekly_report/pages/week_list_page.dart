@@ -24,7 +24,6 @@ class WeekListPage extends ConsumerStatefulWidget {
 }
 
 class _WeekListPageState extends ConsumerState<WeekListPage> {
-  final AppDialogs _helper = AppDialogs();
 
   Future<void> _toggleCountableWeek(WeeklyEntryData week) async {
     final repo = ref.read(weeklyRepositoryProvider);
@@ -39,7 +38,7 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
       return;
     } catch (e, stackTrace) {
       if (mounted) {
-        _helper.showErrorMessage(context, 'Failed to update status: ${e.toString()}', stackTrace: stackTrace);
+        AppDialogs.showError(context, 'Failed to update status: ${e.toString()}', stackTrace: stackTrace);
       }
     }
   }

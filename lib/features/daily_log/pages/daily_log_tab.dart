@@ -149,7 +149,6 @@ class _DailyLogBody extends ConsumerStatefulWidget {
 }
 
 class _DailyLogBodyState extends ConsumerState<_DailyLogBody> {
-  final AppDialogs _helper = AppDialogs();
 
   void _toggleSelection(PersonWithCategories person) {
     final currentSet = ref.read(dailySelectedPeopleProvider);
@@ -182,29 +181,28 @@ class _DailyLogBodyState extends ConsumerState<_DailyLogBody> {
     final localizations = AppLocalizations.of(context);
     final repo = ref.read(dailyRepositoryProvider);
 
-    final confirm = await _helper.displayDialog(
+    final confirm = await AppDialogs.confirm(
       context,
-      localizations.deleteRecord,
-      localizations.confirmDeleteCategory(
+      title: localizations.deleteRecord,
+      message: localizations.confirmDeleteCategory(
         localizedCategoryLabel(context, record.category),
         record.personName ?? localizations.unknown,
         record.date,
       ),
-      localizations,
     );
 
-    if (confirm == true && mounted) {
+    if (confirm && mounted) {
       try {
-        _helper.showLoadingDialog(context, localizations.delete);
+        AppDialogs.showLoading(context, localizations.delete);
         await repo.deleteDailyEntry(record.recordId, record.personId, DateTime.parse(record.date));
         if (mounted) {
-          _helper.hideLoadingDialog(context);
-          await _helper.showSubmitMessage(context, localizations.recordDeleted);
+          AppDialogs.hideLoading(context);
+          await AppDialogs.showSuccess(context, localizations.recordDeleted);
         }
       } catch (e) {
         if (!mounted) return;
-        _helper.hideLoadingDialog(context);
-        _helper.showErrorMessage(context, e.toString());
+        AppDialogs.hideLoading(context);
+        AppDialogs.showError(context, e.toString());
       }
     }
   }
@@ -337,7 +335,6 @@ class _EditModeActions extends ConsumerStatefulWidget {
 }
 
 class _EditModeActionsState extends ConsumerState<_EditModeActions> {
-  final AppDialogs _helper = AppDialogs();
 
   Future<void> _onBulkAddCategory() async {
     final selectedSet = ref.read(dailySelectedPeopleProvider);
@@ -366,26 +363,25 @@ class _EditModeActionsState extends ConsumerState<_EditModeActions> {
     final date = ref.read(dailyDateProvider);
     final repo = ref.read(dailyRepositoryProvider);
 
-    final confirm = await _helper.displayDialog(
+    final confirm = await AppDialogs.confirm(
       context,
-      localizations.delete,
-      localizations.confirmBulkDelete(count),
-      localizations,
+      title: localizations.delete,
+      message: localizations.confirmBulkDelete(count),
     );
-    if (confirm != true || !mounted) return;
+    if (!confirm || !mounted) return;
 
     try {
-      _helper.showLoadingDialog(context, localizations.delete);
+      AppDialogs.showLoading(context, localizations.delete);
       final personIds = selectedSet.map((p) => p.personId).toList();
       await repo.bulkDeleteEntries(personIds, date);
       if (!mounted) return;
-      _helper.hideLoadingDialog(context);
-      await _helper.showSubmitMessage(context, localizations.peopleEntriesDeleted(count));
+      AppDialogs.hideLoading(context);
+      await AppDialogs.showSuccess(context, localizations.peopleEntriesDeleted(count));
       if (mounted) DailyLogTab._toggleEditMode(ref);
     } catch (e, stackTrace) {
       if (!mounted) return;
-      _helper.hideLoadingDialog(context);
-      _helper.showErrorMessage(context, 'Failed to delete entries: $e', stackTrace: stackTrace);
+      AppDialogs.hideLoading(context);
+      AppDialogs.showError(context, 'Failed to delete entries: $e', stackTrace: stackTrace);
     }
   }
 

@@ -8,7 +8,6 @@ import 'package:attendly/features/directory/widgets/alphabet_index_bar.dart';
 import 'package:attendly/features/directory/widgets/directory_search_field.dart';
 import 'package:attendly/features/directory/widgets/person_tile.dart';
 import 'package:attendly/l10n/app_localizations.dart';
-import 'package:attendly/shared/dialogs/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,7 +37,6 @@ class PersonDirectoryList extends ConsumerStatefulWidget {
 class _PersonDirectoryListState extends ConsumerState<PersonDirectoryList> {
   final TextEditingController _searchController = TextEditingController();
   final AnchoredListController _listController = AnchoredListController();
-  final AppDialogs _helper = AppDialogs();
   late final StateController<String> _searchQueryNotifier;
   int _expandedIndex = -1;
 
@@ -145,8 +143,6 @@ class _PersonDirectoryListState extends ConsumerState<PersonDirectoryList> {
                       },
                       onDeletePress: (person) => widget.onDeletePress?.call(person),
                       onEditPress: (person) => widget.onEditPress?.call(person),
-                      buildPersonDetails: (person) => _helper.buildPersonDetails(
-                          people, people.indexOf(person), localizations, context),
                     ),
                   ),
                   if (people.length > 1)
@@ -181,7 +177,6 @@ class _PersonListView extends StatelessWidget {
   final Function(int, bool) onExpansionChanged;
   final Function(DirectoryPeopleData) onDeletePress;
   final Function(DirectoryPeopleData) onEditPress;
-  final List<Widget> Function(DirectoryPeopleData) buildPersonDetails;
   final AnchoredListController listController;
 
   const _PersonListView({
@@ -193,7 +188,6 @@ class _PersonListView extends StatelessWidget {
     required this.onExpansionChanged,
     required this.onDeletePress,
     required this.onEditPress,
-    required this.buildPersonDetails,
     required this.listController,
   });
 
@@ -219,8 +213,7 @@ class _PersonListView extends StatelessWidget {
         final isSelected =
             isSelectionMode && selectedPersonIds.contains(person.id);
         return PersonTile(
-          allPeopleList: people,
-          index: index,
+          person: person,
           isExpanded: expandedIndex == index,
           isSelected: isSelected,
           isSelectionMode: isSelectionMode,
@@ -228,7 +221,6 @@ class _PersonListView extends StatelessWidget {
           onTap: () => onPersonTap(person),
           onDeletePress: () => onDeletePress(person),
           onEditPress: () => onEditPress(person),
-          buildChildren: buildPersonDetails(person),
         );
       },
     );

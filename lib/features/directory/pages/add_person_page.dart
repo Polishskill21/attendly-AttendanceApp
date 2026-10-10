@@ -30,7 +30,6 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _migrationController = TextEditingController();
   final TextEditingController _homeCountryController = TextEditingController();
-  final _helper = AppDialogs();
   Gender? selectedGender;
   bool? selectedMigration;
 
@@ -61,7 +60,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
       selectedMigration = null;
     });
 
-    _helper.showResetMessage(context, AppLocalizations.of(context).allFieldsReset);
+    AppDialogs.showSnack(context, AppLocalizations.of(context).allFieldsReset);
   }
 
   Future<void> _submitForm() async{
@@ -72,18 +71,18 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
 
     // Validate empty fields
     if (name.isEmpty || uiBirthday.isEmpty || selectedGender == null || selectedMigration == null) {
-      _helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
+      AppDialogs.showError(context, localizations.allFieldsMustBeFilled);
       return;
     }
 
     if (selectedMigration == true && homeCountry.isEmpty) {
-      _helper.showErrorMessage(context, localizations.homeCountryRequiredForMigration);
+      AppDialogs.showError(context, localizations.homeCountryRequiredForMigration);
       return;
     }
 
     // Validate date format (dd.MM.YYYY)
     if (!_isValidDate(uiBirthday)) {
-      _helper.showErrorMessage(context, localizations.invalidDateFormat);
+      AppDialogs.showError(context, localizations.invalidDateFormat);
       return;
     }
 
@@ -103,11 +102,11 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
         ),
       );
 
-      await _helper.showSubmitMessage(context, localizations.formSubmittedSuccessfully);
+      await AppDialogs.showSuccess(context, localizations.formSubmittedSuccessfully);
       if (mounted) Navigator.of(context).pop(); 
       return;
     } on custom_db_exceptions.DuplicatePersonException catch (e) {
-      _helper.showErrorMessage(context, localizations.personNamedAlreadyExists(e.name));
+      AppDialogs.showError(context, localizations.personNamedAlreadyExists(e.name));
       return;
     } on custom_db_exceptions.DatabaseNotReadyException {
       return; // Safely abort if DB is transitioning
@@ -119,7 +118,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
     //   return false;
     }
     catch (e, stackTrace) {
-      _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
+      AppDialogs.showError(context, e.toString(), stackTrace: stackTrace);
       return;
     }
   }

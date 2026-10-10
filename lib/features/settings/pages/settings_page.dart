@@ -211,11 +211,10 @@ class SettingsPage extends ConsumerWidget  {
   Future<void> _showRecalibrationDialog(
       BuildContext context, WidgetRef ref) async {
     final localizations = AppLocalizations.of(context);
-    final helper = AppDialogs();
     final dbState = ref.read(databaseProvider);               // CHANGED
  
     if (!dbState.isReady) {
-      helper.showErrorMessage(context, localizations.databaseNotConnected);
+      AppDialogs.showError(context, localizations.databaseNotConnected);
       return;
     }
  
@@ -250,15 +249,15 @@ class SettingsPage extends ConsumerWidget  {
     );
  
     if (confirmed == true) {
-      helper.showLoadingDialog(context, localizations.recalibrating);
+      AppDialogs.showLoading(context, localizations.recalibrating);
       try {
         await db.updateDao.recalibrateWeeklyData();
-        helper.hideLoadingDialog(context);
-        await helper.showSubmitMessage(
+        AppDialogs.hideLoading(context);
+        await AppDialogs.showSuccess(
             context, localizations.recalibrationSuccess);
       } catch (e, stackTrace) {
-        helper.hideLoadingDialog(context);
-        helper.showErrorMessage(context, localizations.recalibrationFailed,
+        AppDialogs.hideLoading(context);
+        AppDialogs.showError(context, localizations.recalibrationFailed,
             stackTrace: stackTrace);
       }
     }

@@ -31,7 +31,6 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
   Category? _selectedCategory;
 
   late DailyRepository _repo;
-  final AppDialogs _helper = AppDialogs();
   bool _didChangeDependencies = false;
 
   @override
@@ -63,7 +62,7 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
   Future<void> _submitChanges() async {
     final localizations = AppLocalizations.of(context);
     if (_selectedCategory == null) {
-      _helper.showErrorMessage(context, localizations.pleaseSelectCategory);
+      AppDialogs.showError(context, localizations.pleaseSelectCategory);
       return;
     }
 
@@ -78,14 +77,14 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
             : _commentController.text.trim(),
       );
 
-      await _helper.showSubmitMessage(context, localizations.recordUpdatedSuccessfully);
+      await AppDialogs.showSuccess(context, localizations.recordUpdatedSuccessfully);
       
       if (mounted) {
         Navigator.of(context).pop(true);
       }
     } on custom_db_exceptions.DuplicateDailyEntryException {
       AppLogger.d("Daily", "Not adding twice to the open category");
-      await _helper.showInfoMessageDialog(
+      await AppDialogs.showInfo(
           context,
           localizations.personAlreadyInCategoryOpen(widget.record.personName ?? localizations.unknown),
         );
@@ -97,9 +96,9 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
     //     await DbConnectionValidator.handleConnectionError(context);
     //   }
     } on custom_db_exceptions.DatabaseException catch (e) {
-      _helper.showErrorMessage(context, e.toString());
+      AppDialogs.showError(context, e.toString());
     } catch (e, stackTrace) {
-      _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
+      AppDialogs.showError(context, e.toString(), stackTrace: stackTrace);
     }
   }
 

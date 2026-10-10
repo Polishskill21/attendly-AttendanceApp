@@ -34,7 +34,6 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _migrationController = TextEditingController();
   final TextEditingController _homeCountryController = TextEditingController();
-  final AppDialogs _helper = AppDialogs();
 
 
   Gender? selectedGender;
@@ -92,7 +91,7 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
       selectedMigration = p.migration;
     }
     catch(e, stackTrace){
-      _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
+      AppDialogs.showError(context, e.toString(), stackTrace: stackTrace);
     }
   }
 
@@ -119,7 +118,7 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
 
 
     if (name.isEmpty || selectedGender == null || selectedMigration == null) {
-      _helper.showErrorMessage(context, localizations.allFieldsMustBeFilled);
+      AppDialogs.showError(context, localizations.allFieldsMustBeFilled);
       return;
     }
 
@@ -161,14 +160,14 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
 
       await repo.updatePerson(p.id, companion);
       
-      await _helper.showSubmitMessage(context, localizations.updatedSuccessfully);
+      await AppDialogs.showSuccess(context, localizations.updatedSuccessfully);
       if (mounted) Navigator.of(context).pop(true);
     } on custom_db_exceptions.DuplicatePersonException catch (e) {
-      _helper.showErrorMessage(
+      AppDialogs.showError(
           context, localizations.personNamedAlreadyExists(e.name));
 
     } on custom_db_exceptions.PersonNotFoundException catch (e) {
-      _helper.showErrorMessage(
+      AppDialogs.showError(
           context, localizations.personWithIdNotFound(e.id));
 
     } on custom_db_exceptions.DatabaseNotReadyException {
@@ -177,10 +176,10 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
     //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
 
     } on custom_db_exceptions.DatabaseOperationException catch (e, st) {
-      _helper.showErrorMessage(context, e.toString(), stackTrace: st);
+      AppDialogs.showError(context, e.toString(), stackTrace: st);
 
     } catch (e, st) {
-      _helper.showErrorMessage(context, e.toString(), stackTrace: st);
+      AppDialogs.showError(context, e.toString(), stackTrace: st);
     }
   }
 

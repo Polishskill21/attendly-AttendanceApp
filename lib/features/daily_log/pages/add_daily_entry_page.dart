@@ -36,7 +36,6 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  final AppDialogs helper = AppDialogs();
 
   late DailyRepository _repo;
 
@@ -101,7 +100,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
       });
     }
 
-    helper.showResetMessage(context, localizations.allFieldsReset);
+    AppDialogs.showSnack(context, localizations.allFieldsReset);
   }
 
   Future<bool> _submitForm() async {
@@ -110,7 +109,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
 
     // Validate required fields
     if (selectedPersons.isEmpty || selectedCategory == null || selectedDate == null) {
-      helper.showErrorMessage(context, localizations.personCategoryDateRequired);
+      AppDialogs.showError(context, localizations.personCategoryDateRequired);
       return false;
     }
 
@@ -135,7 +134,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
     }
 
     try {
-      helper.showLoadingDialog(context, localizations.save);
+      AppDialogs.showLoading(context, localizations.save);
 
       for (var person in selectedPersons) {
         try {
@@ -161,11 +160,11 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
         }
       }
 
-      if(mounted) helper.hideLoadingDialog(context);
+      if(mounted) AppDialogs.hideLoading(context);
 
       if (duplicatePersons.isNotEmpty) {
         String names = duplicatePersons.join(', ');
-        await helper.showInfoMessageDialog(
+        await AppDialogs.showInfo(
           context,
           localizations.personsAlreadyInCategoryOpen(duplicatePersons.length, names),
         );
@@ -174,27 +173,27 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
         // }
       } else if (failCount > 0) {
         String errorDetails = failedPersons.join('\n\n');
-        helper.showErrorMessage(context, "${localizations.personsFailedToAdd(failCount, successCount)}\n\nDetails:\n$errorDetails");
+        AppDialogs.showError(context, "${localizations.personsFailedToAdd(failCount, successCount)}\n\nDetails:\n$errorDetails");
       } else {
-        await helper.showSubmitMessage(context, localizations.personsAddedSuccessfully(successCount));
+        await AppDialogs.showSuccess(context, localizations.personsAddedSuccessfully(successCount));
         if (mounted) {
           Navigator.of(context).pop(true);
         }
       }
       return successCount > 0 && failCount == 0;
     } on custom_db_exceptions.DatabaseNotReadyException {
-      if(mounted) helper.hideLoadingDialog(context);
+      if(mounted) AppDialogs.hideLoading(context);
       return false;
     // } on custom_db_exceptions.DbConnectionException catch (e) {
-    //   if(mounted) helper.hideLoadingDialog(context);
+    //   if(mounted) AppDialogs.hideLoading(context);
     //   debugPrint(e.toString());
     //   if (mounted) {
     //     await DbConnectionValidator.handleConnectionError(context);
     //   }
     //   return false;
     } catch (e, stackTrace) {
-      if(mounted) helper.hideLoadingDialog(context);
-      helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
+      if(mounted) AppDialogs.hideLoading(context);
+      AppDialogs.showError(context, e.toString(), stackTrace: stackTrace);
       return false;
     }
   }
