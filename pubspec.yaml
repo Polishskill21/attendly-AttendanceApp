@@ -36,11 +36,26 @@ dev_dependencies:
   build_runner: ^2.10.5
   rename: ^3.1.0
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logo.png"
+
+# Native splash: covers the engine start until Flutter draws its first frame.
+# Colors match the scaffold background of the light and dark theme.
+flutter_native_splash:
+  color: "#FAFAFA"
+  image: assets/logo.png
+  color_dark: "#212121"
+  image_dark: assets/logo.png
+  android_12:
+    image: assets/logo.png
+    color: "#FAFAFA"
+    image_dark: assets/logo.png
+    color_dark: "#212121"
+  web: false
 
 flutter:
   uses-material-design: true
