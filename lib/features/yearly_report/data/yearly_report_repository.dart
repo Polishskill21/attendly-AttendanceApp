@@ -1,7 +1,7 @@
-
 import 'package:attendly/data/database/app_database.dart';
 import 'package:attendly/data/database/exceptions.dart';
 import 'package:attendly/core/logging/app_logger.dart';
+import 'package:attendly/features/yearly_report/models/year_stats.dart';
 
 
 class YearlyReportRepository {
@@ -11,29 +11,21 @@ class YearlyReportRepository {
 
   YearlyReportRepository(this.db);
 
-  /// Fetches the aggregated statistics for the yearly report.
-  Future<List<Map<String, dynamic>>> getYearlyStats() async {
+  /// The yearly report over all countable weeks, or null while no week has
+  /// data. Updates whenever a week changes.
+  Stream<YearStats?> watchYearlyStats() {
     try {
-      return await db.readDao.getYearStats();
+      return db.readDao.watchYearStats().map((row) {
+        final stats = Map<String, dynamic>.of(row);
+        final weekCount = (stats.remove('week_count') as int?) ?? 0;
+        if (stats.values.every((value) => value == null)) return null;
+        return YearStats(stats: stats, weekCount: weekCount);
+      });
     } catch (e, stack) {
-      AppLogger.e(_tag, "Failed to fetch yearly statistics", e, stack);
+      AppLogger.e(_tag, "Failed to watch yearly statistics", e, stack);
       throw DatabaseOperationException(
-        "Failed to fetch yearly statistics",
+        "Failed to watch yearly statistics",
         originalException: e is Exception ? e : Exception(e.toString()),
-        stackTrace: stack,
-      );
-    }
-  }
-
-  /// Gets the total count of weeks recorded where countable is not 0.
-  Future<int> getRecordedWeekCount() async {
-    try {
-      return await db.readDao.getWeekCount();
-    } catch (e, stack) {
-      AppLogger.e(_tag, "Failed to count recorded weeks", e, stack);
-      throw DatabaseOperationException(
-        "Failed to count recorded weeks",
-        originalException: e is Exception ? e : null,
         stackTrace: stack,
       );
     }

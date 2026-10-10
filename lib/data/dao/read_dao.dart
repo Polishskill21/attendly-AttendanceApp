@@ -162,8 +162,7 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     return total == 0;
   }
 
-  Future<List<Map<String, dynamic>>> getYearStats() async {
-    const sql = '''
+  static const String _yearStatsSums = '''
       SELECT 
         SUM(under_10) AS under_10, 
         SUM(age_10_13) AS age_10_13, 
@@ -182,12 +181,22 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
         SUM(migration_male) as migration_male,
         SUM(migration_female) as migration_female,
         SUM(migration_diverse) as migration_diverse
-      FROM weekly_entry
-      WHERE countable != 0;
-    ''';
+''';
 
-    final result = await customSelect(sql).get();
+  Future<List<Map<String, dynamic>>> getYearStats() async {
+    final result = await customSelect(
+      '$_yearStatsSums FROM weekly_entry WHERE countable != 0',
+    ).get();
     return result.map((row) => row.data).toList();
+  }
+
+  /// The sums of all countable weeks plus their number (`week_count`), as one
+  /// row. Re-emits whenever weekly_entry changes.
+  Stream<Map<String, dynamic>> watchYearStats() {
+    return customSelect(
+      '$_yearStatsSums, COUNT(*) AS week_count FROM weekly_entry WHERE countable != 0',
+      readsFrom: {weeklyEntry},
+    ).watchSingle().map((row) => row.data);
   }
 
   /// Counts recorded weeks where countable is not 0

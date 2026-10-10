@@ -75,4 +75,18 @@ void main() {
     await expectEventually(weeklyReportProvider(monday), (week) => week?.countable == false);
     await expectEventually(yearlyStatsProvider, (stats) => stats == null);
   });
+
+  test('the yearly report sums the countable weeks', () async {
+    final anna = await addTestPerson(db, 'Anna');
+    final ben = await addTestPerson(db, 'Ben');
+    container.listen(yearlyStatsProvider, (_, _) {});
+    expect(await container.read(yearlyStatsProvider.future), isNull);
+
+    await addTestEntry(db, personId: anna, date: monday);
+    await addTestEntry(db, personId: ben, date: monday.add(const Duration(days: 7)));
+
+    await expectEventually(yearlyStatsProvider,
+        (stats) => stats?.weekCount == 2 && stats?.stats['open_male'] == 2);
+    expect(container.read(yearlyStatsProvider).requireValue!.stats.containsKey('week_count'), isFalse);
+  });
 }
