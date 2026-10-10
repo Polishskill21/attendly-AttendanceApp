@@ -17,10 +17,3 @@ List<MigrationOption> getMigrationOptions(BuildContext context) {
     MigrationOption(2, localizations.no, false, Icons.location_off_outlined)
   ];
 }
-
-// Keep the old list for backward compatibility but deprecate it
-@Deprecated("Keep the old list for backward compatibility but deprecate it")
-List<MigrationOption> migrationItems = [
-  MigrationOption(1, "True", true, Icons.location_on_outlined),
-  MigrationOption(2, "False", false, Icons.location_off_outlined)
-];

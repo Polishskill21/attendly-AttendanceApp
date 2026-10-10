@@ -21,12 +21,3 @@ List<CategoryOption> getCategoryOptions(BuildContext context) {
     CategoryOption(4, localizations.other, Category.other, Icons.pending_outlined)
   ];
 }
-
-// Keep the old list for backward compatibility but deprecate it
-@Deprecated("Keep the old list for backward compatibility but deprecate it")
-List<CategoryOption> categoryItems = [
-  CategoryOption(1, "Open", Category.open, FontAwesomeIcons.clipboardUser.data),
-  CategoryOption(2, "Offer", Category.offer, Icons.local_offer_outlined),
-  CategoryOption(3, "Parent", Category.parent, Icons.person_2_outlined),
-  CategoryOption(4, "Other", Category.other, Icons.pending_outlined)
-];

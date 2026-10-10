@@ -1,61 +1,6 @@
 import 'package:attendly/data/tables/enums/category.dart';
-import 'package:attendly/data/tables/enums/gender.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-
-Gender stringToGender(String gender){
-  switch(gender){
-    case "m":
-      return Gender.m;
-
-    case "f":
-      return Gender.f;
-
-    case "d":
-      return Gender.d;
-
-    default:
-      throw ArgumentError("Invalid gender string: $gender");
-  }
-}
-
-String stringToStringGender(String gender, AppLocalizations localizations){
-  switch(gender){
-    case "m":
-      return localizations.male;
-
-    case "f":
-      return localizations.female;
-
-    case "d":
-      return localizations.diverse; 
-
-    default:
-      throw ArgumentError("Invalid gender string: $gender");
-  }
-}
-
-bool intToBool(int migrationStatus){
-  switch(migrationStatus){
-    case 1:
-      return true;
-    case 0: 
-      return false;
-    default: 
-      throw ArgumentError("Invalid migraton status int: $migrationStatus");
-  }
-}
-
-String intToBoolString(int migrationStatus, AppLocalizations localizations){
-  switch(migrationStatus){
-    case 1:
-      return localizations.trueValue;
-    case 0: 
-      return localizations.falseValue;
-    default: 
-      throw ArgumentError("Invalid migraton status int: $migrationStatus");
-  }
-}
 
 String localizedCategoryLabel(BuildContext context, String rawCategory) {
   final l = AppLocalizations.of(context);
@@ -75,4 +20,3 @@ String localizedCategoryLabel(BuildContext context, String rawCategory) {
     return rawCategory;
   }
 }
-

@@ -19,11 +19,3 @@ List<GenderOption> getGenderOptions(BuildContext context) {
     GenderOption(3, localizations.diverse, Gender.d, Icons.transgender)
   ];
 }
-
-// Keep the old list for backward compatibility but deprecate it
-@Deprecated("Keep the old list for backward compatibility but deprecate it")
-List<GenderOption> genderItems = [
-  GenderOption(1, "Male", Gender.m, Icons.male),
-  GenderOption(2, "Female", Gender.f, Icons.female),
-  GenderOption(3, "Diverse", Gender.d, Icons.transgender)
-];
