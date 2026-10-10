@@ -32,7 +32,7 @@ void main() {
     testWidgets('daily log tab shows title and empty state', (tester) async {
       await pumpWithDatabase(
         tester,
-        DailyPerson(selectedTab: 1, onTabChange: (_) {}),
+        DailyLogTab(selectedTab: 1, onTabChange: (_) {}),
         db: db,
       );
 

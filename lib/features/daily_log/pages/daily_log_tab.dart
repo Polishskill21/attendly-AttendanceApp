@@ -18,12 +18,12 @@ import 'package:attendly/shared/options/category_option.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DailyPerson extends ConsumerStatefulWidget {
+class DailyLogTab extends ConsumerStatefulWidget {
   final int selectedTab;
   final void Function(int) onTabChange;
   final bool isTablet;
 
-  const DailyPerson({
+  const DailyLogTab({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
@@ -31,10 +31,10 @@ class DailyPerson extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<DailyPerson> createState() => DailyPersonState();
+  ConsumerState<DailyLogTab> createState() => _DailyLogTabState();
 }
 
-class DailyPersonState extends ConsumerState<DailyPerson> {
+class _DailyLogTabState extends ConsumerState<DailyLogTab> {
   // late DailyRepository _repo;
   final HelperAllPerson _helper = HelperAllPerson();
   bool _isManualRefreshing = false;
@@ -92,14 +92,14 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => AddDaily(initialDate: currentDate, isTablet: widget.isTablet),
+        builder: (context) => AddDailyEntryPage(initialDate: currentDate, isTablet: widget.isTablet),
       ),
     );
   }
 
   Future<void> _onSearchFabPressed() async {
     final selectedDate = await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute(builder: (context) => SearchDailyLogsPage(isTablet: widget.isTablet)),
+      MaterialPageRoute(builder: (context) => DailyLogSearchPage(isTablet: widget.isTablet)),
     );
     if (selectedDate != null) {
       ref.read(dailyDateProvider.notifier).state = selectedDate;
@@ -114,7 +114,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder:
-            (context) => AddDaily(
+            (context) => AddDailyEntryPage(
               initialDate: date,
               preselectedPersons: selectedList,
               isTablet: widget.isTablet,
@@ -358,7 +358,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                             context,
                             MaterialPageRoute(
                               builder:
-                                  (ctx) => AddDaily(
+                                  (ctx) => AddDailyEntryPage(
                                     initialDate: selectedDate,
                                     preselectedPersons: [
                                       {'id': person.personId, 'name': person.name},
@@ -375,7 +375,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
                             MaterialPageRoute(
                               builder:
                                   (ctx) =>
-                                      EditCategoryPage(record: record, isTablet: widget.isTablet),
+                                      EditDailyEntryPage(record: record, isTablet: widget.isTablet),
                             ),
                           );
                         },

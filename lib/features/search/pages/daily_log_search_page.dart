@@ -13,19 +13,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum SearchType { name, description, nameAndDescription }
 
-class SearchDailyLogsPage extends ConsumerStatefulWidget {
+class DailyLogSearchPage extends ConsumerStatefulWidget {
   final bool isTablet;
 
-  const SearchDailyLogsPage({
+  const DailyLogSearchPage({
     super.key,
     this.isTablet = false,
   });
 
   @override
-  ConsumerState<SearchDailyLogsPage> createState() => _SearchDailyLogsPageState();
+  ConsumerState<DailyLogSearchPage> createState() => _DailyLogSearchPageState();
 }
 
-class _SearchDailyLogsPageState extends ConsumerState<SearchDailyLogsPage> {
+class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
   final _nameSearchController = TextEditingController();
   final _descriptionSearchController = TextEditingController();
   final _categoryController = TextEditingController();

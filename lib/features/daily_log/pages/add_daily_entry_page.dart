@@ -17,12 +17,12 @@ import 'package:attendly/shared/dialogs/app_dialogs.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 
 
-class AddDaily extends ConsumerStatefulWidget {
+class AddDailyEntryPage extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final List<Map<String, dynamic>>? preselectedPersons;
   final bool isTablet;
 
-  const AddDaily({
+  const AddDailyEntryPage({
     super.key, 
     this.initialDate, 
     this.preselectedPersons,
@@ -30,10 +30,10 @@ class AddDaily extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AddDaily> createState() => _AddDailyState();
+  ConsumerState<AddDailyEntryPage> createState() => _AddDailyEntryPageState();
 }
 
-class _AddDailyState extends ConsumerState<AddDaily>{
+class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
   DateTime? _persistedDate;
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
@@ -141,7 +141,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
 
       for (var person in selectedPersons) {
         try {
-          // Create DailyPerson object
+          // Create DailyLogTab object
           await _repo.addDailyEntry(
             personId: person['id'],
             date: selectedDate!,

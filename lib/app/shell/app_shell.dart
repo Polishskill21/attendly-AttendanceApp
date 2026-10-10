@@ -20,7 +20,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
 
   // final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
   // final GlobalKey<YearStatsPageState> _yearStatsKey = GlobalKey();
-  // final GlobalKey<DailyPersonState> _dailyPersonKey = GlobalKey();
+  // final GlobalKey<_DailyLogTabState> _dailyPersonKey = GlobalKey();
 
   @override
   void initState() {
@@ -169,7 +169,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
           isTablet: isTablet,
         );
       case 1:
-        return DailyPerson(
+        return DailyLogTab(
           // key: _dailyPersonKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,

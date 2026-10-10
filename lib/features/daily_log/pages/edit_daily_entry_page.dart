@@ -13,21 +13,21 @@ import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditCategoryPage extends ConsumerStatefulWidget {
+class EditDailyEntryPage extends ConsumerStatefulWidget {
   final CategoryRecord record;
   final bool isTablet;
 
-  const EditCategoryPage({
+  const EditDailyEntryPage({
     super.key,
     required this.record,
     this.isTablet = false,
   });
 
   @override
-  ConsumerState<EditCategoryPage> createState() => _EditCategoryPageState();
+  ConsumerState<EditDailyEntryPage> createState() => _EditDailyEntryPageState();
 }
 
-class _EditCategoryPageState extends ConsumerState<EditCategoryPage> {
+class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
   late TextEditingController _commentController;
   late TextEditingController _categoryController;
   Category? _selectedCategory;
