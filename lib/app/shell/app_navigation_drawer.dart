@@ -5,21 +5,23 @@ import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:attendly/features/settings/pages/settings_page.dart';
+import 'package:attendly/app/shell/app_tab.dart';
 import 'package:attendly/app/startup/app_startup_notifier.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AppNavigationDrawer extends ConsumerWidget {
-  final int selectedTab;
-  final Function(int) onTabChange;
+  /// The tablet rail instead of the drawer.
   final bool isRailMode;
 
   const AppNavigationDrawer({
     super.key,
-    required this.selectedTab,
-    required this.onTabChange,
     this.isRailMode = false,
   });
+
+  void _selectTab(WidgetRef ref, AppTab tab) {
+    ref.read(selectedTabProvider.notifier).state = tab;
+  }
 
   /// Runs the default startup again: the new-year banner leads to the
   /// rollover question, "return to main database" leaves a picked database.
@@ -44,13 +46,13 @@ class AppNavigationDrawer extends ConsumerWidget {
     final theme = Theme.of(context);
     final iconSize = Responsive.of(context).iconSize(baseSize: 32);
 
-    final int? validSelectedIndex = (selectedTab >= 0 && selectedTab <= 3) ? selectedTab : null;
+    final selectedTab = ref.watch(selectedTabProvider);
 
     return NavigationRail(
       extended: false,
       minWidth: 72,
-      selectedIndex: validSelectedIndex,
-      onDestinationSelected: onTabChange,
+      selectedIndex: selectedTab.index,
+      onDestinationSelected: (index) => _selectTab(ref, AppTab.values[index]),
       labelType: NavigationRailLabelType.none,
       backgroundColor: theme.scaffoldBackgroundColor,
       leading: Column(
@@ -164,6 +166,7 @@ class AppNavigationDrawer extends ConsumerWidget {
   }
 
   Widget _buildDrawer(BuildContext context, WidgetRef ref) {
+    final selectedTab = ref.watch(selectedTabProvider);
     final appState = ref.watch(databaseProvider);
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
@@ -192,9 +195,9 @@ class AppNavigationDrawer extends ConsumerWidget {
                     theme: theme,
                     icon: Icons.people_outline,
                     text: localizations.directory,
-                    isSelected: selectedTab == 0,
+                    isSelected: selectedTab == AppTab.directory,
                     onTap: () {
-                      onTabChange(0);
+                      _selectTab(ref, AppTab.directory);
                       Navigator.pop(context);
                     },
                     iconScale: iconScale,
@@ -205,9 +208,9 @@ class AppNavigationDrawer extends ConsumerWidget {
                     theme: theme,
                     icon: Icons.calendar_today_outlined,
                     text: localizations.dailyLogs,
-                    isSelected: selectedTab == 1,
+                    isSelected: selectedTab == AppTab.dailyLog,
                     onTap: () {
-                      onTabChange(1);
+                      _selectTab(ref, AppTab.dailyLog);
                       Navigator.pop(context);
                     },
                     iconScale: iconScale,
@@ -218,9 +221,9 @@ class AppNavigationDrawer extends ConsumerWidget {
                     theme: theme,
                     icon: Icons.view_week_outlined,
                     text: localizations.weeklyReport,
-                    isSelected: selectedTab == 2,
+                    isSelected: selectedTab == AppTab.weeklyReport,
                     onTap: () {
-                      onTabChange(2);
+                      _selectTab(ref, AppTab.weeklyReport);
                       Navigator.pop(context);
                     },
                     iconScale: iconScale,
@@ -231,9 +234,9 @@ class AppNavigationDrawer extends ConsumerWidget {
                     theme: theme,
                     icon: Icons.bar_chart_outlined,
                     text: localizations.yearStats,
-                    isSelected: selectedTab == 3,
+                    isSelected: selectedTab == AppTab.yearlyReport,
                     onTap: () {
-                      onTabChange(3);
+                      _selectTab(ref, AppTab.yearlyReport);
                       Navigator.pop(context);
                     },
                     iconScale: iconScale,
@@ -248,7 +251,7 @@ class AppNavigationDrawer extends ConsumerWidget {
               theme: theme,
               icon: Icons.settings_outlined,
               text: localizations.settings,
-              isSelected: selectedTab == 4,
+              isSelected: false,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.of(context).push(

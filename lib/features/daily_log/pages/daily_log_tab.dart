@@ -1,51 +1,155 @@
-import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/shared/navigation/app_routes.dart';
-import 'package:attendly/features/daily_log/models/person_with_categories.dart';
-import 'package:attendly/shared/options/category_label.dart';
-import 'package:attendly/core/responsive/responsive.dart';
-import 'package:attendly/features/daily_log/providers/daily_log_providers.dart';
-import 'package:attendly/data/database/database_provider.dart';
 import 'package:attendly/core/logging/app_logger.dart';
-import 'package:flutter/material.dart';
-import 'package:attendly/shared/dialogs/app_dialogs.dart';
+import 'package:attendly/core/responsive/responsive.dart';
+import 'package:attendly/data/database/database_provider.dart';
+import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
+import 'package:attendly/features/daily_log/models/category_record.dart';
+import 'package:attendly/features/daily_log/models/person_with_categories.dart';
 import 'package:attendly/features/daily_log/pages/add_daily_entry_page.dart';
 import 'package:attendly/features/daily_log/pages/edit_daily_entry_page.dart';
-import 'package:attendly/features/daily_log/models/category_record.dart';
-import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
-import 'package:attendly/app/shell/app_navigation_drawer.dart';
-import 'package:attendly/shared/options/category_option.dart';
+import 'package:attendly/features/daily_log/providers/daily_log_providers.dart';
 import 'package:attendly/l10n/app_localizations.dart';
+import 'package:attendly/shared/dialogs/app_dialogs.dart';
+import 'package:attendly/shared/navigation/app_routes.dart';
+import 'package:attendly/shared/options/category_label.dart';
+import 'package:attendly/shared/options/category_option.dart';
+import 'package:attendly/shared/shell/shell_tab.dart';
+import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DailyLogTab extends ConsumerStatefulWidget {
-  final int selectedTab;
-  final void Function(int) onTabChange;
+/// Daily attendance: entries of one day, grouped by person, with an edit
+/// mode for bulk actions.
+class DailyLogTab extends ShellTab {
+  const DailyLogTab();
 
-  const DailyLogTab({
-    super.key,
-    required this.selectedTab,
-    required this.onTabChange,
-  });
-
-  @override
-  ConsumerState<DailyLogTab> createState() => _DailyLogTabState();
-}
-
-class _DailyLogTabState extends ConsumerState<DailyLogTab> {
-  final AppDialogs _helper = AppDialogs();
-  bool _isManualRefreshing = false;
-
-  void refreshDailyEntries() {
-    ref.invalidate(dailyRawLogsProvider);
-  }
-
-  void _toggleEditMode() {
+  static void _toggleEditMode(WidgetRef ref) {
     final isEditing = ref.read(dailyEditModeProvider);
     ref.read(dailyEditModeProvider.notifier).state = !isEditing;
     if (isEditing) {
       ref.read(dailySelectedPeopleProvider.notifier).state = {};
     }
   }
+
+  static void _selectAll(WidgetRef ref, List<PersonWithCategories> visiblePeople) {
+    final currentSet = ref.read(dailySelectedPeopleProvider);
+    if (currentSet.length == visiblePeople.length) {
+      ref.read(dailySelectedPeopleProvider.notifier).state = {};
+    } else {
+      ref.read(dailySelectedPeopleProvider.notifier).state = Set.from(visiblePeople);
+    }
+  }
+
+  @override
+  PreferredSizeWidget buildAppBar(BuildContext context, WidgetRef ref) {
+    final asyncFilteredData = ref.watch(dailyFilteredLogsProvider);
+    final isEditMode = ref.watch(dailyEditModeProvider);
+    final responsive = Responsive.of(context);
+
+    // Grab the list if available to check lengths
+    final visiblePeople = asyncFilteredData.valueOrNull ?? [];
+
+    return RefreshableAppBar(
+      title: AppLocalizations.of(context).dailyLogs,
+      showRefresh: true,
+      isLoading:
+          asyncFilteredData.isLoading ||
+          asyncFilteredData.isRefreshing ||
+          asyncFilteredData.isReloading,
+      onRefresh: () {
+        AppLogger.d("Daily", "Invalidating daily stream");
+        ref.invalidate(dailyRawLogsProvider);
+      },
+      leading:
+          isEditMode
+              ? IconButton(
+                icon: Icon(Icons.close, size: responsive.iconSize()),
+                onPressed: () => _toggleEditMode(ref),
+              )
+              : DrawerMenuButton.forShell(context),
+      actions: [
+        if (!isEditMode)
+          IconButton(
+            icon: Icon(Icons.edit, size: responsive.iconSize(baseSize: 30)),
+            onPressed: visiblePeople.isEmpty ? null : () => _toggleEditMode(ref),
+          ),
+        if (isEditMode)
+          IconButton(
+            icon: Icon(
+              Icons.select_all,
+              size: responsive.iconSize(baseSize: 28),
+            ),
+            onPressed: visiblePeople.isEmpty ? null : () => _selectAll(ref, visiblePeople),
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget buildBody(BuildContext context, WidgetRef ref) => const _DailyLogBody();
+
+  @override
+  Widget? buildFab(BuildContext context, WidgetRef ref) {
+    if (ref.watch(dailyEditModeProvider)) return null;
+    final responsive = Responsive.of(context);
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        SizedBox(
+          width: responsive.buttonHeight + 10,
+          height: responsive.buttonHeight + 10,
+          child: FloatingActionButton(
+            heroTag: 'search_fab',
+            onPressed: () => _openSearch(context, ref),
+            child: Icon(
+              Icons.search,
+              size: responsive.iconSize(baseSize: 30),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: responsive.buttonHeight + 25,
+          height: responsive.buttonHeight + 25,
+          child: FloatingActionButton(
+            heroTag: 'add_fab',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => AddDailyEntryPage(initialDate: ref.read(dailyDateProvider)),
+              ),
+            ),
+            child: Icon(
+              Icons.add,
+              size: responsive.iconSize(baseSize: 35),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget? buildBottomBar(BuildContext context, WidgetRef ref) {
+    return ref.watch(dailyEditModeProvider) ? const _EditModeActions() : null;
+  }
+
+  Future<void> _openSearch(BuildContext context, WidgetRef ref) async {
+    final selectedDate = await Navigator.of(context).pushNamed<DateTime>(AppRoutes.dailyLogSearch);
+    if (selectedDate != null && context.mounted) {
+      ref.read(dailyDateProvider.notifier).state = selectedDate;
+    }
+  }
+}
+
+class _DailyLogBody extends ConsumerStatefulWidget {
+  const _DailyLogBody();
+
+  @override
+  ConsumerState<_DailyLogBody> createState() => _DailyLogBodyState();
+}
+
+class _DailyLogBodyState extends ConsumerState<_DailyLogBody> {
+  final AppDialogs _helper = AppDialogs();
 
   void _toggleSelection(PersonWithCategories person) {
     final currentSet = ref.read(dailySelectedPeopleProvider);
@@ -58,15 +162,6 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
     ref.read(dailySelectedPeopleProvider.notifier).state = newSet;
   }
 
-  void _selectAll(List<PersonWithCategories> visiblePeople) {
-    final currentSet = ref.read(dailySelectedPeopleProvider);
-    if (currentSet.length == visiblePeople.length) {
-      ref.read(dailySelectedPeopleProvider.notifier).state = {};
-    } else {
-      ref.read(dailySelectedPeopleProvider.notifier).state = Set.from(visiblePeople);
-    }
-  }
-
   Future<void> _selectDate() async {
     final currentDate = ref.read(dailyDateProvider);
     final DateTime? picked = await showDatePicker(
@@ -77,74 +172,9 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
       keyboardType: const TextInputType.numberWithOptions(),
     );
 
-    if (picked != null && picked != currentDate) {
+    if (picked != null && picked != currentDate && mounted) {
       ref.read(dailyDateProvider.notifier).state = picked;
-      if (ref.read(dailyEditModeProvider)) _toggleEditMode();
-    }
-  }
-
-  Future<void> _onFabPressed(BuildContext context) async {
-    final currentDate = ref.read(dailyDateProvider);
-
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AddDailyEntryPage(initialDate: currentDate),
-      ),
-    );
-  }
-
-  Future<void> _onSearchFabPressed() async {
-    final selectedDate = await Navigator.of(context).pushNamed<DateTime>(AppRoutes.dailyLogSearch);
-    if (selectedDate != null) {
-      ref.read(dailyDateProvider.notifier).state = selectedDate;
-    }
-  }
-
-  Future<void> _onBulkAddCategory() async {
-    final selectedSet = ref.read(dailySelectedPeopleProvider);
-    final date = ref.read(dailyDateProvider);
-    final selectedList = selectedSet.map((p) => {'id': p.personId, 'name': p.name}).toList();
-
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder:
-            (context) => AddDailyEntryPage(
-              initialDate: date,
-              preselectedPersons: selectedList,
-            ),
-      ),
-    );
-
-    if (result == true) {
-      _toggleEditMode();
-    }
-  }
-
-  Future<void> _onBulkDelete() async {
-    final localizations = AppLocalizations.of(context);
-    final selectedSet = ref.read(dailySelectedPeopleProvider);
-    final count = selectedSet.length;
-    final date = ref.read(dailyDateProvider);
-    final repo = ref.read(dailyRepositoryProvider);
-
-    final confirm = await _helper.displayDialog(
-      context,
-      localizations.delete,
-      localizations.confirmBulkDelete(count),
-      localizations,
-    );
-    if (confirm != true) return;
-
-    try {
-      _helper.showLoadingDialog(context, localizations.delete);
-      final personIds = selectedSet.map((p) => p.personId).toList();
-      await repo.bulkDeleteEntries(personIds, date);
-      if (mounted) _helper.hideLoadingDialog(context);
-      await _helper.showSubmitMessage(context, localizations.peopleEntriesDeleted(count));
-      _toggleEditMode();
-    } catch (e, stackTrace) {
-      if (mounted) _helper.hideLoadingDialog(context);
-      _helper.showErrorMessage(context, 'Failed to delete entries: $e', stackTrace: stackTrace);
+      if (ref.read(dailyEditModeProvider)) DailyLogTab._toggleEditMode(ref);
     }
   }
 
@@ -163,7 +193,7 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
       localizations,
     );
 
-    if (confirm == true) {
+    if (confirm == true && mounted) {
       try {
         _helper.showLoadingDialog(context, localizations.delete);
         await repo.deleteDailyEntry(record.recordId, record.personId, DateTime.parse(record.date));
@@ -172,7 +202,8 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
           await _helper.showSubmitMessage(context, localizations.recordDeleted);
         }
       } catch (e) {
-        if (mounted) _helper.hideLoadingDialog(context);
+        if (!mounted) return;
+        _helper.hideLoadingDialog(context);
         _helper.showErrorMessage(context, e.toString());
       }
     }
@@ -180,8 +211,8 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final responsive = Responsive.of(context);
 
     // Watch state
     final asyncFilteredData = ref.watch(dailyFilteredLogsProvider);
@@ -202,206 +233,167 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
     final todayDateOnly = DateTime(now.year, now.month, now.day);
     final selectedDateOnly = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
     final isTodayOrFuture = !selectedDateOnly.isBefore(todayDateOnly);
-    final arrowIconSize = Responsive.of(context).iconSize(baseSize: 30);
-    final appBarIconSize = Responsive.of(context).iconSize();
+    final arrowIconSize = responsive.iconSize(baseSize: 30);
 
-    // Grab the list if available to check lengths
-    final visiblePeople = asyncFilteredData.valueOrNull ?? [];
-
-    return Scaffold(
-      drawer:
-          Responsive.of(context).isTablet
-              ? null
-              : AppNavigationDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
-      appBar: RefreshableAppBar(
-        title: localizations.dailyLogs,
-        showRefresh: true,
-        isLoading:
-            asyncFilteredData.isLoading ||
-            asyncFilteredData.isRefreshing ||
-            asyncFilteredData.isReloading ||
-            _isManualRefreshing,
-        onRefresh: () async {
-          setState(() => _isManualRefreshing = true);
-
-          AppLogger.d("Daily", "Invalidating daily stream");
-          refreshDailyEntries();
-
-          await Future.delayed(const Duration(milliseconds: 400));
-          if (mounted) setState(() => _isManualRefreshing = false);
-        },
-        leading:
-            isEditMode
-                ? IconButton(
-                  icon: Icon(Icons.close, size: appBarIconSize),
-                  onPressed: _toggleEditMode,
-                )
-                : Responsive.of(context).isTablet
-                ? null
-                : Builder(
-                  builder:
-                      (context) => IconButton(
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                        icon: Icon(
-                          Icons.menu,
-                          size: Responsive.of(context).iconSize(baseSize: 35),
-                        ),
-                      ),
-                ),
-        actions: [
-          if (!isEditMode)
-            IconButton(
-              icon: Icon(Icons.edit, size: Responsive.of(context).iconSize(baseSize: 30)),
-              onPressed: visiblePeople.isEmpty ? null : _toggleEditMode,
+    return Center(
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.listPadding.horizontal,
+              vertical: responsive.listPadding.vertical,
             ),
-          if (isEditMode)
-            IconButton(
-              icon: Icon(
-                Icons.select_all,
-                size: Responsive.of(context).iconSize(baseSize: 28),
-              ),
-              onPressed: visiblePeople.isEmpty ? null : () => _selectAll(visiblePeople),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: Responsive.of(context).listPadding.horizontal,
-                  vertical: Responsive.of(context).listPadding.vertical,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton(
+                  onPressed:
+                      () =>
+                          ref.read(dailyDateProvider.notifier).state = selectedDate.subtract(
+                            const Duration(days: 1),
+                          ),
+                  icon: Icon(Icons.arrow_back_ios_sharp, color: theme.iconTheme.color),
+                  iconSize: arrowIconSize,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    IconButton(
-                      onPressed:
-                          () =>
-                              ref.read(dailyDateProvider.notifier).state = selectedDate.subtract(
+                GestureDetector(
+                  onTap: _selectDate,
+                  child: Text(
+                    "${selectedDate.day}.${selectedDate.month}.${selectedDate.year}",
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: responsive.titleFontSize,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed:
+                      isTodayOrFuture
+                          ? null
+                          : () =>
+                              ref.read(dailyDateProvider.notifier).state = selectedDate.add(
                                 const Duration(days: 1),
                               ),
-                      icon: Icon(Icons.arrow_back_ios_sharp, color: theme.iconTheme.color),
-                      iconSize: arrowIconSize,
-                    ),
-                    GestureDetector(
-                      onTap: _selectDate,
-                      child: Text(
-                        "${selectedDate.day}.${selectedDate.month}.${selectedDate.year}",
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: Responsive.of(context).titleFontSize,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed:
-                          isTodayOrFuture
-                              ? null
-                              : () =>
-                                  ref.read(dailyDateProvider.notifier).state = selectedDate.add(
-                                    const Duration(days: 1),
-                                  ),
-                      icon: Icon(
-                        Icons.arrow_forward_ios_sharp,
-                        color: isTodayOrFuture ? theme.disabledColor : theme.iconTheme.color,
-                      ),
-                      iconSize: arrowIconSize,
-                    ),
-                  ],
+                  icon: Icon(
+                    Icons.arrow_forward_ios_sharp,
+                    color: isTodayOrFuture ? theme.disabledColor : theme.iconTheme.color,
+                  ),
+                  iconSize: arrowIconSize,
                 ),
-              ),
-              const _FilterSection(),
-              Expanded(
-                child: asyncFilteredData.when(
-                  skipLoadingOnReload: true,
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stacktrace) {
-                    if (error is custom_db_exceptions.DatabaseNotReadyException) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    ); // MyApp handles redirect
-                  },
-                  data:
-                      (people) => _PersonList(
-                        people: people,
-                        isEditMode: isEditMode,
-                        selectedPeople: selectedPeople,
-                        onToggleSelection: _toggleSelection,
-                        onAddCategory: (person) async {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (ctx) => AddDailyEntryPage(
-                                    initialDate: selectedDate,
-                                    preselectedPersons: [
-                                      {'id': person.personId, 'name': person.name},
-                                    ],
-                                  ),
-                            ),
-                          );
-                        },
-                        onEditCategory: (record) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (ctx) =>
-                                      EditDailyEntryPage(record: record),
-                            ),
-                          );
-                        },
-                        onDeleteCategory: _deleteCategory,
-                      ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const _FilterSection(),
+          Expanded(
+            child: asyncFilteredData.when(
+              skipLoadingOnReload: true,
+              loading: () => const Center(child: CircularProgressIndicator()),
+              // Errors are reported to the startup gate by the listener above.
+              error: (error, stacktrace) => const Center(child: CircularProgressIndicator()),
+              data:
+                  (people) => _PersonList(
+                    people: people,
+                    isEditMode: isEditMode,
+                    selectedPeople: selectedPeople,
+                    onToggleSelection: _toggleSelection,
+                    onAddCategory: (person) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (ctx) => AddDailyEntryPage(
+                                initialDate: selectedDate,
+                                preselectedPersons: [
+                                  {'id': person.personId, 'name': person.name},
+                                ],
+                              ),
+                        ),
+                      );
+                    },
+                    onEditCategory: (record) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (ctx) => EditDailyEntryPage(record: record),
+                        ),
+                      );
+                    },
+                    onDeleteCategory: _deleteCategory,
+                  ),
+            ),
+          ),
+        ],
       ),
-      floatingActionButton:
-          isEditMode
-              ? null
-              : Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  SizedBox(
-                    width: Responsive.of(context).buttonHeight + 10,
-                    height: Responsive.of(context).buttonHeight + 10,
-                    child: FloatingActionButton(
-                      heroTag: 'search_fab',
-                      onPressed: _onSearchFabPressed,
-                      child: Icon(
-                        Icons.search,
-                        size: Responsive.of(context).iconSize(baseSize: 30),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: Responsive.of(context).buttonHeight + 25,
-                    height: Responsive.of(context).buttonHeight + 25,
-                    child: FloatingActionButton(
-                      heroTag: 'add_fab',
-                      onPressed: () => _onFabPressed(context),
-                      child: Icon(
-                        Icons.add,
-                        size: Responsive.of(context).iconSize(baseSize: 35),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-      bottomNavigationBar: isEditMode ? _buildEditModeActions(selectedPeople.length) : null,
     );
   }
+}
 
-  Widget _buildEditModeActions(int selectedCount) {
+/// Bottom bar in edit mode: add a category to, or delete the entries of, the
+/// selected people.
+class _EditModeActions extends ConsumerStatefulWidget {
+  const _EditModeActions();
+
+  @override
+  ConsumerState<_EditModeActions> createState() => _EditModeActionsState();
+}
+
+class _EditModeActionsState extends ConsumerState<_EditModeActions> {
+  final AppDialogs _helper = AppDialogs();
+
+  Future<void> _onBulkAddCategory() async {
+    final selectedSet = ref.read(dailySelectedPeopleProvider);
+    final date = ref.read(dailyDateProvider);
+    final selectedList = selectedSet.map((p) => {'id': p.personId, 'name': p.name}).toList();
+
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder:
+            (context) => AddDailyEntryPage(
+              initialDate: date,
+              preselectedPersons: selectedList,
+            ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      DailyLogTab._toggleEditMode(ref);
+    }
+  }
+
+  Future<void> _onBulkDelete() async {
     final localizations = AppLocalizations.of(context);
+    final selectedSet = ref.read(dailySelectedPeopleProvider);
+    final count = selectedSet.length;
+    final date = ref.read(dailyDateProvider);
+    final repo = ref.read(dailyRepositoryProvider);
+
+    final confirm = await _helper.displayDialog(
+      context,
+      localizations.delete,
+      localizations.confirmBulkDelete(count),
+      localizations,
+    );
+    if (confirm != true || !mounted) return;
+
+    try {
+      _helper.showLoadingDialog(context, localizations.delete);
+      final personIds = selectedSet.map((p) => p.personId).toList();
+      await repo.bulkDeleteEntries(personIds, date);
+      if (!mounted) return;
+      _helper.hideLoadingDialog(context);
+      await _helper.showSubmitMessage(context, localizations.peopleEntriesDeleted(count));
+      if (mounted) DailyLogTab._toggleEditMode(ref);
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+      _helper.hideLoadingDialog(context);
+      _helper.showErrorMessage(context, 'Failed to delete entries: $e', stackTrace: stackTrace);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final responsive = Responsive.of(context);
+    final selectedCount = ref.watch(dailySelectedPeopleProvider).length;
     final hasSelection = selectedCount > 0;
 
     return BottomAppBar(
@@ -409,18 +401,18 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           TextButton.icon(
-            icon: Icon(Icons.add_task, size: Responsive.of(context).iconSize()),
+            icon: Icon(Icons.add_task, size: responsive.iconSize()),
             label: Text(
               localizations.addCategory,
-              style: TextStyle(fontSize: Responsive.of(context).smallFontSize),
+              style: TextStyle(fontSize: responsive.smallFontSize),
             ),
             onPressed: hasSelection ? _onBulkAddCategory : null,
           ),
           TextButton.icon(
-            icon: Icon(Icons.delete_sweep, size: Responsive.of(context).iconSize()),
+            icon: Icon(Icons.delete_sweep, size: responsive.iconSize()),
             label: Text(
               '${localizations.delete} ($selectedCount)',
-              style: TextStyle(fontSize: Responsive.of(context).smallFontSize),
+              style: TextStyle(fontSize: responsive.smallFontSize),
             ),
             onPressed: hasSelection ? _onBulkDelete : null,
             style: TextButton.styleFrom(foregroundColor: hasSelection ? Colors.red : Colors.grey),

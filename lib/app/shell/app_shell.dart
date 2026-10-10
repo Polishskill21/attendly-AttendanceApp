@@ -1,46 +1,27 @@
+import 'package:attendly/app/shell/app_navigation_drawer.dart';
+import 'package:attendly/app/shell/app_tab.dart';
+import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/features/daily_log/pages/daily_log_tab.dart';
 import 'package:attendly/features/directory/pages/directory_tab.dart';
 import 'package:attendly/features/weekly_report/pages/weekly_report_tab.dart';
 import 'package:attendly/features/yearly_report/pages/yearly_report_tab.dart';
-import 'package:attendly/core/responsive/responsive.dart';
-import 'package:attendly/app/shell/app_navigation_drawer.dart';
+import 'package:attendly/shared/shell/shell_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AppShell extends StatefulWidget {
-  
+/// The only Scaffold of the tabs: drawer on phones, rail and drawer on
+/// tablets. The selected tab provides the app bar, body, FAB and bottom bar.
+class AppShell extends ConsumerWidget {
   const AppShell({super.key});
 
-  @override
-  State<StatefulWidget> createState() => _AppShellState();
-}
+  static ShellTab _tabFor(AppTab tab) => switch (tab) {
+        AppTab.directory => const DirectoryTab(),
+        AppTab.dailyLog => const DailyLogTab(),
+        AppTab.weeklyReport => const WeeklyReportTab(),
+        AppTab.yearlyReport => const YearlyReportTab(),
+      };
 
-class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
-  int _selectedTab = -1;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-
-    // After the first frame, switch from empty to the real page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _selectedTab = 0);
-    });
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  void _onTabChange(int index) {
-    if (index == _selectedTab) return;
-
-    setState(() => _selectedTab = index);
-  }
-
-  Widget _switcherTransition(Widget child, Animation<double> animation) {
+  static Widget _switcherTransition(Widget child, Animation<double> animation) {
     final fade = CurvedAnimation(
       parent: animation,
       curve: Curves.easeInOut,
@@ -63,44 +44,17 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isTablet = Responsive.of(context).isTablet;
-    if (isTablet) {
-      return _buildTabletLayout();
-    } else {
-      return _buildPhoneLayout();
-    }
-  }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(selectedTabProvider);
+    final tab = _tabFor(selected);
 
-  Widget _buildPhoneLayout() {
-    return Scaffold(
-      drawer: AppNavigationDrawer(
-          selectedTab: _selectedTab, onTabChange: _onTabChange),
-      body: SafeArea(child: _animatedBody()),
-    );
-  }
- 
-  Widget _buildTabletLayout() {
-    return Scaffold(
-      drawer: AppNavigationDrawer(
-          selectedTab: _selectedTab, onTabChange: _onTabChange),
-      body: SafeArea(
-        child: Row(
-          children: [
-            AppNavigationDrawer(
-                selectedTab: _selectedTab,
-                onTabChange: _onTabChange,
-                isRailMode: true),
-            const VerticalDivider(width: 1, thickness: 1),
-            Expanded(child: _animatedBody()),
-          ],
-        ),
-      ),
-    );
-  }
- 
-  Widget _animatedBody() {
-    return AnimatedSwitcher(
+    final appBar = tab.buildAppBar(context, ref);
+    final fab = tab.buildFab(context, ref);
+    final bottomBar = tab.buildBottomBar(context, ref);
+
+    // AnimatedSwitcher instead of IndexedStack: only the visible tab stays
+    // mounted, so the streams of the other tabs are released.
+    final body = AnimatedSwitcher(
       duration: const Duration(milliseconds: 550),
       switchInCurve: Curves.easeInOut,
       switchOutCurve: Curves.easeInOut,
@@ -109,36 +63,43 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         children: [...previousChildren, if (currentChild != null) currentChild],
       ),
       transitionBuilder: _switcherTransition,
-      child: _buildPageForTab(_selectedTab),
+      child: KeyedSubtree(
+        key: ValueKey(selected),
+        child: tab.buildBody(context, ref),
+      ),
     );
-  }
 
-  Widget _buildPageForTab(int tabIndex) {
-    switch (tabIndex) {
-      case -1: // Add this case
-        return Container(key: const ValueKey('initial_empty'));
-      case 0:
-        return DirectoryTab(
-          selectedTab: _selectedTab,
-          onTabChange: _onTabChange,
-        );
-      case 1:
-        return DailyLogTab(
-          selectedTab: _selectedTab,
-          onTabChange: _onTabChange,
-        );
-      case 2:
-        return WeeklyReportTab(
-          selectedTab: _selectedTab,
-          onTabChange: _onTabChange,
-        );
-      case 3:
-        return YearlyReportTab(
-          selectedTab: _selectedTab,
-          onTabChange: _onTabChange,
-        );
-      default:
-        return Container(key: ValueKey('empty_$tabIndex'));
+    if (Responsive.of(context).isTablet) {
+      // The app bar and bottom bar sit next to the rail, as before.
+      return Scaffold(
+        drawer: const AppNavigationDrawer(),
+        floatingActionButton: fab,
+        body: SafeArea(
+          child: Row(
+            children: [
+              const AppNavigationDrawer(isRailMode: true),
+              const VerticalDivider(width: 1, thickness: 1),
+              Expanded(
+                child: Column(
+                  children: [
+                    appBar,
+                    Expanded(child: body),
+                    if (bottomBar != null) bottomBar,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
+
+    return Scaffold(
+      drawer: const AppNavigationDrawer(),
+      appBar: appBar,
+      body: SafeArea(child: body),
+      floatingActionButton: fab,
+      bottomNavigationBar: bottomBar,
+    );
   }
 }

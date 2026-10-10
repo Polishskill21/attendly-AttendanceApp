@@ -4,35 +4,46 @@ import 'package:attendly/data/database/database_provider.dart';
 import 'package:attendly/features/yearly_report/providers/yearly_report_providers.dart';
 import 'package:attendly/core/logging/app_logger.dart';
 import 'package:flutter/material.dart';
-import 'package:attendly/app/shell/app_navigation_drawer.dart';
+import 'package:attendly/shared/shell/shell_tab.dart';
 import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
-import 'package:attendly/shared/widgets/chart_dialog.dart'; 
+import 'package:attendly/shared/widgets/chart_dialog.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class YearlyReportTab extends ConsumerStatefulWidget {
-  final int selectedTab;
-  final void Function(int) onTabChange;
-
-  const YearlyReportTab({
-    super.key,
-    required this.selectedTab,
-    required this.onTabChange,
-  });
+/// Totals and weekly averages over all countable weeks of the year.
+class YearlyReportTab extends ShellTab {
+  const YearlyReportTab();
 
   @override
-  ConsumerState<YearlyReportTab> createState() => _YearlyReportTabState();
-}
+  PreferredSizeWidget buildAppBar(BuildContext context, WidgetRef ref) {
+    final asyncStats = ref.watch(yearlyStatsProvider);
 
-class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
-  bool _isManualRefreshing = false;
-
-  @override
-  void initState() {
-    super.initState();
+    return RefreshableAppBar(
+      title: AppLocalizations.of(context).yearlyStats,
+      showRefresh: true,
+      isLoading: asyncStats.isLoading ||
+                 asyncStats.isReloading,
+      onRefresh: () {
+        AppLogger.d("Yearly", "Invalidating yearly stream");
+        ref.invalidate(yearlyStatsProvider);
+      },
+      leading: DrawerMenuButton.forShell(context),
+    );
   }
 
+  @override
+  Widget buildBody(BuildContext context, WidgetRef ref) => const _YearlyReportBody();
+}
+
+class _YearlyReportBody extends ConsumerStatefulWidget {
+  const _YearlyReportBody();
+
+  @override
+  ConsumerState<_YearlyReportBody> createState() => _YearlyReportBodyState();
+}
+
+class _YearlyReportBodyState extends ConsumerState<_YearlyReportBody> {
   void fetchYearStats() {
     ref.invalidate(yearlyStatsProvider);
   }
@@ -42,52 +53,20 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
     final localizations = AppLocalizations.of(context);
     final asyncStats = ref.watch(yearlyStatsProvider);
 
-    return Scaffold(
-      drawer: Responsive.of(context).isTablet
-          ? null
-          : AppNavigationDrawer(
-              selectedTab: widget.selectedTab,
-              onTabChange: widget.onTabChange,
+    return asyncStats.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => _buildErrorState(error, stack),
+      data: (statsModel) {
+        if (statsModel == null) {
+          return Center(
+            child: Text(
+              localizations.noDataForThisYear,
+              style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
             ),
-      appBar: RefreshableAppBar(
-        title: localizations.yearlyStats,
-        showRefresh: true,
-        isLoading: asyncStats.isLoading || 
-                   asyncStats.isReloading || 
-                   _isManualRefreshing, 
-        onRefresh: () async {
-          setState(() => _isManualRefreshing = true);
-          AppLogger.d("Yearly", "Invalidating yearly stream");
-          fetchYearStats(); 
-
-          await Future.delayed(const Duration(milliseconds: 400));
-          if (mounted) setState(() => _isManualRefreshing = false);
-        },
-        leading: Responsive.of(context).isTablet
-            ? null
-            : Builder(
-                builder: (context) => IconButton(
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                  icon: Icon(Icons.menu,
-                      size: Responsive.of(context).iconSize(baseSize: 35)),
-                ),
-              ),
-      ),
-      body: asyncStats.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildErrorState(error, stack),
-        data: (statsModel) {
-          if (statsModel == null) {
-            return Center(
-              child: Text(
-                localizations.noDataForThisYear,
-                style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
-              ),
-            );
-          }
-          return _buildReportView(statsModel);
-        },
-      ),
+          );
+        }
+        return _buildReportView(statsModel);
+      },
     );
   }
 

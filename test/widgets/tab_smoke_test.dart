@@ -1,9 +1,8 @@
+import 'package:attendly/app/shell/app_shell.dart';
+import 'package:attendly/app/shell/app_tab.dart';
 import 'package:attendly/data/database/app_database.dart';
-import 'package:attendly/features/daily_log/pages/daily_log_tab.dart';
-import 'package:attendly/features/directory/pages/directory_tab.dart';
-import 'package:attendly/features/weekly_report/pages/weekly_report_tab.dart';
-import 'package:attendly/features/yearly_report/pages/yearly_report_tab.dart';
 import 'package:attendly/l10n/app_en.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/pump_app.dart';
@@ -16,52 +15,75 @@ void main() {
   setUp(() => db = createTestDatabase());
   tearDown(() => db.close());
 
+  /// Pumps the shell on [tab], as a phone unless [tablet].
+  Future<void> pumpShell(WidgetTester tester, AppTab tab, {bool tablet = false}) async {
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = tablet ? const Size(1280, 800) : const Size(580, 1000);
+    addTearDown(tester.view.reset);
+
+    await pumpWithDatabase(
+      tester,
+      const AppShell(),
+      db: db,
+      overrides: [selectedTabProvider.overrideWith((ref) => tab)],
+    );
+  }
+
   group('Tab smoke tests (empty database)', () {
-    testWidgets('directory tab shows title and empty state', (tester) async {
-      await pumpWithDatabase(
-        tester,
-        DirectoryTab(selectedTab: 0, onTabChange: (_) {}),
-        db: db,
-      );
+    final emptyStates = {
+      AppTab.directory: (l10n.directory, l10n.noPersonFound),
+      AppTab.dailyLog: (l10n.dailyLogs, l10n.noEntriesForThisDay),
+      AppTab.weeklyReport: (l10n.weeklyReport, l10n.noDataForThisWeek),
+      AppTab.yearlyReport: (l10n.yearlyStats, l10n.noDataForThisYear),
+    };
 
-      expect(find.text(l10n.directory), findsOneWidget);
-      expect(find.text(l10n.noPersonFound), findsOneWidget);
-      await unmount(tester);
-    });
+    for (final MapEntry(key: tab, value: (title, emptyText)) in emptyStates.entries) {
+      testWidgets('${tab.name} tab shows title and empty state', (tester) async {
+        await pumpShell(tester, tab);
 
-    testWidgets('daily log tab shows title and empty state', (tester) async {
-      await pumpWithDatabase(
-        tester,
-        DailyLogTab(selectedTab: 1, onTabChange: (_) {}),
-        db: db,
-      );
+        expect(find.text(title), findsOneWidget);
+        expect(find.text(emptyText), findsOneWidget);
+        await unmount(tester);
+      });
 
-      expect(find.text(l10n.dailyLogs), findsOneWidget);
-      expect(find.text(l10n.noEntriesForThisDay), findsOneWidget);
-      await unmount(tester);
-    });
+      testWidgets('${tab.name} tab has exactly one Scaffold and one drawer on a phone',
+          (tester) async {
+        await pumpShell(tester, tab);
 
-    testWidgets('weekly report tab shows title and empty state', (tester) async {
-      await pumpWithDatabase(
-        tester,
-        WeeklyReportTab(selectedTab: 2, onTabChange: (_) {}),
-        db: db,
-      );
+        expect(find.byType(Scaffold), findsOneWidget);
+        await tester.tap(find.byIcon(Icons.menu));
+        await tester.pumpAndSettle();
+        expect(find.byType(Drawer), findsOneWidget);
+        await unmount(tester);
+      });
+    }
+  });
 
-      expect(find.text(l10n.weeklyReport), findsOneWidget);
+  group('Shell', () {
+    testWidgets('choosing a tab in the drawer switches the tab', (tester) async {
+      await pumpShell(tester, AppTab.directory);
+
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+      await tester.tap(find.descendant(of: find.byType(Drawer), matching: find.text(l10n.weeklyReport)));
+      await tester.pumpAndSettle();
+
       expect(find.text(l10n.noDataForThisWeek), findsOneWidget);
+      expect(find.text(l10n.noPersonFound), findsNothing);
       await unmount(tester);
     });
 
-    testWidgets('yearly report tab shows title and empty state', (tester) async {
-      await pumpWithDatabase(
-        tester,
-        YearlyReportTab(selectedTab: 3, onTabChange: (_) {}),
-        db: db,
-      );
+    testWidgets('a tablet shows the rail next to the tab', (tester) async {
+      await pumpShell(tester, AppTab.directory, tablet: true);
 
-      expect(find.text(l10n.yearlyStats), findsOneWidget);
-      expect(find.text(l10n.noDataForThisYear), findsOneWidget);
+      expect(find.byType(NavigationRail), findsOneWidget);
+      expect(find.byType(Scaffold), findsOneWidget);
+      // The only menu button is the rail's, which opens the drawer.
+      expect(find.byIcon(Icons.menu), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.noEntriesForThisDay), findsOneWidget);
       await unmount(tester);
     });
   });
@@ -73,11 +95,7 @@ void main() {
         await addTestPerson(db, 'Ben');
       });
 
-      await pumpWithDatabase(
-        tester,
-        DirectoryTab(selectedTab: 0, onTabChange: (_) {}),
-        db: db,
-      );
+      await pumpShell(tester, AppTab.directory);
 
       expect(find.text('Anna'), findsOneWidget);
       expect(find.text('Ben'), findsOneWidget);

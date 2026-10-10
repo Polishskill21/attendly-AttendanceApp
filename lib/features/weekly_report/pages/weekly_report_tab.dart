@@ -9,163 +9,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
-import 'package:attendly/app/shell/app_navigation_drawer.dart';
+import 'package:attendly/shared/shell/shell_tab.dart';
 import 'package:attendly/shared/widgets/chart_dialog.dart'; 
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 
-class WeeklyReportTab extends ConsumerStatefulWidget {
-  final int selectedTab;
-  final void Function(int) onTabChange;
-
-  const WeeklyReportTab({
-    super.key,
-    required this.selectedTab,
-    required this.onTabChange,
-  });
+/// Weekly totals for one week (Monday to Friday), and the list of all weeks.
+class WeeklyReportTab extends ShellTab {
+  const WeeklyReportTab();
 
   @override
-  ConsumerState<WeeklyReportTab> createState() => _WeeklyReportTabState();
-}
-
-class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
-  late DateTime selectedWeekDate;
-  bool _statusChanged = false;
-  bool _isManualRefreshing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    
-    final dbYear = ref.read(databaseProvider).dbYear;
-    selectedWeekDate = getFirstDateOfWeek(getScopedDate(dbYear: dbYear));
-  }
-
-  void fetchWeekData(DateTime weekDate) {
-    ref.invalidate(weeklyReportProvider(weekDate));
-  }
-
-  Future<void> _selectWeek() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedWeekDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      selectableDayPredicate: (DateTime val) => val.weekday == DateTime.monday,
-      keyboardType: const TextInputType.numberWithOptions(),
-      builder: (context, child) {
-        if (!Responsive.of(context).isTablet || child == null) return child ?? const SizedBox.shrink();
-
-       final mq = MediaQuery.of(context);
-       final currentScale = mq.textScaler.scale(1.0);
-       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
-       
-       return MediaQuery(
-          data: mq.copyWith(
-            textScaler: TextScaler.linear(newScale),
-          ),
-          child: Transform.scale(
-            scale: 1.1,
-            child: child,
-          ),
-        );
-      },
-    );
-
-    if (picked != null && picked != selectedWeekDate) {
-      setState(() => selectedWeekDate = picked);
-    }
-  }
-
-  void _changeWeek(int days) {
-    setState(() => selectedWeekDate = selectedWeekDate.add(Duration(days: days)));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context);
-    final endDate = selectedWeekDate.add(const Duration(days: 4));
-    
-    // Watch the specific week's data
+  PreferredSizeWidget buildAppBar(BuildContext context, WidgetRef ref) {
+    final selectedWeekDate = ref.watch(selectedWeekProvider);
     final asyncWeekData = ref.watch(weeklyReportProvider(selectedWeekDate));
 
-    ref.listen<AsyncValue<WeeklyEntryData?>>(
-      weeklyReportProvider(selectedWeekDate),
-      (previous, next) {
-        if (next is AsyncError) {
-          final error = next.error;
-          if (error != null && error is! custom_db_exceptions.DatabaseNotReadyException) {
-            ref.read(databaseProvider.notifier).reportDatabaseError(error);
-          }
-        }
+    return RefreshableAppBar(
+      title: AppLocalizations.of(context).weeklyReport,
+      showRefresh: true,
+      isLoading: asyncWeekData.isLoading ||
+                 asyncWeekData.isReloading,
+      onRefresh: () {
+        AppLogger.d("Weekly", "Invalidating weekly stream");
+        ref.invalidate(weeklyReportProvider(selectedWeekDate));
       },
+      leading: DrawerMenuButton.forShell(context),
+      actions: [_buildStatusWidget(context, asyncWeekData)],
     );
+  }
 
-    return Scaffold(
-      drawer: Responsive.of(context).isTablet
-          ? null
-          : AppNavigationDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
-      appBar: RefreshableAppBar(
-        title: localizations.weeklyReport,
-        showRefresh: true,
-        isLoading: asyncWeekData.isLoading || 
-                   asyncWeekData.isReloading || 
-                   _isManualRefreshing,
-        onRefresh: () async {
-          setState(() => _isManualRefreshing = true);
-          AppLogger.d("Weekly", "Invalidating weekly stream");
-          fetchWeekData(selectedWeekDate); 
+  @override
+  Widget buildBody(BuildContext context, WidgetRef ref) => const _WeeklyReportBody();
 
-          await Future.delayed(const Duration(milliseconds: 400));
-          if (mounted) setState(() => _isManualRefreshing = false);
-        },
-        leading: Responsive.of(context).isTablet
-            ? null
-            : Builder(
-                builder: (context) => IconButton(
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                  icon: Icon(Icons.menu, size: Responsive.of(context).iconSize(baseSize: 35)),
-                ),
-              ),
-        actions: [_buildStatusWidget(asyncWeekData)],
-      ),
-      body: Column(
-        children: [
-          _buildWeekSelector(endDate),
-          Expanded(
-            child: asyncWeekData.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) {
-                if (error is custom_db_exceptions.DatabaseNotReadyException) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                return const Center(child: CircularProgressIndicator());
-              },
-              data: (weekData) => weekData == null
-                  ? Center(
-                      child: Text(
-                        localizations.noDataForThisWeek,
-                        style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
-                      )
-                    )
-                  : _buildReportView(weekData),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: SizedBox(
-        width: Responsive.of(context).buttonHeight + 25,
-        height: Responsive.of(context).buttonHeight + 25,
-        child: FloatingActionButton(
-          onPressed: _showWeeksWithData,
-          tooltip: localizations.showWeeksWithDataTooltip,
-          child: Icon(Icons.list_alt, size: Responsive.of(context).iconSize(baseSize: 35)),
-        ),
+  @override
+  Widget buildFab(BuildContext context, WidgetRef ref) {
+    final responsive = Responsive.of(context);
+    return SizedBox(
+      width: responsive.buttonHeight + 25,
+      height: responsive.buttonHeight + 25,
+      child: FloatingActionButton(
+        onPressed: () => _showWeeksWithData(context, ref),
+        tooltip: AppLocalizations.of(context).showWeeksWithDataTooltip,
+        child: Icon(Icons.list_alt, size: responsive.iconSize(baseSize: 35)),
       ),
     );
   }
 
-  Widget _buildStatusWidget(AsyncValue<WeeklyEntryData?> asyncWeekData) {
+  Widget _buildStatusWidget(BuildContext context, AsyncValue<WeeklyEntryData?> asyncWeekData) {
     return asyncWeekData.maybeWhen(
       data: (weekData) {
         if (weekData == null) {
@@ -201,29 +90,121 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
     );
   }
 
-  Future<void> _showWeeksWithData() async {
-    _statusChanged = false;
+  Future<void> _showWeeksWithData(BuildContext context, WidgetRef ref) async {
+    final selectedWeekDate = ref.read(selectedWeekProvider);
+    bool statusChanged = false;
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
         builder: (context) => WeekListPage(
           currentWeekDate: selectedWeekDate,
           onStatusChanged: (DateTime date, bool newStatus) {
-            _statusChanged = true;
+            statusChanged = true;
           },
         ),
       ),
     );
+    if (!context.mounted) return;
 
-    if (result != null && mounted) {
+    if (result != null) {
       final newSelectedDate = DateTime.parse(result['date']);
       if (newSelectedDate != selectedWeekDate) {
-        setState(() => selectedWeekDate = newSelectedDate);
-      } else if (_statusChanged) {
-        fetchWeekData(selectedWeekDate);
+        ref.read(selectedWeekProvider.notifier).state = newSelectedDate;
+      } else if (statusChanged) {
+        ref.invalidate(weeklyReportProvider(selectedWeekDate));
       }
-    } else if (_statusChanged && mounted) {
-      fetchWeekData(selectedWeekDate);
+    } else if (statusChanged) {
+      ref.invalidate(weeklyReportProvider(selectedWeekDate));
     }
+  }
+}
+
+class _WeeklyReportBody extends ConsumerStatefulWidget {
+  const _WeeklyReportBody();
+
+  @override
+  ConsumerState<_WeeklyReportBody> createState() => _WeeklyReportBodyState();
+}
+
+class _WeeklyReportBodyState extends ConsumerState<_WeeklyReportBody> {
+  DateTime get selectedWeekDate => ref.read(selectedWeekProvider);
+
+  Future<void> _selectWeek() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedWeekDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      selectableDayPredicate: (DateTime val) => val.weekday == DateTime.monday,
+      keyboardType: const TextInputType.numberWithOptions(),
+      builder: (context, child) {
+        if (!Responsive.of(context).isTablet || child == null) return child ?? const SizedBox.shrink();
+
+       final mq = MediaQuery.of(context);
+       final currentScale = mq.textScaler.scale(1.0);
+       final newScale = (currentScale * 1.2).clamp(1.0, 1.6);
+       
+       return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(newScale),
+          ),
+          child: Transform.scale(
+            scale: 1.1,
+            child: child,
+          ),
+        );
+      },
+    );
+
+    if (picked != null && picked != selectedWeekDate && mounted) {
+      ref.read(selectedWeekProvider.notifier).state = picked;
+    }
+  }
+
+  void _changeWeek(int days) {
+    ref.read(selectedWeekProvider.notifier).state = selectedWeekDate.add(Duration(days: days));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final selectedWeekDate = ref.watch(selectedWeekProvider);
+    final endDate = selectedWeekDate.add(const Duration(days: 4));
+
+    // Watch the specific week's data
+    final asyncWeekData = ref.watch(weeklyReportProvider(selectedWeekDate));
+
+    ref.listen<AsyncValue<WeeklyEntryData?>>(
+      weeklyReportProvider(selectedWeekDate),
+      (previous, next) {
+        if (next is AsyncError) {
+          final error = next.error;
+          if (error != null && error is! custom_db_exceptions.DatabaseNotReadyException) {
+            ref.read(databaseProvider.notifier).reportDatabaseError(error);
+          }
+        }
+      },
+    );
+
+    return Column(
+      children: [
+        _buildWeekSelector(endDate),
+        Expanded(
+          child: asyncWeekData.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            // Errors are reported to the startup gate by the listener above.
+            error: (error, _) => const Center(child: CircularProgressIndicator()),
+            data: (weekData) => weekData == null
+                ? Center(
+                    child: Text(
+                      localizations.noDataForThisWeek,
+                      style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
+                    )
+                  )
+                : _buildReportView(weekData),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildWeekSelector(DateTime endDate) {
