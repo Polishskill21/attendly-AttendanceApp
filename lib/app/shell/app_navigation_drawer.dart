@@ -400,34 +400,36 @@ class AppNavigationDrawer extends ConsumerWidget {
     final Color defaultIconColor = theme.listTileTheme.iconColor ?? theme.iconTheme.color ?? Colors.grey;
     final isTablet = Responsive.of(context).isTablet;
 
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: isTablet ? 12 : 8, 
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 12 : 8,
         vertical: isTablet ? 6 : 4
       ),
-      decoration: BoxDecoration(
+      // The highlight is a Material, so the ListTile's ink splash stays visible.
+      child: Material(
         color: isSelected ? selectedColor.withValues(alpha: 0.1) : Colors.transparent,
         borderRadius: BorderRadius.circular(isTablet ? 12 : 8),
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: isTablet ? 20 : 16,
-          vertical: isTablet ? 4 : 0,
-        ),
-        leading: Icon(
-          icon,
-          color: isSelected ? selectedColor : defaultIconColor,
-          size: (isTablet ? 32 : 24) * iconScale,
-        ),
-        title: Text(
-          text,
-          style: TextStyle(
-            fontSize: (isTablet ? 18 : 16) * textScale,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? selectedColor : defaultTextColor,
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 20 : 16,
+            vertical: isTablet ? 4 : 0,
           ),
+          leading: Icon(
+            icon,
+            color: isSelected ? selectedColor : defaultIconColor,
+            size: (isTablet ? 32 : 24) * iconScale,
+          ),
+          title: Text(
+            text,
+            style: TextStyle(
+              fontSize: (isTablet ? 18 : 16) * textScale,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? selectedColor : defaultTextColor,
+            ),
+          ),
+          onTap: onTap,
         ),
-        onTap: onTap,
       ),
     );
   }
