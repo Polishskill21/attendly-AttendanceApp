@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 
 void main() async {
@@ -14,16 +13,6 @@ void main() async {
   _installGlobalErrorLogging();
   await _logAppStart();
 
-  if (Platform.isAndroid) {
-    // Check if permission is denied before requesting
-    if (await Permission.storage.isDenied) {
-      await Permission.storage.request();
-      // For Android 10+ (API level 29+)
-      if (await Permission.manageExternalStorage.request().isDenied) {
-        await Permission.manageExternalStorage.request();
-      }
-    }
-  }
   runApp(
     const ProviderScope(
       observers: [LoggingProviderObserver()],
