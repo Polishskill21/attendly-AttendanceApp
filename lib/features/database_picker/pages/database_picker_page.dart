@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:attendly/data/storage/storage_manager.dart';
-import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:attendly/app/startup/splash_screen.dart';
+import 'package:attendly/app/startup/app_startup_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
@@ -33,19 +32,9 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
   }
 
   /// Handles the selection of a database file.
-  void _onFileSelected(BuildContext context, File selectedDb) async {
-    // Close current connection and clear state before switching
-    await ref.read(databaseProvider.notifier).closeDatabase();
-
-    if (!mounted) return;
-
-    // Navigate to splash screen to re-initialize with the new DB
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => SplashScreen(selectedDb: selectedDb),
-      ),
-      (Route<dynamic> route) => false,
-    );
+  /// The startup gate closes this page and shows progress or errors.
+  void _onFileSelected(File selectedDb) {
+    ref.read(appStartupProvider.notifier).openDatabaseFile(selectedDb);
   }
 
   @override
@@ -149,7 +138,7 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
                       color: isCurrentDb ? Colors.grey[600] : null,
                     ),
                   ),
-                  onTap: isCurrentDb ? null : () => _onFileSelected(context, file),
+                  onTap: isCurrentDb ? null : () => _onFileSelected(file),
                 ),
               );
             },

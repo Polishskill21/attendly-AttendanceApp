@@ -5,7 +5,7 @@ import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:attendly/features/settings/pages/settings_page.dart';
-import 'package:attendly/app/startup/splash_screen.dart';
+import 'package:attendly/app/startup/app_startup_notifier.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,20 +23,12 @@ class AppNavigationDrawer extends ConsumerWidget {
     this.isRailMode = false,
   });
 
-  void _handleNewYearBannerTap(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const SplashScreen()),
-      (Route<dynamic> route) => false,
-    );
-  }
-
-  Future<void> _handleReturnToMainDb(BuildContext context, WidgetRef ref) async {
-    await ref.read(databaseProvider.notifier).closeDatabase();
-    if (!context.mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const SplashScreen()),
-      (Route<dynamic> route) => false,
-    );
+  /// Runs the default startup again: the new-year banner leads to the
+  /// rollover question, "return to main database" leaves a picked database.
+  void _openDefaultDatabase(BuildContext context) {
+    ProviderScope.containerOf(context, listen: false)
+        .read(appStartupProvider.notifier)
+        .openDefault();
   }
 
   @override
@@ -78,7 +70,7 @@ class AppNavigationDrawer extends ConsumerWidget {
           ),
           if (appState.showNewYearBanner)
             GestureDetector(
-              onTap: () => _handleNewYearBannerTap(context),
+              onTap: () => _openDefaultDatabase(context),
               child: Container(
                 margin: const EdgeInsets.only(top: 24, bottom: 16),
                 decoration: BoxDecoration(
@@ -151,7 +143,7 @@ class AppNavigationDrawer extends ConsumerWidget {
               ),
               onPressed: () async {
                 if (appState.isTemporaryDb) {
-                  await _handleReturnToMainDb(context, ref);
+                  _openDefaultDatabase(context);
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -277,7 +269,7 @@ class AppNavigationDrawer extends ConsumerWidget {
               onTap: () async {
                 Navigator.pop(context);
                 if (appState.isTemporaryDb) {
-                  await _handleReturnToMainDb(context, ref);
+                  _openDefaultDatabase(context);
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -352,7 +344,7 @@ class AppNavigationDrawer extends ConsumerWidget {
     final textScale = ResponsiveUtils.getTextScaleFactor(context);
     
     return GestureDetector(
-      onTap: () => _handleNewYearBannerTap(context),
+      onTap: () => _openDefaultDatabase(context),
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 16 : 12, 

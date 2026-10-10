@@ -19,44 +19,27 @@ void main() {
       await manager.closeDatabase();
     });
 
-    // hasReportedError, hasSelectedDatabase, rolloverNeeded, initialSetupNeeded -> decision
-    final table = <(bool, bool, bool, bool, StartupDecision)>[
-      (true, false, false, false, StartupDecision.showReportedError),
-      (true, true, true, true, StartupDecision.showReportedError),
-      (false, true, false, false, StartupDecision.openSelectedDatabase),
-      (false, true, true, true, StartupDecision.openSelectedDatabase),
-      (false, false, false, true, StartupDecision.needsSetup),
-      (false, false, true, true, StartupDecision.needsSetup),
-      (false, false, true, false, StartupDecision.askForRollover),
-      (false, false, false, false, StartupDecision.openDefaultDatabase),
+    // rolloverNeeded, initialSetupNeeded -> decision
+    final table = <(bool, bool, StartupDecision)>[
+      (false, true, StartupDecision.needsSetup),
+      (true, true, StartupDecision.needsSetup),
+      (true, false, StartupDecision.askForRollover),
+      (false, false, StartupDecision.openDefaultDatabase),
     ];
 
-    for (final (reported, selected, rollover, setup, expected) in table) {
-      test('reported=$reported selected=$selected rollover=$rollover setup=$setup -> ${expected.name}',
-          () async {
+    for (final (rollover, setup, expected) in table) {
+      test('rollover=$rollover setup=$setup -> ${expected.name}', () async {
         manager
           ..rolloverNeeded = rollover
           ..initialSetupNeeded = setup;
 
-        final decision = await decideStartup(
-          notifier,
-          hasReportedError: reported,
-          hasSelectedDatabase: selected,
-        );
-
-        expect(decision, expected);
+        expect(await decideStartup(notifier), expected);
       });
     }
 
     test('checks the rollover before the first-launch setup', () async {
       await decideStartup(notifier);
       expect(manager.calls, ['checkForYearRollover', 'needsInitialSetup']);
-    });
-
-    test('a reported error or a selected database skips all checks', () async {
-      await decideStartup(notifier, hasReportedError: true);
-      await decideStartup(notifier, hasSelectedDatabase: true);
-      expect(manager.calls, isEmpty);
     });
   });
 

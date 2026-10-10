@@ -9,11 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsService _service;
  
-  SettingsNotifier(this._service) : super(const SettingsState()) {
-    _loadSettings();
-  }
- 
-  Future<void> _loadSettings() async {
+  SettingsNotifier(this._service) : super(const SettingsState());
+
+  /// Reads settings.json. Called by startup once the storage permission is
+  /// granted; until then the defaults (light theme, English) are used.
+  Future<void> load() async {
     try {
       final themeMode = await _service.getThemeMode();
       final locale    = await _service.getLocale();
