@@ -1,25 +1,5 @@
 import 'package:intl/intl.dart';
 
-// DateTime getScopedDate(BuildContext context){
-//   DateTime now = DateTime.now();
-//   final dbYear = context.read<AppState>().dbYear;
-
-//   if (dbYear != null && dbYear < now.year) {
-//     // If DB is from a past year, return Jan 1st of that year.
-//     return DateTime(dbYear, 1, 1);
-//   }
-
-//   // Otherwise, return today's date.
-//   DateTime date = DateTime(now.year, now.month, now.day);
-//   return date;
-// }
-
-// DateTime getPreviousDate(BuildContext context){
-//   DateTime current = getScopedDate(context);
-//   DateTime previous = current.subtract(const Duration(days: 1));
-//   return previous;
-// }
-//
 DateTime getScopedDate({int? dbYear}) {
   DateTime now = DateTime.now();
 

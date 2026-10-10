@@ -18,10 +18,6 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _selectedTab = -1;
 
-  // final GlobalKey<_WeeklyReportTabState> _weeklyReportKey = GlobalKey();
-  // final GlobalKey<_YearlyReportTabState> _yearStatsKey = GlobalKey();
-  // final GlobalKey<_DailyLogTabState> _dailyPersonKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
@@ -39,37 +35,11 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // @override
-  // Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-  //   super.didChangeAppLifecycleState(state);
-  //   if (state == AppLifecycleState.detached) {
-  //     //await DBConnectionManager.close();
-  //   }
-  // }
-
   void _onTabChange(int index) {
     if (index == _selectedTab) return;
 
     setState(() => _selectedTab = index);
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) => _refreshCurrentPage());
   }
-
-  // void _refreshCurrentPage() {
-  //   switch (_selectedTab) {
-  //     // case 1: // Daily Person
-  //     //   _dailyPersonKey.currentState?.refreshDailyEntries();
-  //     //   break;
-  //     case 2: // Weekly Report
-  //       _weeklyReportKey.currentState?.fetchWeekData(_weeklyReportKey.currentState!.selectedWeekDate);
-  //       break;
-  //     case 3: // Year Stats
-  //       _yearStatsKey.currentState?.fetchYearStats();
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }
 
   Widget _switcherTransition(Widget child, Animation<double> animation) {
     final fade = CurvedAnimation(
@@ -162,7 +132,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         return Container(key: const ValueKey('initial_empty'));
       case 0:
         return DirectoryTab(
-          //key: const ValueKey('directory_page'),
           isSelectionMode: false,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
@@ -170,21 +139,18 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         );
       case 1:
         return DailyLogTab(
-          // key: _dailyPersonKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
         );
       case 2:
         return WeeklyReportTab(
-          // key: _weeklyReportKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
         );
       case 3:
         return YearlyReportTab(
-          // key: _yearStatsKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,

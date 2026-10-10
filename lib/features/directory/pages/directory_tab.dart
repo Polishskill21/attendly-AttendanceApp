@@ -1,4 +1,3 @@
-// import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/data/database/app_database.dart';
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/features/directory/data/directory_repository.dart';
@@ -55,16 +54,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   @override
   void initState() {
     super.initState();
-    // _populateList().then((_) {
-    //   // After list is populated, initialize selection if needed
-    //   if (widget.isSelectionMode && widget.initiallySelectedPersons != null) {
-    //     for (var person in widget.initiallySelectedPersons!) {
-    //       // Add the ID to the set of selected IDs
-    //       _selectedPersonIds.add(person['id']);
-    //     }
-    //     setState(() {});
-    //   }
-    // });
 
     _searchQueryNotifier = ref.read(directorySearchQueryProvider.notifier);
 
@@ -95,8 +84,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
       await Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => AddPersonPage(isTablet: widget.isTablet),
       ));
-    // } on custom_db_exceptions.DbConnectionException {
-    //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
     } catch (e, stackTrace) {
       _helper.showErrorMessage(context,
           'An error occurred while adding a person.\n${e.toString()}',
@@ -132,9 +119,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
         await _helper.showSubmitMessage(
             context, localizations.personDeletedFromDb(name, id));
       }
-    // } on custom_db_exceptions.DbConnectionException {
-    //   if (mounted) _helper.hideLoadingDialog(context);
-    //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
     } on custom_db_exceptions.DatabaseException catch (e) {
       if (mounted) _helper.hideLoadingDialog(context);
       String msg = e.toString();
@@ -156,8 +140,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
             personToUpdate: person, isTablet: widget.isTablet),
       ));
       // Stream auto-updates after the repo write inside EditPersonPage.
-    // } on custom_db_exceptions.DbConnectionException {
-    //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
     } catch (e, stackTrace) {
       _helper.showErrorMessage(
           context, 'Failed to update person: ${e.toString()}',
@@ -274,7 +256,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   ) {
     return Column (
       children: [
-        // NEW: Self-contained search field widget
         _SearchField(
           controller: _searchController,
           onClear: () {
@@ -286,12 +267,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
         Expanded (
           child: asyncPeople.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            // error: (e, _) => Center(
-            //   child: Text(e.toString(),
-            //       style: TextStyle(
-            //           fontSize: ResponsiveUtils.getBodyFontSize(context))),
-            // ),
-            // data: (people) {
             error: (e, _) {
               if (e is custom_db_exceptions.DatabaseNotReadyException) {
                 return const Center(child: CircularProgressIndicator());
@@ -303,7 +278,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
               return const Center(child: CircularProgressIndicator());
             },
             data: (people) {
-              // if (people == null) return const Center(child: CircularProgressIndicator());
               if (people.isEmpty) {
                 return Center(
                   child: Text(localizations.noPersonFound,

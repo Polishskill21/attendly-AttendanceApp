@@ -24,16 +24,11 @@ void main() async {
       }
     }
   }
-  //debugPaintSizeEnabled = true;
   runApp(
     const ProviderScope(
       observers: [LoggingProviderObserver()],
       child: AttendlyApp()
     )
-    // ChangeNotifierProvider(
-    //   create: (context) => SettingsProvider(SettingsService()),
-    //   child: const MyApp(),
-    // ),
   );
 }
 
