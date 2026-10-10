@@ -1,9 +1,9 @@
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/frontend/pages/daily_logs_pages/daily_person_page.dart';
-import 'package:attendly/frontend/pages/directory_pages/dir_page.dart';
-import 'package:attendly/frontend/pages/weekly_report/weekly_report_page.dart';
-import 'package:attendly/frontend/pages/yearly_report/year_stats_page.dart';
-import 'package:attendly/localization/app_en.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/features/daily_log/pages/daily_log_tab.dart';
+import 'package:attendly/features/directory/pages/directory_tab.dart';
+import 'package:attendly/features/weekly_report/pages/weekly_report_tab.dart';
+import 'package:attendly/features/yearly_report/pages/yearly_report_tab.dart';
+import 'package:attendly/l10n/app_en.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/pump_app.dart';

@@ -1,7 +1,7 @@
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/tables/enums/category.dart';
-import 'package:attendly/provider/daily_repo_provider.dart';
-import 'package:attendly/provider/database_provider.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/data/tables/enums/category.dart';
+import 'package:attendly/features/daily_log/providers/daily_log_providers.dart';
+import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

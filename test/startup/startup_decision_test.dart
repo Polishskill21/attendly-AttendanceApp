@@ -1,5 +1,5 @@
-import 'package:attendly/frontend/pages/splash_screen/startup_decision.dart';
-import 'package:attendly/provider/database_provider.dart';
+import 'package:attendly/app/startup/startup_decision.dart';
+import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../fakes/fake_database_manager.dart';

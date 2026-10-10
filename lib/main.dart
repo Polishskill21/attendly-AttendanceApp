@@ -1,18 +1,18 @@
 import 'dart:io';
-import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
-import 'package:attendly/frontend/app_database_state.dart';
-import 'package:attendly/frontend/theme_builder.dart';
-import 'package:attendly/global/app_logger.dart';
-import 'package:attendly/provider/database_provider.dart';
-import 'package:attendly/provider/logging_provider_observer.dart';
+import 'package:attendly/data/settings/settings_exceptions.dart';
+import 'package:attendly/data/database/database_state.dart';
+import 'package:attendly/app/theme/app_theme.dart';
+import 'package:attendly/core/logging/app_logger.dart';
+import 'package:attendly/data/database/database_provider.dart';
+import 'package:attendly/core/logging/logging_provider_observer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
-import 'package:attendly/frontend/pages/settings_page/settings_notifier.dart';
-import 'package:attendly/localization/app_localizations_delegate.dart';
+import 'package:attendly/app/startup/splash_screen.dart';
+import 'package:attendly/features/settings/providers/settings_notifier.dart';
+import 'package:attendly/l10n/app_localizations_delegate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 

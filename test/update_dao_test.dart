@@ -1,7 +1,7 @@
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
-import 'package:attendly/data/local/tables/enums/gender.dart';
-import 'package:attendly/data/local/tables/enums/category.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/data/database/exceptions.dart';
+import 'package:attendly/data/tables/enums/gender.dart';
+import 'package:attendly/data/tables/enums/category.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter_test/flutter_test.dart';
 

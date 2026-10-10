@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
-import 'package:attendly/data/local/config/i_database_manager.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/data/database/exceptions.dart';
+import 'package:attendly/data/database/database_manager_interface.dart';
 
 import '../helpers/test_database.dart';
 

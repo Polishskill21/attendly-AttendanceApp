@@ -1,6 +1,6 @@
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/localization/app_localizations_delegate.dart';
-import 'package:attendly/provider/database_provider.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/l10n/app_localizations_delegate.dart';
+import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

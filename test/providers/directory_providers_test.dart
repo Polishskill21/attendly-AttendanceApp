@@ -1,6 +1,6 @@
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/provider/database_provider.dart';
-import 'package:attendly/provider/directory_repo_provider.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/data/database/database_provider.dart';
+import 'package:attendly/features/directory/providers/directory_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

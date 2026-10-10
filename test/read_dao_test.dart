@@ -1,6 +1,6 @@
-import 'package:attendly/data/local/config/database.dart';
-import 'package:attendly/data/local/tables/enums/gender.dart';
-import 'package:attendly/data/local/tables/enums/category.dart';
+import 'package:attendly/data/database/app_database.dart';
+import 'package:attendly/data/tables/enums/gender.dart';
+import 'package:attendly/data/tables/enums/category.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 
