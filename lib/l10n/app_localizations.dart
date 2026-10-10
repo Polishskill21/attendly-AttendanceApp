@@ -106,6 +106,7 @@ abstract class AppLocalizations {
 
   // For add_page.dart
   String get addPersonToTable;
+  String get editPerson;
   String get childsName;
   String get enterChildsName;
   String get childsBirthday;

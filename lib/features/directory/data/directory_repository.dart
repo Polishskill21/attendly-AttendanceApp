@@ -34,7 +34,7 @@ class DirectoryRepository {
 
   // --- INSERT OPERATIONS ---
 
-  /// Adds a new person to the directory (Used in AddPersonPage)
+  /// Adds a new person to the directory (used by PersonFormPage)
   Future<void> addPerson(DirectoryPeopleCompanion person) async {
     try {
       await db.insertDao.insertDirPerson(person);
@@ -54,7 +54,7 @@ class DirectoryRepository {
 
   // --- UPDATE OPERATIONS ---
 
-  /// Updates an existing person's details, but create the companion only with new data (Used in EditPersonPage)
+  /// Updates an existing person's details, but create the companion only with new data (used by PersonFormPage)
   Future<void> updatePerson(int id, DirectoryPeopleCompanion companion) async {
     try {
       await db.updateDao.updateDirPerson(id, companion);

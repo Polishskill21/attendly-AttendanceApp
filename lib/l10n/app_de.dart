@@ -279,6 +279,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get addPersonToTable => 'Person zur Tabelle hinzufügen';
 
   @override
+  String get editPerson => 'Person bearbeiten';
+
+  @override
   String get childsName => 'Name der Person';
 
   @override

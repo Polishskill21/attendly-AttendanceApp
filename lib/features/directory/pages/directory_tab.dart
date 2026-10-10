@@ -2,8 +2,7 @@ import 'package:attendly/core/logging/app_logger.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/data/database/app_database.dart';
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/features/directory/pages/add_person_page.dart';
-import 'package:attendly/features/directory/pages/edit_person_page.dart';
+import 'package:attendly/features/directory/pages/person_form_page.dart';
 import 'package:attendly/features/directory/providers/directory_providers.dart';
 import 'package:attendly/features/directory/widgets/person_directory_list.dart';
 import 'package:attendly/l10n/app_localizations.dart';
@@ -56,7 +55,7 @@ class DirectoryTab extends ShellTab {
   Future<void> _addPerson(BuildContext context) async {
     try {
       await Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => AddPersonPage(),
+        builder: (_) => const PersonFormPage(mode: PersonFormMode.add),
       ));
     } catch (e, stackTrace) {
       if (!context.mounted) return;
@@ -122,9 +121,9 @@ class _DirectoryBodyState extends ConsumerState<_DirectoryBody> {
   Future<void> _editPerson(DirectoryPeopleData person) async {
     try {
       await Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => EditPersonPage(personToUpdate: person),
+        builder: (_) => PersonFormPage(mode: PersonFormMode.edit, person: person),
       ));
-      // Stream auto-updates after the repo write inside EditPersonPage.
+      // Stream auto-updates after the repo write inside PersonFormPage.
     } catch (e, stackTrace) {
       if (!mounted) return;
       AppDialogs.showError(

@@ -280,6 +280,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addPersonToTable => 'Add Person to Table';
 
   @override
+  String get editPerson => 'Edit Person';
+
+  @override
   String get childsName => "Person's Name";
 
   @override
