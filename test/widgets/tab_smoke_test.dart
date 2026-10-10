@@ -102,6 +102,24 @@ void main() {
       await unmount(tester);
     });
 
+    testWidgets('typing in the search filters the list after a short pause', (tester) async {
+      await tester.runAsync(() async {
+        await addTestPerson(db, 'Anna');
+        await addTestPerson(db, 'Ben');
+      });
+
+      await pumpShell(tester, AppTab.directory);
+      await tester.enterText(find.byType(TextField), 'an');
+      await tester.pump();
+      expect(find.text('Ben'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      expect(find.text('Anna'), findsOneWidget);
+      expect(find.text('Ben'), findsNothing);
+      await unmount(tester);
+    });
+
     testWidgets('expanding a person shows the details', (tester) async {
       await tester.runAsync(() => addTestPerson(db, 'Anna', birthday: DateTime(2010, 3, 4)));
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anchored_list/anchored_list.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/data/database/app_database.dart';
@@ -38,7 +40,12 @@ class _PersonDirectoryListState extends ConsumerState<PersonDirectoryList> {
   final TextEditingController _searchController = TextEditingController();
   final AnchoredListController _listController = AnchoredListController();
   late final StateController<String> _searchQueryNotifier;
+  Timer? _searchDebounce;
   int _expandedIndex = -1;
+
+  /// Typing waits this long before filtering, so a fast typist does not
+  /// filter a large directory once per key.
+  static const Duration _searchDelay = Duration(milliseconds: 150);
 
   @override
   void initState() {
@@ -50,16 +57,27 @@ class _PersonDirectoryListState extends ConsumerState<PersonDirectoryList> {
     }
 
     _searchController.text = ref.read(directorySearchQueryProvider);
-    _searchController.addListener(() {
-      _searchQueryNotifier.state = _searchController.text;
-    });
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchQueryNotifier.state = '';
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final text = _searchController.text;
+    _searchDebounce?.cancel();
+    if (text == _searchQueryNotifier.state) return;
+    // Clearing the field shows everyone again right away.
+    if (text.isEmpty) {
+      _searchQueryNotifier.state = text;
+      return;
+    }
+    _searchDebounce = Timer(_searchDelay, () => _searchQueryNotifier.state = text);
   }
 
   void _jumpToLetter(Map<String, int> letterIndexMap, String letter) {
