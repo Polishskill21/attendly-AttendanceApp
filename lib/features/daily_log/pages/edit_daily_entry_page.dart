@@ -15,12 +15,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EditDailyEntryPage extends ConsumerStatefulWidget {
   final CategoryRecord record;
-  final bool isTablet;
 
   const EditDailyEntryPage({
     super.key,
     required this.record,
-    this.isTablet = false,
   });
 
   @override

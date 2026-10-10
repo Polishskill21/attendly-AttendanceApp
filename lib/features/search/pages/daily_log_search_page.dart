@@ -14,11 +14,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 enum SearchType { name, description, nameAndDescription }
 
 class DailyLogSearchPage extends ConsumerStatefulWidget {
-  final bool isTablet;
 
   const DailyLogSearchPage({
     super.key,
-    this.isTablet = false,
   });
 
   @override
@@ -114,7 +112,7 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
     final localizations = AppLocalizations.of(context);
     final iconSize = Responsive.of(context).iconSize();
     final bodySize = Responsive.of(context).bodyFontSize;
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
 
     return Scaffold(
       appBar: AppBar(

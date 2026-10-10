@@ -12,13 +12,11 @@ import 'package:intl/intl.dart';
 class WeekListPage extends ConsumerStatefulWidget {
   final DateTime currentWeekDate;
   final Function(DateTime, bool)? onStatusChanged;
-  final bool isTablet;
 
   const WeekListPage({
     super.key,
     required this.currentWeekDate,
     this.onStatusChanged,
-    this.isTablet = false,
   });
 
   @override
@@ -48,7 +46,7 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final iconSize = Responsive.of(context).iconSize();
     
     final asyncWeeksList = ref.watch(allWeeksProvider);

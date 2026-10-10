@@ -15,7 +15,6 @@ class PersonTile extends StatefulWidget {
   final List<Widget> buildChildren;
   final bool isSelected;
   final bool isSelectionMode;
-  final bool isTablet;
 
   const PersonTile({
     super.key,
@@ -29,7 +28,6 @@ class PersonTile extends StatefulWidget {
     required this.buildChildren,
     this.isSelected = false,
     this.isSelectionMode = false,
-    this.isTablet = false,
   });
 
   @override
@@ -41,7 +39,7 @@ class _PersonTileState extends State<PersonTile> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
 
     final cardColor = widget.isSelected
         ? theme.primaryColor.withAlpha(15)

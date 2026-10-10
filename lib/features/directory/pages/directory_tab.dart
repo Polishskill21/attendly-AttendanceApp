@@ -24,7 +24,6 @@ class DirectoryTab extends ConsumerStatefulWidget {
   final List<int>? initiallySelectedIds;
   final int? selectedTab;
   final void Function(int)? onTabChange;
-  final bool isTablet;
 
   const DirectoryTab({
     super.key,
@@ -33,7 +32,6 @@ class DirectoryTab extends ConsumerStatefulWidget {
     this.initiallySelectedIds,
     this.selectedTab,
     this.onTabChange,
-    this.isTablet = false,
   });
 
   @override
@@ -82,7 +80,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   Future<void> _onFabPressed() async {
     try {
       await Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => AddPersonPage(isTablet: widget.isTablet),
+        builder: (_) => AddPersonPage(),
       ));
     } catch (e, stackTrace) {
       _helper.showErrorMessage(context,
@@ -137,7 +135,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
     try {
       await Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => EditPersonPage(
-            personToUpdate: person, isTablet: widget.isTablet),
+            personToUpdate: person),
       ));
       // Stream auto-updates after the repo write inside EditPersonPage.
     } catch (e, stackTrace) {
@@ -155,7 +153,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final iconSize = Responsive.of(context).iconSize();
 
     final isAscending = ref.watch(directorySortAscendingProvider);
@@ -195,7 +193,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
     }
 
     return Scaffold(
-      drawer: widget.isTablet 
+      drawer: Responsive.of(context).isTablet 
           ? null
           : AppNavigationDrawer(
               selectedTab: widget.selectedTab!,
@@ -217,8 +215,7 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
           await Future.delayed(const Duration(milliseconds: 400));
           if (mounted) setState(() => _isManualRefreshing = false);
         },
-        isTablet: isTablet,
-        leading: widget.isTablet
+        leading: Responsive.of(context).isTablet
             ? null
             : Builder(
                 builder: (context) => IconButton(
@@ -262,7 +259,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
             _searchController.clear();
             ref.read(directorySearchQueryProvider.notifier).state = '';
           },
-          isTablet: isTablet,
         ),
         Expanded (
           child: asyncPeople.when(
@@ -322,7 +318,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
                     onEditPress: (person) => _editPerson(person),
                     buildPersonDetails: (person) => _helper.buildPersonDetails(
                         people, people.indexOf(person), localizations, context),
-                    isTablet: isTablet,
                     repo: ref.read(directoryRepositoryProvider),
                     helper: _helper,
                   ),
@@ -335,7 +330,6 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
                     top: 8,
                     bottom: Responsive.of(context).buttonHeight + 48 + MediaQuery.of(context).padding.bottom,
                     child: AlphabetIndexBar(
-                        isTablet: isTablet,
                         availableLetters: letterIndexMap.keys.toSet(),
                         onLetterSelected: (letter, {required bool isDragging}) {
                           final index = letterIndexMap[letter];
@@ -368,12 +362,10 @@ class _DirectoryTabState extends ConsumerState<DirectoryTab> {
 class _SearchField extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onClear;
-  final bool isTablet;
 
   const _SearchField({
     required this.controller,
     required this.onClear,
-    this.isTablet = false,
   });
 
   @override
@@ -412,7 +404,6 @@ class _PersonListView extends StatelessWidget {
   final Function(DirectoryPeopleData) onDeletePress;
   final Function(DirectoryPeopleData) onEditPress;
   final List<Widget> Function(DirectoryPeopleData) buildPersonDetails;
-  final bool isTablet;
   final DirectoryRepository? repo;
   final AppDialogs helper;
   final AnchoredListController listController;
@@ -430,7 +421,6 @@ class _PersonListView extends StatelessWidget {
     required this.repo,
     required this.helper,
     required this.listController,
-    this.isTablet = false,
   });
 
   @override
@@ -465,7 +455,6 @@ class _PersonListView extends StatelessWidget {
           onDeletePress: () => onDeletePress(person),
           onEditPress: () => onEditPress(person),
           buildChildren: buildPersonDetails(person),
-          isTablet: isTablet,
         );
       },
     );

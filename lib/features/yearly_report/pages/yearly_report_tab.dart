@@ -14,13 +14,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class YearlyReportTab extends ConsumerStatefulWidget {
   final int selectedTab;
   final void Function(int) onTabChange;
-  final bool isTablet;
 
   const YearlyReportTab({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
-    required this.isTablet
   });
 
   @override
@@ -45,7 +43,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
     final asyncStats = ref.watch(yearlyStatsProvider);
 
     return Scaffold(
-      drawer: widget.isTablet
+      drawer: Responsive.of(context).isTablet
           ? null
           : AppNavigationDrawer(
               selectedTab: widget.selectedTab,
@@ -65,8 +63,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
           await Future.delayed(const Duration(milliseconds: 400));
           if (mounted) setState(() => _isManualRefreshing = false);
         },
-        isTablet: widget.isTablet,
-        leading: widget.isTablet
+        leading: Responsive.of(context).isTablet
             ? null
             : Builder(
                 builder: (context) => IconButton(

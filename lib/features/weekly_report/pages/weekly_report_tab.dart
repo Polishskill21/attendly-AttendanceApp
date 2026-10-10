@@ -17,13 +17,11 @@ import 'package:attendly/core/responsive/responsive.dart';
 class WeeklyReportTab extends ConsumerStatefulWidget {
   final int selectedTab;
   final void Function(int) onTabChange;
-  final bool isTablet;
 
   const WeeklyReportTab({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
-    this.isTablet = false,
   });
 
   @override
@@ -56,7 +54,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
       selectableDayPredicate: (DateTime val) => val.weekday == DateTime.monday,
       keyboardType: const TextInputType.numberWithOptions(),
       builder: (context, child) {
-        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+        if (!Responsive.of(context).isTablet || child == null) return child ?? const SizedBox.shrink();
 
        final mq = MediaQuery.of(context);
        final currentScale = mq.textScaler.scale(1.0);
@@ -104,7 +102,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
     );
 
     return Scaffold(
-      drawer: widget.isTablet
+      drawer: Responsive.of(context).isTablet
           ? null
           : AppNavigationDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
@@ -121,8 +119,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
           await Future.delayed(const Duration(milliseconds: 400));
           if (mounted) setState(() => _isManualRefreshing = false);
         },
-        isTablet: widget.isTablet,
-        leading: widget.isTablet
+        leading: Responsive.of(context).isTablet
             ? null
             : Builder(
                 builder: (context) => IconButton(

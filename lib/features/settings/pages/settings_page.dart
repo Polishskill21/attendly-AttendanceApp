@@ -129,7 +129,7 @@ class SettingsPage extends ConsumerWidget  {
                   trailing: Icon(Icons.chevron_right, size: Responsive.of(context).iconSize()),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) =>
-                        HelpPage(isTablet: Responsive.of(context).isTablet),
+                        HelpPage(),
                   )),
                 ),
                 const Divider(height: 1),

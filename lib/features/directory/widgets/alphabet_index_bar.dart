@@ -54,13 +54,11 @@ class AlphabetIndexBar extends StatefulWidget {
   final Set<String> availableLetters;
   final void Function(String letter, {required bool isDragging}) onLetterSelected;
   final List<String> letters;
-  final bool isTablet;
 
   const AlphabetIndexBar({
     super.key,
     required this.availableLetters,
     required this.onLetterSelected,
-    this.isTablet = false,
     this.letters = const [
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
       'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '#',

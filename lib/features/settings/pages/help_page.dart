@@ -7,9 +7,8 @@ import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 
 class HelpPage extends StatefulWidget {
-  final bool isTablet;
 
-  const HelpPage({super.key, this.isTablet = false});
+  const HelpPage({super.key});
 
   @override
   State<HelpPage> createState() => _HelpPageState();
@@ -51,7 +50,7 @@ class _HelpPageState extends State<HelpPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final iconSize = Responsive.of(context).iconSize();
 
     return Scaffold(

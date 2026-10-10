@@ -17,12 +17,10 @@ import 'package:attendly/l10n/app_localizations.dart';
 
 class EditPersonPage extends ConsumerStatefulWidget{
   final DirectoryPeopleData personToUpdate;
-  final bool isTablet;
 
   const EditPersonPage({
     super.key, 
     required this.personToUpdate, 
-    this.isTablet = false,
   });
 
   @override
@@ -205,7 +203,7 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
       initialDatePickerMode: DatePickerMode.year,
       keyboardType: TextInputType.numberWithOptions(),
       builder: (context, child) {
-        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+        if (!Responsive.of(context).isTablet || child == null) return child ?? const SizedBox.shrink();
         
         final mq = MediaQuery.of(context);
         final newScale = (mq.textScaler.scale(1.0) * 1.2).clamp(1.0, 1.6);

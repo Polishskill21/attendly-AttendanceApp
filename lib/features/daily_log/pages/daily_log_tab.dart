@@ -20,13 +20,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class DailyLogTab extends ConsumerStatefulWidget {
   final int selectedTab;
   final void Function(int) onTabChange;
-  final bool isTablet;
 
   const DailyLogTab({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
-    this.isTablet = false,
   });
 
   @override
@@ -90,14 +88,14 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => AddDailyEntryPage(initialDate: currentDate, isTablet: widget.isTablet),
+        builder: (context) => AddDailyEntryPage(initialDate: currentDate),
       ),
     );
   }
 
   Future<void> _onSearchFabPressed() async {
     final selectedDate = await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute(builder: (context) => DailyLogSearchPage(isTablet: widget.isTablet)),
+      MaterialPageRoute(builder: (context) => DailyLogSearchPage()),
     );
     if (selectedDate != null) {
       ref.read(dailyDateProvider.notifier).state = selectedDate;
@@ -115,7 +113,6 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
             (context) => AddDailyEntryPage(
               initialDate: date,
               preselectedPersons: selectedList,
-              isTablet: widget.isTablet,
             ),
       ),
     );
@@ -215,7 +212,7 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
 
     return Scaffold(
       drawer:
-          widget.isTablet
+          Responsive.of(context).isTablet
               ? null
               : AppNavigationDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
@@ -235,14 +232,13 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
           await Future.delayed(const Duration(milliseconds: 400));
           if (mounted) setState(() => _isManualRefreshing = false);
         },
-        isTablet: widget.isTablet,
         leading:
             isEditMode
                 ? IconButton(
                   icon: Icon(Icons.close, size: appBarIconSize),
                   onPressed: _toggleEditMode,
                 )
-                : widget.isTablet
+                : Responsive.of(context).isTablet
                 ? null
                 : Builder(
                   builder:
@@ -347,7 +343,6 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                                     preselectedPersons: [
                                       {'id': person.personId, 'name': person.name},
                                     ],
-                                    isTablet: widget.isTablet,
                                   ),
                             ),
                           );
@@ -358,7 +353,7 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
                             MaterialPageRoute(
                               builder:
                                   (ctx) =>
-                                      EditDailyEntryPage(record: record, isTablet: widget.isTablet),
+                                      EditDailyEntryPage(record: record),
                             ),
                           );
                         },

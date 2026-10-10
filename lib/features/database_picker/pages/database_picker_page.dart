@@ -10,12 +10,10 @@ import 'package:attendly/core/responsive/responsive.dart';
 class DatabasePickerPage extends ConsumerStatefulWidget {
   // Add a field to hold the path of the currently active database.
   final String? currentDbPath;
-  final bool isTablet;
 
   const DatabasePickerPage({
     super.key, 
     this.currentDbPath,
-    this.isTablet = false,
   });
 
   @override
@@ -40,7 +38,7 @@ class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final iconSize = Responsive.of(context).iconSize();
     
     return Scaffold(

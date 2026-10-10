@@ -12,14 +12,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AppNavigationDrawer extends ConsumerWidget {
   final int selectedTab;
   final Function(int) onTabChange;
-  final bool isTablet;
   final bool isRailMode;
 
   const AppNavigationDrawer({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
-    this.isTablet = false,
     this.isRailMode = false,
   });
 
@@ -33,7 +31,7 @@ class AppNavigationDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (isRailMode && isTablet) {
+    if (isRailMode) {
       return _buildNavigationRail(context, ref);
     } else {
       return _buildDrawer(context, ref);
@@ -149,7 +147,6 @@ class AppNavigationDrawer extends ConsumerWidget {
                     MaterialPageRoute(
                       builder: (_) => DatabasePickerPage(
                         currentDbPath: appState.currentDbPath,
-                        isTablet: isTablet,
                       ),
                     ),
                   );
@@ -175,6 +172,7 @@ class AppNavigationDrawer extends ConsumerWidget {
     
     final iconScale = Responsive.of(context).iconScaleFactor;
 
+    final isTablet = Responsive.of(context).isTablet;
     final textScale = isTablet ? 0.9 : 1.0;
 
     return Drawer(
@@ -275,7 +273,6 @@ class AppNavigationDrawer extends ConsumerWidget {
                     MaterialPageRoute(
                       builder: (_) => DatabasePickerPage(
                         currentDbPath: appState.currentDbPath,
-                        isTablet: isTablet,
                       ),
                     ),
                   );
@@ -292,7 +289,7 @@ class AppNavigationDrawer extends ConsumerWidget {
   }
 
   Widget _buildDrawerHeader(BuildContext context, DatabaseState appState, ThemeData theme, String dbName, AppLocalizations localizations) {
-    final isTablet = this.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final textScale = isTablet ? 0.85 : 1.0;
     
     return Container(
@@ -333,14 +330,15 @@ class AppNavigationDrawer extends ConsumerWidget {
             ),
             if (appState.showNewYearBanner) ...[
               const SizedBox(height: 15),
-              _buildNewYearBanner(context, localizations, isTablet: isTablet),
+              _buildNewYearBanner(context, localizations),
             ]
           ],
         ),
     );
   }
 
-  Widget _buildNewYearBanner(BuildContext context, AppLocalizations localizations, {bool isTablet = false}) {
+  Widget _buildNewYearBanner(BuildContext context, AppLocalizations localizations) {
+    final isTablet = Responsive.of(context).isTablet;
     final textScale = Responsive.of(context).textScaleFactor;
     
     return GestureDetector(
@@ -400,7 +398,7 @@ class AppNavigationDrawer extends ConsumerWidget {
     final Color selectedColor = theme.colorScheme.primary;
     final Color defaultTextColor = theme.listTileTheme.textColor ?? theme.textTheme.bodyLarge?.color ?? Colors.black87;
     final Color defaultIconColor = theme.listTileTheme.iconColor ?? theme.iconTheme.color ?? Colors.grey;
-    final isTablet = this.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
 
     return Container(
       margin: EdgeInsets.symmetric(

@@ -14,11 +14,9 @@ import 'package:attendly/shared/dialogs/app_dialogs.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 
 class AddPersonPage extends ConsumerStatefulWidget{
-  final bool isTablet;
 
   const AddPersonPage({
     super.key, 
-    this.isTablet = false,
   });
 
   @override
@@ -145,7 +143,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
       initialDatePickerMode: DatePickerMode.year,
       keyboardType: TextInputType.numberWithOptions(),
       builder: (context, child) {
-        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+        if (!Responsive.of(context).isTablet || child == null) return child ?? const SizedBox.shrink();
 
        final mq = MediaQuery.of(context);
        final currentScale = mq.textScaler.scale(1.0);
@@ -175,7 +173,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final iconSize = Responsive.of(context).iconSize();
     
     return PopScope(

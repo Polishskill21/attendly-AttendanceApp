@@ -56,7 +56,7 @@ void main() {
     testWidgets('yearly report tab shows title and empty state', (tester) async {
       await pumpWithDatabase(
         tester,
-        YearlyReportTab(selectedTab: 3, onTabChange: (_) {}, isTablet: false),
+        YearlyReportTab(selectedTab: 3, onTabChange: (_) {}),
         db: db,
       );
 

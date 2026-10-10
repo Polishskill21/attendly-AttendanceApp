@@ -20,13 +20,11 @@ import 'package:attendly/l10n/app_localizations.dart';
 class AddDailyEntryPage extends ConsumerStatefulWidget {
   final DateTime? initialDate;
   final List<Map<String, dynamic>>? preselectedPersons;
-  final bool isTablet;
 
   const AddDailyEntryPage({
     super.key, 
     this.initialDate, 
     this.preselectedPersons,
-    this.isTablet = false,
   });
 
   @override
@@ -210,7 +208,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
       lastDate: DateTime(2100),
       keyboardType: TextInputType.numberWithOptions(),
       builder: (context, child) {
-        if (!widget.isTablet || child == null) return child ?? const SizedBox.shrink();
+        if (!Responsive.of(context).isTablet || child == null) return child ?? const SizedBox.shrink();
 
        final mq = MediaQuery.of(context);
        final currentScale = mq.textScaler.scale(1.0);
@@ -240,7 +238,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final iconSize = Responsive.of(context).iconSize();
     
     return PopScope(
@@ -299,7 +297,6 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                             onPersonsSelected: (selectedPersonsData) {
                               Navigator.of(context).pop(selectedPersonsData);
                             },
-                            isTablet: isTablet,
                           ),
                         )
                       );

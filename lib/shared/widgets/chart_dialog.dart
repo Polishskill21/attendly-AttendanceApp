@@ -35,7 +35,7 @@ class ChartDialog {
           content: SizedBox(
             width: double.maxFinite,
             height: isTablet ? 450 : 350,
-            child: _PieChart(data: data, isTablet: isTablet),
+            child: _PieChart(data: data),
           ),
           actions: <Widget>[
             TextButton(
@@ -60,9 +60,8 @@ class ChartDialog {
 
 class _PieChart extends StatefulWidget {
   final Map<String, int> data;
-  final bool isTablet;
 
-  const _PieChart({required this.data, this.isTablet = false});
+  const _PieChart({required this.data});
 
   @override
   State<_PieChart> createState() => _PieChartState();
@@ -83,7 +82,7 @@ class _PieChartState extends State<_PieChart> {
   @override
   Widget build(BuildContext context) {
     final total = widget.data.values.fold(0, (sum, item) => sum + item);
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
 
     if (total == 0) {
       return Center(
@@ -129,7 +128,7 @@ class _PieChartState extends State<_PieChart> {
   List<PieChartSectionData> _getSections(int total) {
     final dataEntries =
         widget.data.entries.where((entry) => entry.value > 0).toList();
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
 
     return List.generate(dataEntries.length, (i) {
       final isTouched = i == touchedIndex;
@@ -162,7 +161,7 @@ class _PieChartState extends State<_PieChart> {
   Widget _buildLegend() {
     final dataEntries =
         widget.data.entries.where((entry) => entry.value > 0).toList();
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     
     return Wrap(
       spacing: isTablet ? 20 : 16,

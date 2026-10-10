@@ -8,7 +8,6 @@ class RefreshableAppBar extends StatefulWidget implements PreferredSizeWidget {
   final bool showRefresh;
   final Widget? leading;
   final List<Widget>? actions;
-  final bool isTablet;
 
   const RefreshableAppBar({
     super.key,
@@ -18,7 +17,6 @@ class RefreshableAppBar extends StatefulWidget implements PreferredSizeWidget {
     required this.showRefresh,
     this.leading,
     this.actions,
-    this.isTablet = false,
   });
 
   @override
@@ -31,7 +29,7 @@ class RefreshableAppBar extends StatefulWidget implements PreferredSizeWidget {
 class _RefreshableAppBarState extends State<RefreshableAppBar> {
   @override
   Widget build(BuildContext context) {
-    final isTablet = widget.isTablet || Responsive.of(context).isTablet;
+    final isTablet = Responsive.of(context).isTablet;
     final titleFontSize = isTablet ? 28.0 : 20.0;
     final iconSize = isTablet ? 32.0 : 24.0;
 

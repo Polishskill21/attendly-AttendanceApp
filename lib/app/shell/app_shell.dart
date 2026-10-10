@@ -75,7 +75,7 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   Widget _buildPhoneLayout() {
     return Scaffold(
       drawer: AppNavigationDrawer(
-          selectedTab: _selectedTab, onTabChange: _onTabChange, isTablet: false),
+          selectedTab: _selectedTab, onTabChange: _onTabChange),
       body: SafeArea(child: _animatedBody()),
     );
   }
@@ -83,24 +83,23 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   Widget _buildTabletLayout() {
     return Scaffold(
       drawer: AppNavigationDrawer(
-          selectedTab: _selectedTab, onTabChange: _onTabChange, isTablet: true),
+          selectedTab: _selectedTab, onTabChange: _onTabChange),
       body: SafeArea(
         child: Row(
           children: [
             AppNavigationDrawer(
                 selectedTab: _selectedTab,
                 onTabChange: _onTabChange,
-                isTablet: true,
                 isRailMode: true),
             const VerticalDivider(width: 1, thickness: 1),
-            Expanded(child: _animatedBody(isTablet: true)),
+            Expanded(child: _animatedBody()),
           ],
         ),
       ),
     );
   }
  
-  Widget _animatedBody({bool isTablet = false}) {
+  Widget _animatedBody() {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 550),
       switchInCurve: Curves.easeInOut,
@@ -110,11 +109,11 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         children: [...previousChildren, if (currentChild != null) currentChild],
       ),
       transitionBuilder: _switcherTransition,
-      child: _buildPageForTab(_selectedTab, isTablet: isTablet),
+      child: _buildPageForTab(_selectedTab),
     );
   }
 
-  Widget _buildPageForTab(int tabIndex, {bool isTablet = false}) {
+  Widget _buildPageForTab(int tabIndex) {
     switch (tabIndex) {
       case -1: // Add this case
         return Container(key: const ValueKey('initial_empty'));
@@ -123,25 +122,21 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
           isSelectionMode: false,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
-          isTablet: isTablet,
         );
       case 1:
         return DailyLogTab(
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
-          isTablet: isTablet,
         );
       case 2:
         return WeeklyReportTab(
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
-          isTablet: isTablet,
         );
       case 3:
         return YearlyReportTab(
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
-          isTablet: isTablet,
         );
       default:
         return Container(key: ValueKey('empty_$tabIndex'));
