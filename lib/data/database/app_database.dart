@@ -92,8 +92,12 @@ class AppDatabase extends _$AppDatabase{
       if (from < 3) {
         AppLogger.i(_tag, "Migrating to v3: Adding indexes on daily_entry");
 
-        await m.createIndex(dailyEntryDatePerson);
-        await m.createIndex(dailyEntryPerson);
+        // An interrupted earlier run can leave the indexes behind without the
+        // version bump, so drop them first and the step can run again.
+        for (final index in [dailyEntryDatePerson, dailyEntryPerson]) {
+          await customStatement('DROP INDEX IF EXISTS ${index.entityName}');
+          await m.createIndex(index);
+        }
       }
     });
   }

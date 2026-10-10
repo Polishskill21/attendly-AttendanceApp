@@ -48,6 +48,21 @@ void main() {
     await db.close();
   });
 
+  test('v2 -> v3 also works when an interrupted run left the indexes', () async {
+    final schema = await verifier.schemaAt(2);
+
+    final oldDb = v2.DatabaseAtV2(schema.newConnection());
+    await oldDb.customStatement(
+      'CREATE INDEX daily_entry_date_person ON daily_entry (date, person_id)',
+    );
+    await oldDb.customStatement('CREATE INDEX daily_entry_person ON daily_entry (person_id)');
+    await oldDb.close();
+
+    final db = AppDatabase(schema.newConnection());
+    await verifier.migrateAndValidate(db, 3);
+    await db.close();
+  });
+
   test('the per-day query uses the new index', () async {
     final db = AppDatabase.testInstance();
     final day = db.dateOnlyConverter.toSql(DateTime(2026, 3, 2));
