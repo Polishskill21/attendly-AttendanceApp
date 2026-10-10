@@ -3,6 +3,7 @@ import 'package:attendly/frontend/widgets/changelog_helper.dart';
 import 'package:attendly/global/app_logger.dart';
 import 'package:attendly/global/global_function_collection.dart';
 import 'package:attendly/frontend/widgets/migration_dialog.dart';
+import 'package:attendly/frontend/pages/splash_screen/startup_decision.dart';
 import 'package:attendly/main_app.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
@@ -103,47 +104,49 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   Future<_StartupResult> _initializeDatabase() async {
     final notifier = ref.read(databaseManagerProvider.notifier);
 
-    if (_showReportedError) {
-      AppLogger.w(_tag, "Showing error screen for a reported database error");
-      _startupError = widget.dbError;
-      return _StartupResult.failed;
-    }
-
     try {
-      // ── Case A: user picked a specific DB file from the list ───────────────
-      if (widget.selectedDb != null) {
-        AppLogger.i(_tag, "Startup: switching to selected database ${widget.selectedDb!.path}");
-        await notifier.openDatabase(file: widget.selectedDb, onMigrationStarted: _onSchemaMigrationStarted);
-        return _StartupResult.ready;
+      final decision = await decideStartup(
+        notifier,
+        hasReportedError: _showReportedError,
+        hasSelectedDatabase: widget.selectedDb != null,
+      );
+
+      switch (decision) {
+        case StartupDecision.showReportedError:
+          AppLogger.w(_tag, "Showing error screen for a reported database error");
+          _startupError = widget.dbError;
+          return _StartupResult.failed;
+
+        case StartupDecision.openSelectedDatabase:
+          AppLogger.i(_tag, "Startup: switching to selected database ${widget.selectedDb!.path}");
+          await notifier.openDatabase(file: widget.selectedDb, onMigrationStarted: _onSchemaMigrationStarted);
+          return _StartupResult.ready;
+
+        case StartupDecision.needsSetup:
+          AppLogger.i(_tag, "Startup: no database yet, showing setup screen");
+          return _StartupResult.needsSetup;
+
+        case StartupDecision.askForRollover:
+          if (!mounted) {
+            await notifier.openDatabase(onMigrationStarted: _onSchemaMigrationStarted);
+            return _StartupResult.ready;
+          }
+          final choice = await _showYearChangeDialog();
+          AppLogger.i(_tag, "Year change dialog: user chose ${choice?.name ?? 'nothing'}");
+
+          if (choice == YearChangeChoice.create) {
+            await _handleYearRollover();
+          } else {
+            // User chose to stay on the old DB for now — open it with banner
+            await notifier.openDatabaseWithBanner(onMigrationStarted: _onSchemaMigrationStarted);
+          }
+          return _StartupResult.ready;
+
+        case StartupDecision.openDefaultDatabase:
+          AppLogger.i(_tag, "Startup: opening default database");
+          await notifier.openDatabase(onMigrationStarted: _onSchemaMigrationStarted);
+          return _StartupResult.ready;
       }
-
-      AppLogger.i(_tag, "Startup: opening default database");
-
-      // ── Case B: normal startup ─────────────────────────────────────────────
-      // Also creates settings.json with defaults if it does not exist yet.
-      final rolloverNeeded = await notifier.checkForYearRollover();
-
-      // ── Case C: fresh install, no database exists yet ─────────────────────
-      if (await notifier.needsInitialSetup()) {
-        AppLogger.i(_tag, "Startup: no database yet, showing setup screen");
-        return _StartupResult.needsSetup;
-      }
-
-      if (rolloverNeeded && mounted) {
-        final choice = await _showYearChangeDialog();
-        AppLogger.i(_tag, "Year change dialog: user chose ${choice?.name ?? 'nothing'}");
-
-        if (choice == YearChangeChoice.create) {
-          await _handleYearRollover();
-        } else {
-          // User chose to stay on the old DB for now — open it with banner
-          await notifier.openDatabaseWithBanner(onMigrationStarted: _onSchemaMigrationStarted);
-        }
-      } else {
-        await notifier.openDatabase(onMigrationStarted: _onSchemaMigrationStarted);
-      }
-
-      return _StartupResult.ready;
     } catch (e, stackTrace) {
       AppLogger.e(_tag, "Startup failed, showing error screen", e, stackTrace);
       _startupError = e;
