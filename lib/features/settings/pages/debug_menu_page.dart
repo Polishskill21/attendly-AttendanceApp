@@ -4,6 +4,8 @@ import 'package:attendly/data/storage/storage_manager.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/core/logging/app_logger.dart';
 import 'package:attendly/data/database/database_provider.dart';
+import 'package:attendly/features/settings/data/test_people_seeder.dart';
+import 'package:attendly/shared/dialogs/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:attendly/l10n/app_localizations.dart';
@@ -324,6 +326,11 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
                 iconSize: iconSize,
                 isTablet: Responsive.of(context).isTablet,
               ),
+              if (appState.isReady) ...[
+                Divider(
+                    height: Responsive.of(context).isTablet ? 40 : 32),
+                const _TestDataSection(),
+              ],
               SizedBox(
                   height: Responsive.of(context).isTablet ? 24 : 16),
               Row(
@@ -378,6 +385,78 @@ class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
         style: TextStyle(
             fontSize: Responsive.of(context).bodyFontSize - 6),
       ),
+    );
+  }
+}
+/// Seeds fake people into the open database to check large directories.
+class _TestDataSection extends ConsumerStatefulWidget {
+  const _TestDataSection();
+
+  @override
+  ConsumerState<_TestDataSection> createState() => _TestDataSectionState();
+}
+
+class _TestDataSectionState extends ConsumerState<_TestDataSection> {
+  bool _isBusy = false;
+
+  Future<void> _run(Future<String> Function(TestPeopleSeeder seeder) action) async {
+    setState(() => _isBusy = true);
+    try {
+      final message = await action(TestPeopleSeeder(ref.read(appDatabaseProvider)));
+      if (mounted) AppDialogs.showSnack(context, message);
+    } catch (e, stackTrace) {
+      AppLogger.e('Debug', 'Test data action failed', e, stackTrace);
+      if (mounted) AppDialogs.showError(context, e.toString(), stackTrace: stackTrace);
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final responsive = Responsive.of(context);
+    final textStyle = TextStyle(fontSize: responsive.bodyFontSize - 4);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          localizations.testData,
+          style: TextStyle(
+            fontSize: responsive.bodyFontSize,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: responsive.isTablet ? 12 : 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final count in const [1000, 5000])
+              OutlinedButton(
+                onPressed: _isBusy
+                    ? null
+                    : () => _run((seeder) async =>
+                        localizations.testPeopleAdded(await seeder.seed(count))),
+                child: Text(localizations.addTestPeople(count), style: textStyle),
+              ),
+            OutlinedButton(
+              onPressed: _isBusy
+                  ? null
+                  : () => _run((seeder) async =>
+                      localizations.testPeopleDeleted(await seeder.deleteSeeded())),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(localizations.deleteTestPeople, style: textStyle),
+            ),
+            if (_isBusy)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3)),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

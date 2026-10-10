@@ -697,4 +697,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get showLogs => 'Protokolle anzeigen';
+
+  // Debug menu: test data
+  @override
+  String get testData => 'Testdaten';
+
+  @override
+  String addTestPeople(int count) => '$count Testpersonen hinzufügen';
+
+  @override
+  String get deleteTestPeople => 'Testpersonen löschen';
+
+  @override
+  String testPeopleAdded(int count) => '$count Testpersonen hinzugefügt';
+
+  @override
+  String testPeopleDeleted(int count) => '$count Testpersonen gelöscht';
 }

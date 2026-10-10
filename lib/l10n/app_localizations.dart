@@ -322,4 +322,11 @@ abstract class AppLocalizations {
   String get grantPermission;
   String get openAppSettings;
   String get showLogs;
+
+  // Debug menu: test data
+  String get testData;
+  String addTestPeople(int count);
+  String get deleteTestPeople;
+  String testPeopleAdded(int count);
+  String testPeopleDeleted(int count);
 }

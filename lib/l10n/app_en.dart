@@ -704,4 +704,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get showLogs => 'Show logs';
+
+  // Debug menu: test data
+  @override
+  String get testData => 'Test data';
+
+  @override
+  String addTestPeople(int count) => 'Add $count test people';
+
+  @override
+  String get deleteTestPeople => 'Delete test people';
+
+  @override
+  String testPeopleAdded(int count) => '$count test people added';
+
+  @override
+  String testPeopleDeleted(int count) => '$count test people deleted';
 }
