@@ -1,3 +1,4 @@
+import 'package:attendly/app/app_router.dart';
 import 'package:attendly/app/startup/startup_gate.dart';
 import 'package:attendly/app/theme/app_theme.dart';
 import 'package:attendly/data/settings/settings_exceptions.dart';
@@ -48,6 +49,7 @@ class AttendlyApp extends ConsumerWidget {
           child: child!,
         );
       },
+      onGenerateRoute: onGenerateAppRoute,
       home: const StartupGate(),
     );
   }

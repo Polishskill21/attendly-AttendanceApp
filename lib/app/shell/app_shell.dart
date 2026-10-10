@@ -119,7 +119,6 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
         return Container(key: const ValueKey('initial_empty'));
       case 0:
         return DirectoryTab(
-          isSelectionMode: false,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
         );

@@ -1,5 +1,5 @@
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
-import 'package:attendly/features/search/pages/daily_log_search_page.dart';
+import 'package:attendly/shared/navigation/app_routes.dart';
 import 'package:attendly/features/daily_log/models/person_with_categories.dart';
 import 'package:attendly/shared/options/category_label.dart';
 import 'package:attendly/core/responsive/responsive.dart';
@@ -94,9 +94,7 @@ class _DailyLogTabState extends ConsumerState<DailyLogTab> {
   }
 
   Future<void> _onSearchFabPressed() async {
-    final selectedDate = await Navigator.of(context).push<DateTime>(
-      MaterialPageRoute(builder: (context) => DailyLogSearchPage()),
-    );
+    final selectedDate = await Navigator.of(context).pushNamed<DateTime>(AppRoutes.dailyLogSearch);
     if (selectedDate != null) {
       ref.read(dailyDateProvider.notifier).state = selectedDate;
     }

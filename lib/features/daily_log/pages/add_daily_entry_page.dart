@@ -2,7 +2,7 @@ import 'package:attendly/data/database/app_database.dart';
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/data/tables/enums/category.dart';
 import 'package:attendly/features/daily_log/data/daily_repository.dart';
-import 'package:attendly/features/directory/pages/directory_tab.dart';
+import 'package:attendly/shared/navigation/app_routes.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/core/utils/date_utils.dart';
 import 'package:attendly/features/daily_log/providers/daily_log_providers.dart';
@@ -287,18 +287,9 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                   child: InkWell(
                     onTap: (widget.preselectedPersons?.isNotEmpty ?? false) ? null : () async {
                       
-                      final value = await Navigator.of(context).push<List<DirectoryPeopleData>>(
-                        MaterialPageRoute(
-                          builder: (context) => DirectoryTab(
-                            isSelectionMode: true,
-                            
-                            initiallySelectedIds: selectedPersons.map((p) => p['id'] as int).toList(),
-                            
-                            onPersonsSelected: (selectedPersonsData) {
-                              Navigator.of(context).pop(selectedPersonsData);
-                            },
-                          ),
-                        )
+                      final value = await Navigator.of(context).pushNamed<List<DirectoryPeopleData>>(
+                        AppRoutes.personPicker,
+                        arguments: selectedPersons.map((p) => p['id'] as int).toList(),
                       );
                       
                       if (value != null) {
