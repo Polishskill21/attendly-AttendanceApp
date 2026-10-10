@@ -43,10 +43,13 @@ class ReadDao extends DatabaseAccessor<AppDatabase> with _$ReadDaoMixin {
     return result != null ? db.dateOnlyConverter.fromSql(result) : null;
   }
 
+  /// Stops at the first row instead of loading the whole day.
   Future<bool> existsEntryForDate(DateTime date) async {
-    final query = select(dailyEntry)..where((t) => t.date.equals(db.dateOnlyConverter.toSql(date)));
-    final result = await query.get();
-    return result.isNotEmpty;
+    final query = selectOnly(dailyEntry)
+      ..addColumns([dailyEntry.recordId])
+      ..where(dailyEntry.date.equals(db.dateOnlyConverter.toSql(date)))
+      ..limit(1);
+    return await query.getSingleOrNull() != null;
   }
 
   Future<Category?> getCategory(int recordId, DateTime date, int personId) async {
