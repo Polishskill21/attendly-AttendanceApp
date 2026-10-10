@@ -1,5 +1,6 @@
 import 'package:attendly/data/database/app_database.dart';
 import 'package:attendly/features/directory/data/directory_repository.dart';
+import 'package:attendly/features/directory/models/letter_index.dart';
 import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,4 +32,10 @@ final filteredDirectoryProvider = Provider<AsyncValue<List<DirectoryPeopleData>>
         .where((person) => person.name.toLowerCase().contains(query))
         .toList();
   });
+});
+/// First letter -> list index for the alphabet index bar. Recomputed only
+/// when the filtered list changes, not on every rebuild of the list.
+final directoryLetterIndexProvider = Provider.autoDispose<Map<String, int>>((ref) {
+  final people = ref.watch(filteredDirectoryProvider).valueOrNull ?? const <DirectoryPeopleData>[];
+  return buildLetterIndexMap<DirectoryPeopleData>(people, (p) => p.name);
 });

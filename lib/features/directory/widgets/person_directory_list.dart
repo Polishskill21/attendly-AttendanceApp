@@ -83,6 +83,9 @@ class _PersonDirectoryListState extends ConsumerState<PersonDirectoryList> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final asyncPeople = ref.watch(filteredDirectoryProvider);
+    // First-letter -> index map of the list in its current (ascending or
+    // descending) order, so the jump target is right in both directions.
+    final letterIndexMap = ref.watch(directoryLetterIndexProvider);
 
     // Changing the sort order moves every row, so an open card would jump.
     ref.listen(directorySortAscendingProvider, (_, _) {
@@ -120,14 +123,6 @@ class _PersonDirectoryListState extends ConsumerState<PersonDirectoryList> {
                           fontWeight: FontWeight.bold)),
                 );
               }
-              // First-letter -> index map, built from the list in its current
-              // (ascending or descending) order, so the jump target is always
-              // correct regardless of sort direction.
-              final letterIndexMap = buildLetterIndexMap<DirectoryPeopleData>(
-                people,
-                (p) => p.name,
-              );
-
               return Stack(
                 children: [
                   Positioned.fill(

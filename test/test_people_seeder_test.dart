@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:attendly/data/database/app_database.dart';
-import 'package:attendly/features/directory/widgets/alphabet_index_bar.dart';
+import 'package:attendly/features/directory/models/letter_index.dart';
 import 'package:attendly/features/settings/data/test_people_seeder.dart';
 import 'package:flutter_test/flutter_test.dart';
 

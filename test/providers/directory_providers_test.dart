@@ -53,4 +53,14 @@ void main() {
     container.read(directorySortAscendingProvider.notifier).state = false;
     expect(await filteredNames(), ['Hannah', 'Benjamin', 'Anna']);
   });
+
+  test('the letter index points at the first person of each letter', () async {
+    container.listen(directoryLetterIndexProvider, (_, _) {});
+    await container.read(directoryStreamProvider.future);
+    expect(container.read(directoryLetterIndexProvider), {'A': 0, 'B': 1, 'H': 2});
+
+    container.read(directorySortAscendingProvider.notifier).state = false;
+    await container.read(directoryStreamProvider.future);
+    expect(container.read(directoryLetterIndexProvider), {'H': 0, 'B': 1, 'A': 2});
+  });
 }
