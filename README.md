@@ -97,7 +97,7 @@ The app writes a log file to help trace problems (startup, database open/create,
 - **Deleting:** safe at any time; a new file is created automatically.
 - **Uninstall:** the log files stay on the device, just like the databases.
 - **Viewing in the app:** *Settings → Debug menu → Recent logs*, or long-press the icon on the startup/error screen twice. Both have a copy button.
-- **Developers:** use `AppLogger` (`lib/global/app_logger.dart`) instead of `debugPrint`. Set `AppLogger.logSqlStatements = true` to print every SQL statement.
+- **Developers:** use `AppLogger` (`lib/core/logging/app_logger.dart`) instead of `debugPrint`. Set `AppLogger.logSqlStatements = true` to print every SQL statement.
 
 > Error messages in the log may contain names (e.g. "person named X already exists").
 
