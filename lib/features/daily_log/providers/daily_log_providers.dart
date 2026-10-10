@@ -24,13 +24,14 @@ final dailyEditModeProvider       = StateProvider.autoDispose<bool>((ref) => fal
 final dailySelectedPeopleProvider = StateProvider.autoDispose<Set<PersonWithCategories>>((ref) => {});
 
 
-final dailyRawLogsProvider = StreamProvider<List<PersonWithCategories>>((ref) async* {
+/// The entries of the selected day, grouped by person. Only this day is held:
+/// a date change rebuilds the provider and cancels the old stream, and leaving
+/// the daily tab releases it.
+final dailyRawLogsProvider = StreamProvider.autoDispose<List<PersonWithCategories>>((ref) {
   final date = ref.watch(dailyDateProvider);
   final repo = ref.watch(dailyRepositoryProvider);
 
-  final stream = repo.watchDailyLogsFromCurrentDay(date);
-
-  await for (final rawResults in stream) {
+  return repo.watchDailyLogsFromCurrentDay(date).map((rawResults) {
     final Map<int, PersonWithCategories> personMap = {};
 
     for (final row in rawResults) {
@@ -50,10 +51,9 @@ final dailyRawLogsProvider = StreamProvider<List<PersonWithCategories>>((ref) as
       final record = CategoryRecord.fromDrift(personData, dailyData);
       personMap[personId]!.records.add(record);
     }
-    
-    // Yield the new list every time the database updates
-    yield personMap.values.toList();
-  }
+
+    return personMap.values.toList();
+  });
 });
 
 
