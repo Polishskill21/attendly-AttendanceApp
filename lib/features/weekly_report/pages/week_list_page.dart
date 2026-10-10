@@ -9,12 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class WeeksListPage extends ConsumerStatefulWidget {
+class WeekListPage extends ConsumerStatefulWidget {
   final DateTime currentWeekDate;
   final Function(DateTime, bool)? onStatusChanged;
   final bool isTablet;
 
-  const WeeksListPage({
+  const WeekListPage({
     super.key,
     required this.currentWeekDate,
     this.onStatusChanged,
@@ -22,10 +22,10 @@ class WeeksListPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WeeksListPage> createState() => _WeeksListPageState();
+  ConsumerState<WeekListPage> createState() => _WeekListPageState();
 }
 
-class _WeeksListPageState extends ConsumerState<WeeksListPage> {
+class _WeekListPageState extends ConsumerState<WeekListPage> {
   final HelperAllPerson _helper = HelperAllPerson();
 
 

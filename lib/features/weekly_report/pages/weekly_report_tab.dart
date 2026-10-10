@@ -16,12 +16,12 @@ import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 
 
-class WeeklyReportPage extends ConsumerStatefulWidget {
+class WeeklyReportTab extends ConsumerStatefulWidget {
   final int selectedTab;
   final void Function(int) onTabChange;
   final bool isTablet;
 
-  const WeeklyReportPage({
+  const WeeklyReportTab({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
@@ -29,10 +29,10 @@ class WeeklyReportPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WeeklyReportPage> createState() => WeeklyReportPageState();
+  ConsumerState<WeeklyReportTab> createState() => _WeeklyReportTabState();
 }
 
-class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
+class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
   // final HelperAllPerson _helper = HelperAllPerson();
   late DateTime selectedWeekDate;
   bool _statusChanged = false;
@@ -244,7 +244,7 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
     _statusChanged = false;
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
-        builder: (context) => WeeksListPage(
+        builder: (context) => WeekListPage(
           currentWeekDate: selectedWeekDate,
           onStatusChanged: (DateTime date, bool newStatus) {
             _statusChanged = true;

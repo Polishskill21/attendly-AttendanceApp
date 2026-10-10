@@ -1,6 +1,6 @@
-class YearStatsModel {
+class YearStats {
   final Map<String, dynamic> stats;
   final int weekCount;
 
-  YearStatsModel({required this.stats, required this.weekCount});
+  YearStats({required this.stats, required this.weekCount});
 }

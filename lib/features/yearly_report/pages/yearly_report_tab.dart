@@ -11,12 +11,12 @@ import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class YearStatsPage extends ConsumerStatefulWidget {
+class YearlyReportTab extends ConsumerStatefulWidget {
   final int selectedTab;
   final void Function(int) onTabChange;
   final bool isTablet;
 
-  const YearStatsPage({
+  const YearlyReportTab({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
@@ -24,10 +24,10 @@ class YearStatsPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<YearStatsPage> createState() => YearStatsPageState();
+  ConsumerState<YearlyReportTab> createState() => _YearlyReportTabState();
 }
 
-class YearStatsPageState extends ConsumerState<YearStatsPage> {
+class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
   bool _isManualRefreshing = false;
 
   @override
@@ -141,7 +141,7 @@ class YearStatsPageState extends ConsumerState<YearStatsPage> {
     );
   }
 
-  Widget _buildReportView(YearStatsModel statsModel) {
+  Widget _buildReportView(YearStats statsModel) {
     final localizations = AppLocalizations.of(context);
     final stats = statsModel.stats;
     final weekCount = statsModel.weekCount;

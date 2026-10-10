@@ -18,8 +18,8 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _selectedTab = -1;
 
-  // final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
-  // final GlobalKey<YearStatsPageState> _yearStatsKey = GlobalKey();
+  // final GlobalKey<_WeeklyReportTabState> _weeklyReportKey = GlobalKey();
+  // final GlobalKey<_YearlyReportTabState> _yearStatsKey = GlobalKey();
   // final GlobalKey<_DailyLogTabState> _dailyPersonKey = GlobalKey();
 
   @override
@@ -176,14 +176,14 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
           isTablet: isTablet,
         );
       case 2:
-        return WeeklyReportPage(
+        return WeeklyReportTab(
           // key: _weeklyReportKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,
           isTablet: isTablet,
         );
       case 3:
-        return YearStatsPage(
+        return YearlyReportTab(
           // key: _yearStatsKey,
           selectedTab: _selectedTab,
           onTabChange: _onTabChange,

@@ -4,12 +4,12 @@ import 'package:attendly/data/database/exceptions.dart';
 import 'package:attendly/core/logging/app_logger.dart';
 
 
-class YearlyStatsRepository {
-  static const String _tag = 'YearlyStatsRepository';
+class YearlyReportRepository {
+  static const String _tag = 'YearlyReportRepository';
 
   final AppDatabase db;
 
-  YearlyStatsRepository(this.db);
+  YearlyReportRepository(this.db);
 
   /// Fetches the aggregated statistics for the yearly report.
   Future<List<Map<String, dynamic>>> getYearlyStats() async {

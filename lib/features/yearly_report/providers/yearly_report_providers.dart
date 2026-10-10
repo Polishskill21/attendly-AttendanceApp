@@ -3,11 +3,11 @@ import 'package:attendly/features/yearly_report/models/year_stats.dart';
 import 'package:attendly/data/database/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final yearlyRepositoryProvider = Provider<YearlyStatsRepository>((ref) {
-  return YearlyStatsRepository(ref.watch(appDatabaseProvider));
+final yearlyRepositoryProvider = Provider<YearlyReportRepository>((ref) {
+  return YearlyReportRepository(ref.watch(appDatabaseProvider));
 });
 
-final yearlyStatsProvider = StreamProvider.autoDispose<YearStatsModel?>((ref) async* {
+final yearlyStatsProvider = StreamProvider.autoDispose<YearStats?>((ref) async* {
   final db = ref.watch(appDatabaseProvider);
   final yearlyRepo = ref.watch(yearlyRepositoryProvider);
 
@@ -27,7 +27,7 @@ final yearlyStatsProvider = StreamProvider.autoDispose<YearStatsModel?>((ref) as
     final weekCount = results[1] as int;
 
     if (statsData.isNotEmpty && statsData.first.values.any((v) => v != null)) {
-      yield YearStatsModel(stats: statsData.first, weekCount: weekCount);
+      yield YearStats(stats: statsData.first, weekCount: weekCount);
     } else {
       yield null;
     }
