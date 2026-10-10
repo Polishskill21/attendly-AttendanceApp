@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 
-class MigraionItem{
+class MigrationOption{
   final int id;
   final String label;
   final bool value;
   final IconData? icon;
 
-  MigraionItem(this.id, this.label, this.value, this.icon);
+  MigrationOption(this.id, this.label, this.value, this.icon);
 }
 
-List<MigraionItem> getMigrationItems(BuildContext context) {
+List<MigrationOption> getMigrationOptions(BuildContext context) {
   final localizations = AppLocalizations.of(context);
   return [
-    MigraionItem(1, localizations.yes, true, Icons.location_on_outlined),
-    MigraionItem(2, localizations.no, false, Icons.location_off_outlined)
+    MigrationOption(1, localizations.yes, true, Icons.location_on_outlined),
+    MigrationOption(2, localizations.no, false, Icons.location_off_outlined)
   ];
 }
 
 // Keep the old list for backward compatibility but deprecate it
 @Deprecated("Keep the old list for backward compatibility but deprecate it")
-List<MigraionItem> migrationItems = [
-  MigraionItem(1, "True", true, Icons.location_on_outlined),
-  MigraionItem(2, "False", false, Icons.location_off_outlined)
+List<MigrationOption> migrationItems = [
+  MigrationOption(1, "True", true, Icons.location_on_outlined),
+  MigrationOption(2, "False", false, Icons.location_off_outlined)
 ];

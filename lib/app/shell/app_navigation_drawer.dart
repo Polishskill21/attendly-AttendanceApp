@@ -163,7 +163,7 @@ class AppNavigationDrawer extends ConsumerWidget {
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => DatabaseListPage(
+                      builder: (_) => DatabasePickerPage(
                         currentDbPath: appState.currentDbPath,
                         isTablet: isTablet,
                       ),
@@ -289,7 +289,7 @@ class AppNavigationDrawer extends ConsumerWidget {
                 } else {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => DatabaseListPage(
+                      builder: (_) => DatabasePickerPage(
                         currentDbPath: appState.currentDbPath,
                         isTablet: isTablet,
                       ),

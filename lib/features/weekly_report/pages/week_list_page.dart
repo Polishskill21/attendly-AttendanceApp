@@ -26,7 +26,7 @@ class WeekListPage extends ConsumerStatefulWidget {
 }
 
 class _WeekListPageState extends ConsumerState<WeekListPage> {
-  final HelperAllPerson _helper = HelperAllPerson();
+  final AppDialogs _helper = AppDialogs();
 
 
   Future<void> _toggleCountableWeek(WeeklyEntryData week) async {

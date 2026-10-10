@@ -226,7 +226,7 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                   ],
                 ),
                 SizedBox(height: ResponsiveUtils.getListPadding(context).vertical * 2),
-                DropdownMenu<CategoryItem?>(
+                DropdownMenu<CategoryOption?>(
                   controller: _categoryController,
                   // width: MediaQuery.of(context).size.width - (ResponsiveUtils.getContentPadding(context).horizontal * 2),
                   expandedInsets: EdgeInsets.zero,
@@ -239,9 +239,9 @@ class _DailyLogSearchPageState extends ConsumerState<DailyLogSearchPage> {
                     style: TextStyle(fontSize: bodySize, fontWeight: FontWeight.w500),
                   ),
                   onSelected: (item) => setState(() => _selectedCategory = item?.category.name),
-                  dropdownMenuEntries: getCategoryItems(context)
-                      .map<DropdownMenuEntry<CategoryItem?>>((CategoryItem item) {
-                    return DropdownMenuEntry<CategoryItem?>(
+                  dropdownMenuEntries: getCategoryOptions(context)
+                      .map<DropdownMenuEntry<CategoryOption?>>((CategoryOption item) {
+                    return DropdownMenuEntry<CategoryOption?>(
                       value: item,
                       label: item.label,
                       leadingIcon: item.icon != null ? Icon(item.icon, size: iconSize) : null,

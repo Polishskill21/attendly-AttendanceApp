@@ -38,7 +38,7 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  final HelperAllPerson helper = HelperAllPerson();
+  final AppDialogs helper = AppDialogs();
 
   late DailyRepository _repo;
 
@@ -406,22 +406,22 @@ class _AddDailyEntryPageState extends ConsumerState<AddDailyEntryPage>{
                     fontSize: ResponsiveUtils.getBodyFontSize(context),
                   )
                 ),
-                DropdownMenu<CategoryItem>(
+                DropdownMenu<CategoryOption>(
                   controller: _categoryController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectCategory,
                   textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
                   enableFilter: true,
                   requestFocusOnTap: false,
-                  onSelected: (CategoryItem? item) {
+                  onSelected: (CategoryOption? item) {
                     setState(() {
                       selectedCategory = item?.category;
                       _multiplier = 1;
                       _controller.text = '1';
                     });
                   },
-                  dropdownMenuEntries: getCategoryItems(context).map<DropdownMenuEntry<CategoryItem>>((CategoryItem menu) {
-                    return DropdownMenuEntry<CategoryItem>(
+                  dropdownMenuEntries: getCategoryOptions(context).map<DropdownMenuEntry<CategoryOption>>((CategoryOption menu) {
+                    return DropdownMenuEntry<CategoryOption>(
                       value: menu,
                       label: menu.label,
                       leadingIcon: menu.icon != null ? Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)) : null,

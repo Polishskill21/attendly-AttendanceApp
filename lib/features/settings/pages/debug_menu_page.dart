@@ -10,14 +10,14 @@ import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
-class DebugMenu extends ConsumerStatefulWidget  {
-  const DebugMenu({super.key});
+class DebugMenuPage extends ConsumerStatefulWidget  {
+  const DebugMenuPage({super.key});
 
   @override
-  ConsumerState<DebugMenu> createState() => _DebugMenuState();
+  ConsumerState<DebugMenuPage> createState() => _DebugMenuPageState();
 }
 
-class _DebugMenuState extends ConsumerState<DebugMenu> {
+class _DebugMenuPageState extends ConsumerState<DebugMenuPage> {
   String _settingsContent = '';
   bool _isLoading = true;
   String? _error;

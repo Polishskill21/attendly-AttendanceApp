@@ -3,30 +3,30 @@ import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class CategoryItem{
+class CategoryOption{
   final int id;
   final String label;
   final Category category;
   final IconData? icon;
 
-  CategoryItem(this.id, this.label, this.category, this.icon);
+  CategoryOption(this.id, this.label, this.category, this.icon);
 }
 
-List<CategoryItem> getCategoryItems(BuildContext context) {
+List<CategoryOption> getCategoryOptions(BuildContext context) {
   final localizations = AppLocalizations.of(context);
   return [
-    CategoryItem(1, localizations.open, Category.open, FontAwesomeIcons.clipboardUser.data),
-    CategoryItem(2, localizations.offers, Category.offer, Icons.local_offer_outlined),
-    CategoryItem(3, localizations.parent,Category.parent, Icons.person_2_outlined),
-    CategoryItem(4, localizations.other, Category.other, Icons.pending_outlined)
+    CategoryOption(1, localizations.open, Category.open, FontAwesomeIcons.clipboardUser.data),
+    CategoryOption(2, localizations.offers, Category.offer, Icons.local_offer_outlined),
+    CategoryOption(3, localizations.parent,Category.parent, Icons.person_2_outlined),
+    CategoryOption(4, localizations.other, Category.other, Icons.pending_outlined)
   ];
 }
 
 // Keep the old list for backward compatibility but deprecate it
 @Deprecated("Keep the old list for backward compatibility but deprecate it")
-List<CategoryItem> categoryItems = [
-  CategoryItem(1, "Open", Category.open, FontAwesomeIcons.clipboardUser.data),
-  CategoryItem(2, "Offer", Category.offer, Icons.local_offer_outlined),
-  CategoryItem(3, "Parent", Category.parent, Icons.person_2_outlined),
-  CategoryItem(4, "Other", Category.other, Icons.pending_outlined)
+List<CategoryOption> categoryItems = [
+  CategoryOption(1, "Open", Category.open, FontAwesomeIcons.clipboardUser.data),
+  CategoryOption(2, "Offer", Category.offer, Icons.local_offer_outlined),
+  CategoryOption(3, "Parent", Category.parent, Icons.person_2_outlined),
+  CategoryOption(4, "Other", Category.other, Icons.pending_outlined)
 ];

@@ -36,7 +36,7 @@ class DailyLogTab extends ConsumerStatefulWidget {
 
 class _DailyLogTabState extends ConsumerState<DailyLogTab> {
   // late DailyRepository _repo;
-  final HelperAllPerson _helper = HelperAllPerson();
+  final AppDialogs _helper = AppDialogs();
   bool _isManualRefreshing = false;
 
   void refreshDailyEntries() {
@@ -529,7 +529,7 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
             ),
           ),
           const SizedBox(height: 12),
-          DropdownMenu<CategoryItem?>(
+          DropdownMenu<CategoryOption?>(
             controller: _categoryController,
             expandedInsets: EdgeInsets.zero,
             textStyle: TextStyle(fontSize: body + 2),
@@ -539,7 +539,7 @@ class _FilterSectionState extends ConsumerState<_FilterSection> {
                 (item) =>
                     ref.read(dailyCategoryFilterProvider.notifier).state = item?.category.name,
             dropdownMenuEntries:
-                getCategoryItems(context)
+                getCategoryOptions(context)
                     .map(
                       (item) => DropdownMenuEntry(
                         value: item,

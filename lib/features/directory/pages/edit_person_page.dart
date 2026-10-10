@@ -36,13 +36,13 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _migrationController = TextEditingController();
   final TextEditingController _homeCountryController = TextEditingController();
-  final HelperAllPerson _helper = HelperAllPerson();
+  final AppDialogs _helper = AppDialogs();
 
 
   Gender? selectedGender;
   bool? selectedMigration;
-  GenderItem? _initialGender;
-  MigraionItem? _initialMigration;
+  GenderOption? _initialGender;
+  MigrationOption? _initialMigration;
   bool _hasInitializedSelections = false;
 
 
@@ -98,8 +98,8 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
     }
   }
 
-  GenderItem? _genderToItem(Gender gender, BuildContext context) {
-    final items = getGenderItems(context);
+  GenderOption? _genderToItem(Gender gender, BuildContext context) {
+    final items = getGenderOptions(context);
     switch (gender) {
       case Gender.m: return items[0];
       case Gender.f: return items[1];
@@ -107,8 +107,8 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
     }
   }
 
-  MigraionItem? _migrationToItem(bool migration, BuildContext context) {
-    final items = getMigrationItems(context);
+  MigrationOption? _migrationToItem(bool migration, BuildContext context) {
+    final items = getMigrationOptions(context);
     return migration ? items[0] : items[1];
   }
 
@@ -306,16 +306,16 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
               Text(localizations.selectGender,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
               ),
-              DropdownMenu<GenderItem>(
+              DropdownMenu<GenderOption>(
                 controller: _genderController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectChildGender,
                 textStyle: TextStyle(
                     fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 initialSelection: _initialGender,
-                dropdownMenuEntries: getGenderItems(context)
-                    .map<DropdownMenuEntry<GenderItem>>((menu) =>
-                        DropdownMenuEntry<GenderItem>(
+                dropdownMenuEntries: getGenderOptions(context)
+                    .map<DropdownMenuEntry<GenderOption>>((menu) =>
+                        DropdownMenuEntry<GenderOption>(
                           value: menu,
                           label: menu.label,
                           leadingIcon: Icon(menu.icon, size: iconSize),
@@ -350,16 +350,16 @@ class _EditPersonPageState extends ConsumerState<EditPersonPage>{
               Text(localizations.selectMigration,
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
               ),
-              DropdownMenu<MigraionItem>(
+              DropdownMenu<MigrationOption>(
                 controller: _migrationController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectChildsMigrationBackground,
                 textStyle: TextStyle(
                     fontSize: ResponsiveUtils.getBodyFontSize(context)),
                 initialSelection: _initialMigration,
-                dropdownMenuEntries: getMigrationItems(context)
-                    .map<DropdownMenuEntry<MigraionItem>>((menu) =>
-                        DropdownMenuEntry<MigraionItem>(
+                dropdownMenuEntries: getMigrationOptions(context)
+                    .map<DropdownMenuEntry<MigrationOption>>((menu) =>
+                        DropdownMenuEntry<MigrationOption>(
                           value: menu,
                           label: menu.label,
                           leadingIcon: Icon(menu.icon, size: iconSize),

@@ -8,7 +8,7 @@ import 'package:attendly/shared/widgets/error_dialog.dart';
 import 'package:intl/intl.dart';
 
 
-class HelperAllPerson {
+class AppDialogs {
   Future<bool?> displayDialog(BuildContext context, String header, String message, AppLocalizations localizations) async {
     final isTablet = ResponsiveUtils.isTablet(context);
     

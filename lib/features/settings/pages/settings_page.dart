@@ -16,7 +16,7 @@ class SettingsPage extends ConsumerWidget  {
   // void _showRecalibrationDialog() async {
   //   final localizations = AppLocalizations.of(context);
 
-  //   HelperAllPerson helper = HelperAllPerson();
+  //   AppDialogs helper = AppDialogs();
   //   final appState = context.read<AppState>();
 
   //   if (!appState.isReady) {
@@ -223,7 +223,7 @@ class SettingsPage extends ConsumerWidget  {
                       ),
                     GestureDetector(
                       onLongPress: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const DebugMenu()),
+                        MaterialPageRoute(builder: (_) => const DebugMenuPage()),
                       ),
                       child: Icon(
                           Icons.info_outline, 
@@ -245,7 +245,7 @@ class SettingsPage extends ConsumerWidget  {
                             final version =
                                 snapshot.hasData ? snapshot.data!.version : '...';
                             return InkWell(
-                              onTap: () => ChangelogHelper.showDirectly(context),
+                              onTap: () => ChangelogDialog.showDirectly(context),
                               borderRadius: BorderRadius.circular(8),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -285,7 +285,7 @@ class SettingsPage extends ConsumerWidget  {
   Future<void> _showRecalibrationDialog(
       BuildContext context, WidgetRef ref) async {
     final localizations = AppLocalizations.of(context);
-    final helper = HelperAllPerson();
+    final helper = AppDialogs();
     final dbState = ref.read(databaseProvider);               // CHANGED
  
     if (!dbState.isReady) {
@@ -339,7 +339,7 @@ class SettingsPage extends ConsumerWidget  {
   }
  
   // Future<void> _runMigrationTest(BuildContext context, WidgetRef ref) async {
-  //   final helper = HelperAllPerson();
+  //   final helper = AppDialogs();
   //   helper.showLoadingDialog(context, "Testing Migration...");
  
   //   try {
@@ -408,7 +408,7 @@ class SettingsPage extends ConsumerWidget  {
 }
 
 //   Future<void> _runMigrationTest() async {
-//     final helper = HelperAllPerson();
+//     final helper = AppDialogs();
     
 //     helper.showLoadingDialog(context, "Testing Migration...");
 

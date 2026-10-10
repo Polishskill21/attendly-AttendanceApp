@@ -89,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     if (result != _StartupResult.ready) return result;
 
     if (mounted && !ref.read(databaseProvider).isTemporaryDb) {
-      await ChangelogHelper.presentChangelogIfNew(context);
+      await ChangelogDialog.presentChangelogIfNew(context);
     }
 
     if (mounted) {
@@ -210,7 +210,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   //   }
 
   //   if (mounted && !isTemporaryDb) {
-  //     ChangelogHelper.presentChangelogIfNew(context);
+  //     ChangelogDialog.presentChangelogIfNew(context);
   //   }
 
   //   debugPrint("Opened database successfully");

@@ -43,7 +43,7 @@ class DirectoryTab extends ConsumerStatefulWidget {
 
 class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   final TextEditingController _searchController = TextEditingController();
-  final HelperAllPerson _helper = HelperAllPerson();
+  final AppDialogs _helper = AppDialogs();
   int _expandedIndex = -1;
   bool _isManualRefreshing = false;
   late final StateController<String> _searchQueryNotifier;
@@ -440,7 +440,7 @@ class _PersonListView extends StatelessWidget {
   final List<Widget> Function(DirectoryPeopleData) buildPersonDetails;
   final bool isTablet;
   final DirectoryRepository? repo;
-  final HelperAllPerson helper;
+  final AppDialogs helper;
   final AnchoredListController listController;
 
   const _PersonListView({

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 
-class ChartDialogHelper {
-  static Future<void> showChartDialog(
+class ChartDialog {
+  static Future<void> show(
     BuildContext context, {
     required String title,
     required Map<String, int> data

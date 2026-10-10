@@ -8,22 +8,22 @@ import 'package:flutter/material.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 
-class DatabaseListPage extends ConsumerStatefulWidget {
+class DatabasePickerPage extends ConsumerStatefulWidget {
   // Add a field to hold the path of the currently active database.
   final String? currentDbPath;
   final bool isTablet;
 
-  const DatabaseListPage({
+  const DatabasePickerPage({
     super.key, 
     this.currentDbPath,
     this.isTablet = false,
   });
 
   @override
-  ConsumerState<DatabaseListPage> createState() => _DatabaseListPageState();
+  ConsumerState<DatabasePickerPage> createState() => _DatabasePickerPageState();
 }
 
-class _DatabaseListPageState extends ConsumerState<DatabaseListPage> {
+class _DatabasePickerPageState extends ConsumerState<DatabasePickerPage> {
   late final Future<List<File>> _dbFilesFuture;
 
   @override

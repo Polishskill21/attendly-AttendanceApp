@@ -6,7 +6,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ChangelogHelper {
+class ChangelogDialog {
   static const String _versionKey = 'last_seen_version';
 
   static Future<void> presentChangelogIfNew(BuildContext context) async {

@@ -33,7 +33,7 @@ class WeeklyReportTab extends ConsumerStatefulWidget {
 }
 
 class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
-  // final HelperAllPerson _helper = HelperAllPerson();
+  // final AppDialogs _helper = AppDialogs();
   late DateTime selectedWeekDate;
   bool _statusChanged = false;
   bool _isManualRefreshing = false;
@@ -462,7 +462,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
             IconButton(
               icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
               onPressed: (withCount + withoutCount > 0)
-                  ? () => ChartDialogHelper.showChartDialog(
+                  ? () => ChartDialog.show(
                         context,
                         title: '${localizations.migrationBackground}: $gender',
                         data: {
@@ -513,7 +513,7 @@ class _WeeklyReportTabState extends ConsumerState<WeeklyReportTab> {
                 ),
                 IconButton(
                   icon: Icon(Icons.pie_chart, size: ResponsiveUtils.getIconSize(context)),
-                  onPressed: () => ChartDialogHelper.showChartDialog(
+                  onPressed: () => ChartDialog.show(
                     context,
                     title: title,
                     data: data,

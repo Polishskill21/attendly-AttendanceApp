@@ -32,7 +32,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _migrationController = TextEditingController();
   final TextEditingController _homeCountryController = TextEditingController();
-  final _helper = HelperAllPerson();
+  final _helper = AppDialogs();
   Gender? selectedGender;
   bool? selectedMigration;
 
@@ -264,7 +264,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
               Text(localizations.selectGender, 
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
               ),
-                DropdownMenu<GenderItem>(
+                DropdownMenu<GenderOption>(
                   controller: _genderController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectChildGender,
@@ -274,9 +274,9 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                   requestFocusOnTap: false,
                   onSelected: (item) =>
                       setState(() => selectedGender = item?.value),
-                  dropdownMenuEntries: getGenderItems(context)
-                      .map<DropdownMenuEntry<GenderItem>>((menu) =>
-                          DropdownMenuEntry<GenderItem>(
+                  dropdownMenuEntries: getGenderOptions(context)
+                      .map<DropdownMenuEntry<GenderOption>>((menu) =>
+                          DropdownMenuEntry<GenderOption>(
                             value: menu,
                             label: menu.label,
                             leadingIcon:
@@ -313,7 +313,7 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
               Text(localizations.selectMigration, 
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: ResponsiveUtils.getBodyFontSize(context))
               ),
-              DropdownMenu<MigraionItem>(
+              DropdownMenu<MigrationOption>(
                   controller: _migrationController,
                   expandedInsets: EdgeInsets.zero,
                   hintText: localizations.selectChildsMigrationBackground,
@@ -325,9 +325,9 @@ class _AddPersonPageState extends ConsumerState<AddPersonPage>{
                     selectedMigration = item?.value;
                     if (selectedMigration == false) _homeCountryController.clear();
                   }),
-                  dropdownMenuEntries: getMigrationItems(context)
-                      .map<DropdownMenuEntry<MigraionItem>>((menu) =>
-                          DropdownMenuEntry<MigraionItem>(
+                  dropdownMenuEntries: getMigrationOptions(context)
+                      .map<DropdownMenuEntry<MigrationOption>>((menu) =>
+                          DropdownMenuEntry<MigrationOption>(
                             value: menu,
                             label: menu.label,
                             leadingIcon:

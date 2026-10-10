@@ -290,7 +290,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
               IconButton(
                 icon: Icon(Icons.pie_chart,
                     size: ResponsiveUtils.getIconSize(context)),
-                onPressed: () => ChartDialogHelper.showChartDialog(context,
+                onPressed: () => ChartDialog.show(context,
                     title: title, data: data),
               ),
           ]),
@@ -396,7 +396,7 @@ class _YearlyReportTabState extends ConsumerState<YearlyReportTab> {
               icon: Icon(Icons.pie_chart,
                   size: ResponsiveUtils.getIconSize(context)),
               onPressed: (withCount + withoutCount > 0)
-                  ? () => ChartDialogHelper.showChartDialog(
+                  ? () => ChartDialog.show(
                         context,
                         title:
                             '${localizations.migrationBackground}: $gender',

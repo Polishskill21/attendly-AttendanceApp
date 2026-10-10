@@ -33,7 +33,7 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
   Category? _selectedCategory;
 
   late DailyRepository _repo;
-  final HelperAllPerson _helper = HelperAllPerson();
+  final AppDialogs _helper = AppDialogs();
   bool _didChangeDependencies = false;
 
   @override
@@ -49,7 +49,7 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
   @override
   void didChangeDependencies() {
     if (!_didChangeDependencies) {
-      _categoryController.text = getCategoryItems(context).firstWhereOrNull((item) => item.category == _selectedCategory)?.label ?? '';
+      _categoryController.text = getCategoryOptions(context).firstWhereOrNull((item) => item.category == _selectedCategory)?.label ?? '';
       _didChangeDependencies = true;
     }
     super.didChangeDependencies();
@@ -152,22 +152,22 @@ class _EditDailyEntryPageState extends ConsumerState<EditDailyEntryPage> {
                 ),
               ),
               SizedBox(height: ResponsiveUtils.getListPadding(context).vertical / 2),
-              DropdownMenu<CategoryItem>(
+              DropdownMenu<CategoryOption>(
                 controller: _categoryController,
                 expandedInsets: EdgeInsets.zero,
                 hintText: localizations.selectCategory,
                 textStyle: TextStyle(fontSize: ResponsiveUtils.getBodyFontSize(context)),
-                initialSelection: getCategoryItems(context)
+                initialSelection: getCategoryOptions(context)
                     .firstWhereOrNull((item) => item.category == _selectedCategory),
                 enableFilter: true,
                 requestFocusOnTap: false,
-                onSelected: (CategoryItem? item) {
+                onSelected: (CategoryOption? item) {
                   setState(() {
                     _selectedCategory = item?.category;
                   });
                 },
-                dropdownMenuEntries: getCategoryItems(context).map<DropdownMenuEntry<CategoryItem>>((CategoryItem menu) {
-                  return DropdownMenuEntry<CategoryItem>(
+                dropdownMenuEntries: getCategoryOptions(context).map<DropdownMenuEntry<CategoryOption>>((CategoryOption menu) {
+                  return DropdownMenuEntry<CategoryOption>(
                     value: menu,
                     label: menu.label,
                     leadingIcon: menu.icon != null ? Icon(menu.icon, size: ResponsiveUtils.getIconSize(context)) : null,
