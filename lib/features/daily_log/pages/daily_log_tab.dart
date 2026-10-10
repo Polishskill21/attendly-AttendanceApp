@@ -211,7 +211,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
       if (next is AsyncError) {
         final error = next.error;
         if (error != null && error is! custom_db_exceptions.DatabaseNotReadyException) {
-          ref.read(databaseManagerProvider.notifier).reportDatabaseError(error);
+          ref.read(databaseProvider.notifier).reportDatabaseError(error);
         }
       }
     });

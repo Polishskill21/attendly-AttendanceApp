@@ -8,13 +8,13 @@ import 'package:attendly/core/logging/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
  
  
-class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
+class DatabaseNotifier extends StateNotifier<DatabaseState> {
   /// [manager] is only passed in tests; the app always uses [DatabaseManager].
-  DatabaseManagerNotifier([IDatabaseManager? manager])
+  DatabaseNotifier([DatabaseManagerInterface? manager])
       : _manager = manager ?? DatabaseManager(),
-        super(const AppDatabaseState());
+        super(const DatabaseState());
 
-  final IDatabaseManager _manager;
+  final DatabaseManagerInterface _manager;
  
  
   /// Normal startup: check if we need a year rollover first.
@@ -32,7 +32,7 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   /// Marks state as ready when done.
   Future<void> openDatabase({File? file, Future<void> Function()? onMigrationStarted}) async {
     await _manager.openDatabase(file: file, onMigrationStarted: onMigrationStarted);
-    state = AppDatabaseState(
+    state = DatabaseState(
       manager:           _manager,
       isTemporaryDb:     file != null, 
       showNewYearBanner: false,
@@ -43,7 +43,7 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   /// Opens the default DB but keeps the "new year banner" visible.
   Future<void> openDatabaseWithBanner({Future<void> Function()? onMigrationStarted}) async {
     await _manager.openDatabase(onMigrationStarted: onMigrationStarted);
-    state = AppDatabaseState(
+    state = DatabaseState(
       manager:           _manager,
       isTemporaryDb:     false,
       showNewYearBanner: true,
@@ -54,7 +54,7 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   /// Creates a fresh DB for the current year.
   Future<void> createDatabase() async {
     await _manager.createDatabase();
-    state = AppDatabaseState(
+    state = DatabaseState(
       manager:           _manager,
       isTemporaryDb:     false,
       showNewYearBanner: false,
@@ -66,7 +66,7 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   /// On success the banner stays hidden; on failure the caller shows a banner.
   Future<void> performYearRolloverAndOpen({Future<void> Function()? onMigrationStarted}) async {
     await _manager.performYearRolloverAndOpen(onMigrationStarted: onMigrationStarted);
-    state = AppDatabaseState(
+    state = DatabaseState(
       manager:           _manager,
       isTemporaryDb:     false,
       showNewYearBanner: false,
@@ -88,26 +88,26 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   /// Closes the underlying DB and resets state to "not ready".
   /// Called before switching to a different DB file.
   Future<void> closeDatabase() async {
-    state = const AppDatabaseState(); // isReady = false immediately
+    state = const DatabaseState(); // isReady = false immediately
     await _manager.closeDatabase();
   }
 
   void reportDatabaseError(Object error, [StackTrace? stackTrace]) {
     AppLogger.e('Database', 'A page reported a database error, showing the error screen '
         '(db: ${state.currentDbPath ?? 'none'})', error, stackTrace);
-    state = AppDatabaseState(dbError: error); // manager=null, isReady=false
+    state = DatabaseState(dbError: error); // manager=null, isReady=false
   }
 }
 /// The provider you read / watch everywhere.
-final databaseManagerProvider =
-    StateNotifierProvider<DatabaseManagerNotifier, AppDatabaseState>(
-  (ref) => DatabaseManagerNotifier(),
+final databaseProvider =
+    StateNotifierProvider<DatabaseNotifier, DatabaseState>(
+  (ref) => DatabaseNotifier(),
 );
  
 
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final state = ref.watch(databaseManagerProvider);
+  final state = ref.watch(databaseProvider);
   
   if (state.manager == null || !state.isReady) {
     throw const DatabaseNotReadyException();

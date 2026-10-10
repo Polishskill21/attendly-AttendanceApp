@@ -120,7 +120,7 @@ class _DebugMenuState extends ConsumerState<DebugMenu> {
     final localizations = AppLocalizations.of(context);
     final iconSize = ResponsiveUtils.getIconSize(context);
     // Read the active db state from AppState
-    final appState = ref.watch(databaseManagerProvider); 
+    final appState = ref.watch(databaseProvider); 
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {

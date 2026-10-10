@@ -90,7 +90,7 @@ class _WeeksListPageState extends ConsumerState<WeeksListPage> {
             }
             
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) ref.read(databaseManagerProvider.notifier).reportDatabaseError(error);
+              if (mounted) ref.read(databaseProvider.notifier).reportDatabaseError(error);
             });
             return const Center(child: CircularProgressIndicator());
           },

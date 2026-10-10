@@ -1,15 +1,15 @@
 import 'package:attendly/data/database/database_manager_interface.dart';
 
 /// Immutable snapshot of what database is currently open.
-/// Held inside [DatabaseManagerNotifier].
-class AppDatabaseState {
-  final IDatabaseManager? manager;
+/// Held inside [DatabaseNotifier].
+class DatabaseState {
+  final DatabaseManagerInterface? manager;
   final bool isTemporaryDb;
   final bool showNewYearBanner;
   final bool isReady;
   final Object? dbError;
 
-  const AppDatabaseState({
+  const DatabaseState({
     this.manager,
     this.isTemporaryDb = false,
     this.showNewYearBanner = false,
@@ -21,14 +21,14 @@ class AppDatabaseState {
   String? get currentDbPath => manager?.currentDbPath;
   int?    get dbYear         => manager?.dbYear;
 
-  AppDatabaseState copyWith({
-    IDatabaseManager? manager,
+  DatabaseState copyWith({
+    DatabaseManagerInterface? manager,
     bool? isTemporaryDb,
     bool? showNewYearBanner,
     bool? isReady,
     Object? dbError
   }) {
-    return AppDatabaseState(
+    return DatabaseState(
       manager:           manager           ?? this.manager,
       isTemporaryDb:     isTemporaryDb     ?? this.isTemporaryDb,
       showNewYearBanner: showNewYearBanner ?? this.showNewYearBanner,

@@ -43,7 +43,7 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
   void initState() {
     super.initState();
     
-    final dbYear = ref.read(databaseManagerProvider).dbYear;
+    final dbYear = ref.read(databaseProvider).dbYear;
     selectedWeekDate = getFirstDateOfWeek(getScopedDate(dbYear: dbYear));
   }
 
@@ -126,7 +126,7 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
         if (next is AsyncError) {
           final error = next.error;
           if (error != null && error is! custom_db_exceptions.DatabaseNotReadyException) {
-            ref.read(databaseManagerProvider.notifier).reportDatabaseError(error);
+            ref.read(databaseProvider.notifier).reportDatabaseError(error);
           }
         }
       },

@@ -286,7 +286,7 @@ class SettingsPage extends ConsumerWidget  {
       BuildContext context, WidgetRef ref) async {
     final localizations = AppLocalizations.of(context);
     final helper = HelperAllPerson();
-    final dbState = ref.read(databaseManagerProvider);               // CHANGED
+    final dbState = ref.read(databaseProvider);               // CHANGED
  
     if (!dbState.isReady) {
       helper.showErrorMessage(context, localizations.databaseNotConnected);
@@ -347,7 +347,7 @@ class SettingsPage extends ConsumerWidget  {
   //     final file = File(p.join(dir!.path, 'db_2026_jt.db'));
  
   //     // Use the notifier directly — no new DatabaseManager() needed
-  //     final notifier = ref.read(databaseManagerProvider.notifier);  // CHANGED
+  //     final notifier = ref.read(databaseProvider.notifier);  // CHANGED
  
   //     final rolloverNeeded = await notifier.checkForYearRollover();
   //     if (rolloverNeeded) {
@@ -362,7 +362,7 @@ class SettingsPage extends ConsumerWidget  {
   //       }
   //     }
  
-  //     final testDb = ref.read(databaseManagerProvider).manager!.databaseConnection;
+  //     final testDb = ref.read(databaseProvider).manager!.databaseConnection;
   //     final people = await testDb.readDao.getAllPerson(true);
   //     final dailyResults = await testDb.readDao
   //         .getPeopleFromCurrentDay(DateTime(2026, 01, 22));

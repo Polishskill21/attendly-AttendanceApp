@@ -10,7 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:attendly/data/database/app_database.dart';
 
 
-class DatabaseManager implements IDatabaseManager {
+class DatabaseManager implements DatabaseManagerInterface {
   static const String _tag = "Database";
 
   AppDatabase? _db;

@@ -7,11 +7,11 @@ import '../fakes/fake_database_manager.dart';
 void main() {
   group('decideStartup', () {
     late FakeDatabaseManager manager;
-    late DatabaseManagerNotifier notifier;
+    late DatabaseNotifier notifier;
 
     setUp(() {
       manager = FakeDatabaseManager();
-      notifier = DatabaseManagerNotifier(manager);
+      notifier = DatabaseNotifier(manager);
     });
 
     tearDown(() async {
@@ -60,13 +60,13 @@ void main() {
     });
   });
 
-  group('DatabaseManagerNotifier', () {
+  group('DatabaseNotifier', () {
     late FakeDatabaseManager manager;
-    late DatabaseManagerNotifier notifier;
+    late DatabaseNotifier notifier;
 
     setUp(() {
       manager = FakeDatabaseManager();
-      notifier = DatabaseManagerNotifier(manager);
+      notifier = DatabaseNotifier(manager);
     });
 
     tearDown(() async {

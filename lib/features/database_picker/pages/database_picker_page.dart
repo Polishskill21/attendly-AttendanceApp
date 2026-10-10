@@ -35,7 +35,7 @@ class _DatabaseListPageState extends ConsumerState<DatabaseListPage> {
   /// Handles the selection of a database file.
   void _onFileSelected(BuildContext context, File selectedDb) async {
     // Close current connection and clear state before switching
-    await ref.read(databaseManagerProvider.notifier).closeDatabase();
+    await ref.read(databaseProvider.notifier).closeDatabase();
 
     if (!mounted) return;
 

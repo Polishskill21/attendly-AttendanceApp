@@ -13,7 +13,7 @@ final dailyRepositoryProvider = Provider<DailyRepository>((ref) {
 
 final dailyDateProvider = StateProvider<DateTime>((ref) {
   final dbYear = ref.watch(
-    databaseManagerProvider.select((s) => s.dbYear),
+    databaseProvider.select((s) => s.dbYear),
   );
   return getScopedDate(dbYear: dbYear);
 });

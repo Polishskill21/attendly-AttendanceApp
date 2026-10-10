@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:attendly/data/database/app_database.dart';
 
-abstract interface class IDatabaseManager {
+abstract interface class DatabaseManagerInterface {
   AppDatabase get databaseConnection;
 
   String? get currentDbPath;

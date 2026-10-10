@@ -84,7 +84,7 @@ class MyApp extends ConsumerWidget {
 
     // A page reported a database error: replace the whole stack with the
     // splash screen's error view (retry / create new).
-    ref.listen<AppDatabaseState>(databaseManagerProvider, (previous, next) {
+    ref.listen<DatabaseState>(databaseProvider, (previous, next) {
       if (next.dbError != null && previous?.dbError == null) {
         _navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => SplashScreen(dbError: next.dbError)),

@@ -6,12 +6,12 @@ import 'package:attendly/data/database/database_manager_interface.dart';
 
 import '../helpers/test_database.dart';
 
-/// [IDatabaseManager] backed by an in-memory database, without touching
+/// [DatabaseManagerInterface] backed by an in-memory database, without touching
 /// storage, permissions or settings.json.
 ///
 /// Every call is recorded in [calls], so tests can check the order in which
 /// startup asks its questions.
-class FakeDatabaseManager implements IDatabaseManager {
+class FakeDatabaseManager implements DatabaseManagerInterface {
   FakeDatabaseManager({
     this.rolloverNeeded = false,
     this.initialSetupNeeded = false,

@@ -298,7 +298,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
               }
               
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) ref.read(databaseManagerProvider.notifier).reportDatabaseError(e);
+                if (mounted) ref.read(databaseProvider.notifier).reportDatabaseError(e);
               });
               return const Center(child: CircularProgressIndicator());
             },

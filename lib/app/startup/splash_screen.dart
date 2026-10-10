@@ -88,7 +88,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
     if (result != _StartupResult.ready) return result;
 
-    if (mounted && !ref.read(databaseManagerProvider).isTemporaryDb) {
+    if (mounted && !ref.read(databaseProvider).isTemporaryDb) {
       await ChangelogHelper.presentChangelogIfNew(context);
     }
 
@@ -102,7 +102,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   }
 
   Future<_StartupResult> _initializeDatabase() async {
-    final notifier = ref.read(databaseManagerProvider.notifier);
+    final notifier = ref.read(databaseProvider.notifier);
 
     try {
       final decision = await decideStartup(
@@ -164,7 +164,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   //       debugPrint("Could not open specific db: $e");
   //       return true;
   //     }
-  //     ref.read(databaseManagerProvider.notifier).setDatabase(
+  //     ref.read(databaseProvider.notifier).setDatabase(
   //       dbManager,
   //       isTemporary: true,
   //       showBanner: false,
@@ -246,7 +246,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     setState(() => _isCreatingNewDb = true);
  
     try {
-      await ref.read(databaseManagerProvider.notifier).createDatabase();
+      await ref.read(databaseProvider.notifier).createDatabase();
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainApp()),
@@ -269,7 +269,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   //   setState(() => _isCreatingNewDb = true);
 
   //   try {
-  //     final IDatabaseManager dbManager = DatabaseManager();
+  //     final DatabaseManagerInterface dbManager = DatabaseManager();
   //     await dbManager.createDatabase();
 
   //     if (mounted) {
@@ -299,7 +299,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
  
   //   try {
   //     await ref
-  //         .read(databaseManagerProvider.notifier)
+  //         .read(databaseProvider.notifier)
   //         .performYearRolloverAndOpen();
   //     // Success — notifier already set showNewYearBanner=false
   //   } catch (e) {
@@ -311,7 +311,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   //       }
   //       // Rollover failed — fall back to opening old DB with banner
   //       try {
-  //         await ref.read(databaseManagerProvider.notifier).openDatabaseWithBanner();
+  //         await ref.read(databaseProvider.notifier).openDatabaseWithBanner();
   //       } catch (_) {
   //         // Even fallback failed — _initializeDatabase will return false
   //         rethrow;
@@ -338,7 +338,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
     try {
       await ref
-          .read(databaseManagerProvider.notifier)
+          .read(databaseProvider.notifier)
           .performYearRolloverAndOpen();
       await safeCloseDialog(); 
       
@@ -354,7 +354,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
         }
         AppLogger.i(_tag, "User cancelled the rollover, falling back to the old database");
         try {
-          await ref.read(databaseManagerProvider.notifier).openDatabaseWithBanner();
+          await ref.read(databaseProvider.notifier).openDatabaseWithBanner();
         } catch (_) {
           rethrow;
         }
@@ -365,7 +365,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     }
   }
 
-  // Future<bool> _handleCreateNewYearDatabase(IDatabaseManager dbManager) async {
+  // Future<bool> _handleCreateNewYearDatabase(DatabaseManagerInterface dbManager) async {
   //   setState(() => _isCreatingNewDb = true);
   //   try {
   //     await dbManager.performYearRolloverAndOpen();
@@ -385,7 +385,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
   Future<void> _showSecretMenu() async {
     final jsonContent = await ref
-        .read(databaseManagerProvider.notifier)
+        .read(databaseProvider.notifier)
         .getSettingsJsonContent();
     if (!mounted) return;
     final isTablet = ResponsiveUtils.isTablet(context);

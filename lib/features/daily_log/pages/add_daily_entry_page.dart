@@ -71,7 +71,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
     super.initState();
 
     _repo = ref.read(dailyRepositoryProvider);
-    final dbYear = ref.read(databaseManagerProvider).dbYear;
+    final dbYear = ref.read(databaseProvider).dbYear;
     
     // Initialize with passed date or current date
     selectedDate = widget.initialDate ?? _persistedDate ?? getScopedDate(dbYear: dbYear);
@@ -85,7 +85,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
 
   void _resetFields(){
     final localizations = AppLocalizations.of(context);
-    final dbYear = ref.read(databaseManagerProvider).dbYear;
+    final dbYear = ref.read(databaseProvider).dbYear;
     setState(() {
       selectedPersons.clear();
       _commentController.clear();
@@ -202,7 +202,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
   }
 
   Future<void> _selectDate() async {
-    final dbYear = ref.read(databaseManagerProvider).dbYear;
+    final dbYear = ref.read(databaseProvider).dbYear;
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: selectedDate ?? getScopedDate(dbYear: dbYear),

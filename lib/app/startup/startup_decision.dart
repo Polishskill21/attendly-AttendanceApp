@@ -21,7 +21,7 @@ enum StartupDecision {
 /// Runs the startup checks in the order the app relies on: the rollover check
 /// first (it also creates settings.json), then the first-launch check.
 Future<StartupDecision> decideStartup(
-  DatabaseManagerNotifier notifier, {
+  DatabaseNotifier notifier, {
   bool hasReportedError = false,
   bool hasSelectedDatabase = false,
 }) async {

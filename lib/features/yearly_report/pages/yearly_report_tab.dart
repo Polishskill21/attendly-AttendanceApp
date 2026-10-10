@@ -110,7 +110,7 @@ class YearStatsPageState extends ConsumerState<YearStatsPage> {
     String displayMessage = "An unexpected error occurred.";
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(databaseManagerProvider.notifier).reportDatabaseError(error);
+      if (mounted) ref.read(databaseProvider.notifier).reportDatabaseError(error);
     });
 
     return Center(

@@ -35,11 +35,11 @@ class CustomDrawer extends ConsumerWidget {
   //     MaterialPageRoute(builder: (_) => const SplashScreen()),
   //     (Route<dynamic> route) => false,
   //   );
-  //   await ref.read(databaseManagerProvider.notifier).closeDatabase();
+  //   await ref.read(databaseProvider.notifier).closeDatabase();
   // }
 
   Future<void> _handleReturnToMainDb(BuildContext context, WidgetRef ref) async {
-    await ref.read(databaseManagerProvider.notifier).closeDatabase();
+    await ref.read(databaseProvider.notifier).closeDatabase();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const SplashScreen()),
@@ -57,7 +57,7 @@ class CustomDrawer extends ConsumerWidget {
   }
 
   Widget _buildNavigationRail(BuildContext context, WidgetRef ref) {
-    final appState = ref.watch(databaseManagerProvider);
+    final appState = ref.watch(databaseProvider);
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final iconSize = ResponsiveUtils.getIconSize(context, baseSize: 32);
@@ -183,7 +183,7 @@ class CustomDrawer extends ConsumerWidget {
   }
 
   Widget _buildDrawer(BuildContext context, WidgetRef ref) {
-    final appState = ref.watch(databaseManagerProvider);
+    final appState = ref.watch(databaseProvider);
     final localizations = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final dbPath = appState.currentDbPath ?? localizations.noDatabaseOpen;
@@ -307,7 +307,7 @@ class CustomDrawer extends ConsumerWidget {
     );
   }
 
-  Widget _buildDrawerHeader(BuildContext context, AppDatabaseState appState, ThemeData theme, String dbName, AppLocalizations localizations) {
+  Widget _buildDrawerHeader(BuildContext context, DatabaseState appState, ThemeData theme, String dbName, AppLocalizations localizations) {
     final isTablet = this.isTablet || ResponsiveUtils.isTablet(context);
     final textScale = isTablet ? 0.85 : 1.0;
     
