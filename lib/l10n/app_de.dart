@@ -647,7 +647,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get doNotCloseAppWarning => 'App nicht schließen';
 
-  // For splash_screen.dart (first launch / open failure)
+  // Startup screens (first launch / open failure)
   @override
   String get noDatabaseTitle => 'Willkommen bei Attendly';
 
@@ -669,10 +669,29 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get openDefaultDatabase => 'Standarddatenbank öffnen';
 
-  // Logs (debug menu / splash secret menu)
+  // Logs (debug menu / startup failed screen)
   @override
   String get recentLogs => 'Letzte Protokolle';
 
   @override
   String get logsCopiedToClipboard => 'Protokolle in die Zwischenablage kopiert';
+
+  // Storage permission (startup)
+  @override
+  String get storagePermissionTitle => 'Speicherzugriff benötigt';
+
+  @override
+  String get storagePermissionMessage => 'Attendly speichert seine Datenbanken unter Dokumente/AttendlyDb. Bitte erlauben Sie den Zugriff auf Dateien, damit die App sie öffnen kann.';
+
+  @override
+  String get storagePermissionDeniedMessage => 'Der Zugriff auf Dateien wurde verweigert. Öffnen Sie die App-Einstellungen, erlauben Sie den Zugriff auf Dateien und kehren Sie zu Attendly zurück.';
+
+  @override
+  String get grantPermission => 'Zugriff erlauben';
+
+  @override
+  String get openAppSettings => 'Einstellungen öffnen';
+
+  @override
+  String get showLogs => 'Protokolle anzeigen';
 }

@@ -148,7 +148,7 @@ abstract class AppLocalizations {
   // Missing string for custom_drawer.dart
   String get currentDatabase;
 
-  // Missing string for splash_screen.dart
+  // Startup loading screen
   String get initializing;
 
   // Missing strings for category items
@@ -301,7 +301,7 @@ abstract class AppLocalizations {
   String get migrationBodyMessage;
   String get doNotCloseAppWarning;
 
-  // For splash_screen.dart (first launch / open failure)
+  // Startup screens (first launch / open failure)
   String get noDatabaseTitle;
   String get noDatabaseMessage;
   String get createDatabase;
@@ -310,7 +310,15 @@ abstract class AppLocalizations {
   String createNewDatabaseWarning(String year);
   String get openDefaultDatabase;
 
-  // Logs (debug menu / splash secret menu)
+  // Logs (debug menu / startup failed screen)
   String get recentLogs;
   String get logsCopiedToClipboard;
+
+  // Storage permission (startup)
+  String get storagePermissionTitle;
+  String get storagePermissionMessage;
+  String get storagePermissionDeniedMessage;
+  String get grantPermission;
+  String get openAppSettings;
+  String get showLogs;
 }

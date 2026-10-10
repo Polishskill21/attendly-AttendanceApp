@@ -369,7 +369,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get currentDatabase => 'Current Database';
 
-  // Missing string for splash_screen.dart
+  // Startup loading screen
   @override
   String get initializing => 'Initializing...';
 
@@ -654,7 +654,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get doNotCloseAppWarning => 'Do not close the app';
 
-  // For splash_screen.dart (first launch / open failure)
+  // Startup screens (first launch / open failure)
   @override
   String get noDatabaseTitle => 'Welcome to Attendly';
 
@@ -676,10 +676,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get openDefaultDatabase => 'Open default database';
 
-  // Logs (debug menu / splash secret menu)
+  // Logs (debug menu / startup failed screen)
   @override
   String get recentLogs => 'Recent logs';
 
   @override
   String get logsCopiedToClipboard => 'Logs copied to clipboard';
+
+  // Storage permission (startup)
+  @override
+  String get storagePermissionTitle => 'Storage access needed';
+
+  @override
+  String get storagePermissionMessage => 'Attendly keeps its databases in Documents/AttendlyDb. Please allow access to files so the app can open them.';
+
+  @override
+  String get storagePermissionDeniedMessage => 'Access to files was denied. Open the app settings, allow access to files and come back to Attendly.';
+
+  @override
+  String get grantPermission => 'Allow access';
+
+  @override
+  String get openAppSettings => 'Open settings';
+
+  @override
+  String get showLogs => 'Show logs';
 }
