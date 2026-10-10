@@ -3,8 +3,7 @@ import 'package:attendly/data/database/database_provider.dart';
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/features/daily_log/models/category_record.dart';
 import 'package:attendly/features/daily_log/models/person_with_categories.dart';
-import 'package:attendly/features/daily_log/pages/add_daily_entry_page.dart';
-import 'package:attendly/features/daily_log/pages/edit_daily_entry_page.dart';
+import 'package:attendly/features/daily_log/pages/daily_entry_form_page.dart';
 import 'package:attendly/features/daily_log/providers/daily_log_providers.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/shared/dialogs/app_dialogs.dart';
@@ -105,7 +104,10 @@ class DailyLogTab extends ShellTab {
             heroTag: 'add_fab',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => AddDailyEntryPage(initialDate: ref.read(dailyDateProvider)),
+                builder: (context) => DailyEntryFormPage(
+                  mode: DailyEntryFormMode.add,
+                  initialDate: ref.read(dailyDateProvider),
+                ),
               ),
             ),
             child: Icon(
@@ -288,11 +290,10 @@ class _DailyLogBodyState extends ConsumerState<_DailyLogBody> {
                         context,
                         MaterialPageRoute(
                           builder:
-                              (ctx) => AddDailyEntryPage(
+                              (ctx) => DailyEntryFormPage(
+                                mode: DailyEntryFormMode.add,
                                 initialDate: selectedDate,
-                                preselectedPersons: [
-                                  {'id': person.personId, 'name': person.name},
-                                ],
+                                preselectedPersons: [(id: person.personId, name: person.name)],
                               ),
                         ),
                       );
@@ -301,7 +302,7 @@ class _DailyLogBodyState extends ConsumerState<_DailyLogBody> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (ctx) => EditDailyEntryPage(record: record),
+                          builder: (ctx) => DailyEntryFormPage(mode: DailyEntryFormMode.edit, record: record),
                         ),
                       );
                     },
@@ -329,12 +330,13 @@ class _EditModeActionsState extends ConsumerState<_EditModeActions> {
   Future<void> _onBulkAddCategory() async {
     final selectedSet = ref.read(dailySelectedPeopleProvider);
     final date = ref.read(dailyDateProvider);
-    final selectedList = selectedSet.map((p) => {'id': p.personId, 'name': p.name}).toList();
+    final selectedList = [for (final p in selectedSet) (id: p.personId, name: p.name)];
 
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder:
-            (context) => AddDailyEntryPage(
+            (context) => DailyEntryFormPage(
+              mode: DailyEntryFormMode.add,
               initialDate: date,
               preselectedPersons: selectedList,
             ),
