@@ -4,6 +4,7 @@ import 'package:attendly/frontend/pages/weekly_report/weekly_list_page.dart';
 import 'package:attendly/global/global_function_collection.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:attendly/provider/weekly_repo_provider.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -143,7 +144,7 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
                    _isManualRefreshing,
         onRefresh: () async {
           setState(() => _isManualRefreshing = true);
-          debugPrint("Invalidating Weekly Stream");
+          AppLogger.d("Weekly", "Invalidating weekly stream");
           fetchWeekData(selectedWeekDate); 
 
           await Future.delayed(const Duration(milliseconds: 400));

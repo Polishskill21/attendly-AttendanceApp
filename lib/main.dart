@@ -1,8 +1,13 @@
 import 'dart:io';
 import 'package:attendly/data/local/config/exceptions/settings_exceptions.dart';
+import 'package:attendly/frontend/app_database_state.dart';
 import 'package:attendly/frontend/theme_builder.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:attendly/provider/database_provider.dart';
+import 'package:attendly/provider/logging_provider_observer.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:attendly/frontend/pages/splash_screen/splash_screen.dart';
@@ -14,6 +19,8 @@ import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _installGlobalErrorLogging();
+  await _logAppStart();
 
   if (Platform.isAndroid) {
     // Check if permission is denied before requesting
@@ -28,6 +35,7 @@ void main() async {
   //debugPaintSizeEnabled = true;
   runApp(
     const ProviderScope(
+      observers: [LoggingProviderObserver()],
       child: MyApp()
     )
     // ChangeNotifierProvider(
@@ -37,8 +45,35 @@ void main() async {
   );
 }
 
+/// Routes every uncaught error (widget build, async, platform) into the log with its stack trace.
+void _installGlobalErrorLogging() {
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    AppLogger.e('Flutter', 'Uncaught Flutter error${details.context != null ? ' ${details.context}' : ''}',
+        details.exception, details.stack);
+  };
+
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    AppLogger.e('Uncaught', 'Unhandled asynchronous error', error, stackTrace);
+    return true;
+  };
+}
+
+Future<void> _logAppStart() async {
+  String version = 'unknown';
+  try {
+    final info = await PackageInfo.fromPlatform();
+    version = '${info.version}+${info.buildNumber}';
+  } catch (_) {}
+  AppLogger.i('App', '===== Attendly $version starting on '
+      '${Platform.operatingSystem} ${Platform.operatingSystemVersion} '
+      '(${kReleaseMode ? 'release' : 'debug'}) =====');
+}
+
 /// Thin wrapper that keeps the old SettingsProvider (provider package) alive.
 /// ProviderScope (riverpod) is outside, so both coexist cleanly.
+
+final _navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -46,17 +81,22 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
-    final dbState  = ref.watch(databaseManagerProvider);
+
+    // A page reported a database error: replace the whole stack with the
+    // splash screen's error view (retry / create new).
+    ref.listen<AppDatabaseState>(databaseManagerProvider, (previous, next) {
+      if (next.dbError != null && previous?.dbError == null) {
+        _navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => SplashScreen(dbError: next.dbError)),
+          (_) => false,
+        );
+      }
+    });
 
     if (settings.error != null) return _buildErrorApp(settings.error!);
 
-    if (dbState.dbError != null) {
     return MaterialApp(
-      home: SplashScreen(dbError: dbState.dbError),
-    );
-  }
-
-    return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'Attendly',
       themeMode: settings.themeMode,
       locale:    settings.locale,

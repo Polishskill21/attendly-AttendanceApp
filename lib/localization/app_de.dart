@@ -646,4 +646,33 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get doNotCloseAppWarning => 'App nicht schließen';
+
+  // For splash_screen.dart (first launch / open failure)
+  @override
+  String get noDatabaseTitle => 'Willkommen bei Attendly';
+
+  @override
+  String get noDatabaseMessage => 'Es ist noch keine Datenbank vorhanden. Erstellen Sie eine Datenbank für das aktuelle Jahr, um zu beginnen.';
+
+  @override
+  String get createDatabase => 'Datenbank erstellen';
+
+  @override
+  String get databaseOpenFailedMessage => 'Die Datenbank konnte nicht geöffnet werden. Versuchen Sie es erneut oder erstellen Sie eine neue Datenbank.';
+
+  @override
+  String get createNewDatabaseWarningTitle => 'Neue Datenbank erstellen?';
+
+  @override
+  String createNewDatabaseWarning(String year) => 'Es wird eine neue, leere Datenbank für $year erstellt und ab sofort verwendet. Personen und Einträge aus der Datenbank, die nicht geöffnet werden konnte, werden NICHT übernommen.\n\nFalls bereits eine Datenbank für $year existiert, wird diese stattdessen geöffnet. Bestehende Datenbankdateien werden nicht gelöscht.';
+
+  @override
+  String get openDefaultDatabase => 'Standarddatenbank öffnen';
+
+  // Logs (debug menu / splash secret menu)
+  @override
+  String get recentLogs => 'Letzte Protokolle';
+
+  @override
+  String get logsCopiedToClipboard => 'Protokolle in die Zwischenablage kopiert';
 }

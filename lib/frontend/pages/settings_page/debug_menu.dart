@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -100,6 +101,17 @@ class _DebugMenuState extends ConsumerState<DebugMenu> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(localizations.settingsCopiedToClipboard)),
+    );
+  }
+
+  void _copyLogsToClipboard() {
+    final localizations = AppLocalizations.of(context);
+    final path = AppLogger.logFilePath;
+    final logs = AppLogger.recentLines.join('\n');
+
+    Clipboard.setData(ClipboardData(text: path != null ? 'Log file: $path\n\n$logs' : logs));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(localizations.logsCopiedToClipboard)),
     );
   }
 
@@ -233,6 +245,61 @@ class _DebugMenuState extends ConsumerState<DebugMenu> {
                         ),
                       ),
                     ),
+              Divider(
+                  height: ResponsiveUtils.isTablet(context) ? 40 : 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      localizations.recentLogs,
+                      style: TextStyle(
+                        fontSize: ResponsiveUtils.getBodyFontSize(context),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.copy, size: iconSize),
+                    onPressed: _copyLogsToClipboard,
+                    tooltip: localizations.copyToClipboard,
+                  ),
+                ],
+              ),
+              if (AppLogger.logFilePath != null)
+                Text(
+                  'Path: ${AppLogger.logFilePath}',
+                  style: TextStyle(
+                    fontSize:
+                        ResponsiveUtils.getBodyFontSize(context) - 4,
+                    fontFamily: 'monospace',
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              SizedBox(
+                  height: ResponsiveUtils.isTablet(context) ? 12 : 8),
+              Container(
+                width: double.infinity,
+                height: ResponsiveUtils.isTablet(context) ? 400 : 300,
+                padding: ResponsiveUtils.getContentPadding(context),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius:
+                      ResponsiveUtils.getCardBorderRadius(context),
+                ),
+                child: SingleChildScrollView(
+                  reverse: true, // newest entries at the bottom, visible first
+                  child: SelectableText(
+                    AppLogger.recentLines.join('\n'),
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      color: Colors.black87,
+                      fontSize:
+                          ResponsiveUtils.getBodyFontSize(context) - 8,
+                    ),
+                  ),
+                ),
+              ),
               Divider(
                   height: ResponsiveUtils.isTablet(context) ? 40 : 32),
               // DB path — from AppState instead of DBConnectionManager

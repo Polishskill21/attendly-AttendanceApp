@@ -6,6 +6,7 @@ import 'package:attendly/frontend/person_model/person_logic_conversion.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:attendly/provider/daily_repo_provider.dart';
 import 'package:attendly/provider/database_provider.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/pages/daily_logs_pages/add_page_daily.dart';
@@ -241,7 +242,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
         onRefresh: () async {
           setState(() => _isManualRefreshing = true);
 
-          debugPrint("Invalidating daily stream");
+          AppLogger.d("Daily", "Invalidating daily stream");
           refreshDailyEntries();
 
           await Future.delayed(const Duration(milliseconds: 400));

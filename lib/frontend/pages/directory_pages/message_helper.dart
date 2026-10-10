@@ -1,6 +1,7 @@
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/tables/enums/gender.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/localization/app_localizations.dart';
 import 'package:attendly/frontend/widgets/error_dialog.dart';
@@ -177,6 +178,7 @@ class HelperAllPerson {
   }
 
   void showErrorMessage(BuildContext context, String? message, {StackTrace? stackTrace}) {
+    AppLogger.e('UI', 'Error dialog shown: ${message ?? 'unknown error'}', null, stackTrace);
     final localizations = AppLocalizations.of(context);
     showDialog<void>(
       context: context,

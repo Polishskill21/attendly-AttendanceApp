@@ -87,6 +87,22 @@ Located in the **Settings**, the Help page provides guidance on how to use the a
 
 ---
 
+## 🪵 Logs
+
+The app writes a log file to help trace problems (startup, database open/create, year rollover, errors with stack traces).
+
+- **Location:** `Documents/AttendlyDb/logs/attendly.log` (and `attendly.old.log`)
+- **What is written:** info, warning and error messages. Debug messages and SQL statements only appear in the console (`flutter run` / `adb logcat`).
+- **Size limit:** on every app start, if `attendly.log` is larger than **512 KB**, it is renamed to `attendly.old.log` (replacing the previous one) and a new `attendly.log` is started. At most two files exist (~1 MB in total), so **no manual cleanup is needed**.
+- **Deleting:** safe at any time; a new file is created automatically.
+- **Uninstall:** the log files stay on the device, just like the databases.
+- **Viewing in the app:** *Settings → Debug menu → Recent logs*, or long-press the icon on the startup/error screen twice. Both have a copy button.
+- **Developers:** use `AppLogger` (`lib/global/app_logger.dart`) instead of `debugPrint`. Set `AppLogger.logSqlStatements = true` to print every SQL statement.
+
+> Error messages in the log may contain names (e.g. "person named X already exists").
+
+---
+
 ## ⚠️ Permissions
 
 - **Full Storage Access:** Required to read/write the local database and manage backups.

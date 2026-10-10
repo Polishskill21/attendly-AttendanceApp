@@ -300,4 +300,17 @@ abstract class AppLocalizations {
   String get migratingDatabase;
   String get migrationBodyMessage;
   String get doNotCloseAppWarning;
+
+  // For splash_screen.dart (first launch / open failure)
+  String get noDatabaseTitle;
+  String get noDatabaseMessage;
+  String get createDatabase;
+  String get databaseOpenFailedMessage;
+  String get createNewDatabaseWarningTitle;
+  String createNewDatabaseWarning(String year);
+  String get openDefaultDatabase;
+
+  // Logs (debug menu / splash secret menu)
+  String get recentLogs;
+  String get logsCopiedToClipboard;
 }

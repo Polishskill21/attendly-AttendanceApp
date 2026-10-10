@@ -2,19 +2,19 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
 import 'package:attendly/data/local/config/i_database_manager.dart';
+import 'package:attendly/data/local/config/settings_store.dart';
 import 'package:attendly/data/local/config/storage_manager.dart';
 import 'package:attendly/global/global_function_collection.dart';
-import 'package:flutter/foundation.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:attendly/data/local/config/database.dart';
 
 
 class DatabaseManager implements IDatabaseManager {
-  final String _fileName = "settings.json";
-  
+  static const String _tag = "Database";
+
   AppDatabase? _db;
-  File? _settingsFile;
-  File? _oldDbFile;     
+  File? _oldDbFile;
   File? _currentDbFile;
 
   @override
@@ -24,10 +24,10 @@ class DatabaseManager implements IDatabaseManager {
   int? get dbYear {
     final path = currentDbPath;
     if (path == null) return null;
-    
+
     final match = RegExp(r'db_(\d{4})').firstMatch(path);
     final yearStr = match?.group(1);
-    
+
     return yearStr != null ? int.tryParse(yearStr) : null;
   }
 
@@ -41,97 +41,150 @@ class DatabaseManager implements IDatabaseManager {
 
   @override
   Future<bool> checkForYearRollover() async {
-    _settingsFile ??= await _initJsonFile();
-    if (_settingsFile == null) return false;
-
-    final data = await _getFileData(_settingsFile!);
-    String yearFromFile = data['current_year'];
+    final data = await _loadSettings();
     _currentDbFile = File(data['file_path']);
+    final yearFromFile = int.tryParse(data['current_year'].toString()) ?? getCurrentYearAsInt();
 
-    if (int.parse(yearFromFile) < getCurrentYearAsInt()) {
+    final currentYear = getCurrentYearAsInt();
+    final dbExists = await _currentDbFile!.exists();
+    AppLogger.i(_tag, "Year check: settings year=$yearFromFile, system year=$currentYear, "
+        "configured db=${_currentDbFile!.path} (exists: $dbExists)");
+
+    // A rollover only makes sense if there is an old database to carry people over from.
+    if (yearFromFile < currentYear && dbExists) {
       _oldDbFile = _currentDbFile;
+      AppLogger.i(_tag, "Year rollover needed: $yearFromFile -> $currentYear");
       return true;
+    }
+    if (yearFromFile < currentYear) {
+      AppLogger.w(_tag, "Year changed but the old database is missing, no rollover possible");
     }
 
     return false;
   }
 
   @override
+  Future<bool> needsInitialSetup() async {
+    if (_currentDbFile == null) {
+      final data = await _loadSettings();
+      _currentDbFile = File(data['file_path']);
+    }
+    if (await _currentDbFile!.exists()) return false;
+
+    final dbFiles = await StorageManager.listDbFiles();
+    if (dbFiles.isEmpty) {
+      AppLogger.i(_tag, "No database files found, initial setup needed");
+      return true;
+    }
+    AppLogger.w(_tag, "Configured db ${_currentDbFile!.path} is missing, but other databases exist: "
+        "${dbFiles.map((f) => p.basename(f.path)).join(', ')}");
+    return false;
+  }
+
+  @override
   Future<void> openDatabase({File? file, Future<void> Function()? onMigrationStarted}) async {
     if (file == null && _currentDbFile == null) {
-      _settingsFile ??= await _initJsonFile();
-      if (_settingsFile != null) {
-        final data = await _getFileData(_settingsFile!);
-        _currentDbFile = File(data['file_path']);
-      }
+      final data = await _loadSettings();
+      _currentDbFile = File(data['file_path']);
     }
 
     File targetFile = file ?? _currentDbFile!;
-    
+
     if (!await targetFile.exists()) {
-      debugPrint("Failed to open db because it does not exist");
+      AppLogger.e(_tag, "Cannot open ${targetFile.path}: file does not exist");
       throw FileSystemException(
         "Database file does not exist. It must be created explicitly.",
         targetFile.path,
       );
     }
 
-    debugPrint("Trying to open ${targetFile.path}");
+    AppLogger.i(_tag, "Opening ${targetFile.path} (${await targetFile.length()} bytes"
+        "${file != null ? ', selected by user' : ''})");
 
     await closeDatabase();
     _currentDbFile = targetFile;
     _db = AppDatabase(AppDatabase.openConnection(targetFile), onMigrationStarted: onMigrationStarted);
-    debugPrint("Opened Database");
-    await _db!.forceOpen();
+
+    final stopwatch = Stopwatch()..start();
+    try {
+      await _db!.forceOpen();
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Opening ${targetFile.path} failed after ${stopwatch.elapsedMilliseconds} ms", e, stackTrace);
+      rethrow;
+    }
+    AppLogger.i(_tag, "Opened ${p.basename(targetFile.path)} in ${stopwatch.elapsedMilliseconds} ms");
   }
 
   @override
   Future<void> createDatabase() async {
     final dir = await StorageManager.getExternalDocumentsDir();
-    if (dir == null) throw Exception("Could not access external storage");
+    if (dir == null) {
+      AppLogger.e(_tag, "Cannot create database: storage directory not accessible");
+      throw Exception("Could not access external storage");
+    }
 
     String newYear = yearToString(getCurrentYear());
     String newDbPath = p.join(dir.path, "db_$newYear.db");
     File newDbFile = File(newDbPath);
+    AppLogger.i(_tag, await newDbFile.exists()
+        ? "Create requested, but $newDbPath already exists - opening it instead"
+        : "Creating new database $newDbPath");
 
     await closeDatabase();
-    
-    _db = AppDatabase(AppDatabase.openConnection(newDbFile));
-    await _db!.forceOpen();
 
-    await _updateFile(_settingsFile, newDbPath, newYear);
-    //debugPrint("updating file with $newDbFile and $newYear");
+    try {
+      _db = AppDatabase(AppDatabase.openConnection(newDbFile));
+      await _db!.forceOpen();
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Creating/opening $newDbPath failed", e, stackTrace);
+      rethrow;
+    }
+
+    await SettingsStore.update({'current_year': newYear, 'file_path': newDbPath});
     _currentDbFile = newDbFile;
-    debugPrint("created new db");
+    AppLogger.i(_tag, "Database $newDbPath ready and set as default");
   }
 
   @override
   Future<void> performYearRolloverAndOpen({Future<void> Function()? onMigrationStarted}) async {
 
     if (_oldDbFile == null) {
-      debugPrint("No old database found to rollover from.");
+      AppLogger.w(_tag, "Rollover requested but no old database is known, creating an empty one");
       await createDatabase();
       return;
     }
 
-    debugPrint("Pre-migrating old database to ensure schemas match...");
-    final tempOldDb = AppDatabase(AppDatabase.openConnection(_oldDbFile!), onMigrationStarted: onMigrationStarted);
-    
-    await tempOldDb.forceOpen(); 
-    await tempOldDb.close();
-    debugPrint("Old database migration complete.");
+    final oldPath = _oldDbFile!.path;
+    AppLogger.i(_tag, "Year rollover started from $oldPath");
 
-    await createDatabase();
+    try {
+      AppLogger.i(_tag, "Rollover step 1/3: migrating old database schema");
+      final tempOldDb = AppDatabase(AppDatabase.openConnection(_oldDbFile!), onMigrationStarted: onMigrationStarted);
+      await tempOldDb.forceOpen();
+      await tempOldDb.close();
 
-    debugPrint("Performing a copy");
-    await _db!.copyPersonDirFromOldDatabase(_oldDbFile!.path);
+      AppLogger.i(_tag, "Rollover step 2/3: creating database for the new year");
+      await createDatabase();
+
+      AppLogger.i(_tag, "Rollover step 3/3: copying people directory");
+      await _db!.copyPersonDirFromOldDatabase(oldPath);
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Year rollover from $oldPath failed", e, stackTrace);
+      rethrow;
+    }
+    AppLogger.i(_tag, "Year rollover finished, now using $currentDbPath");
   }
 
   @override
   Future<void> closeDatabase() async {
     if (_db != null) {
-      debugPrint("Closing Db");
-      await _db!.close();
+      AppLogger.i(_tag, "Closing ${_currentDbFile != null ? p.basename(_currentDbFile!.path) : 'database'}");
+      try {
+        await _db!.close();
+      } catch (e, stackTrace) {
+        AppLogger.e(_tag, "Closing the database failed", e, stackTrace);
+        rethrow;
+      }
       _db = null;
     }
   }
@@ -139,13 +192,11 @@ class DatabaseManager implements IDatabaseManager {
   @override
   Future<String> getSettingsJsonContent() async {
     try {
-      final file = await _initJsonFile();
-      if (file == null || !await file.exists()) return '{}';
-      final content = await file.readAsString();
-      if (content.trim().isEmpty) return '{}';
-      final json = jsonDecode(content);
+      final json = await SettingsStore.load();
+      if (json == null) return '{}';
       return const JsonEncoder.withIndent('  ').convert(json);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      AppLogger.e(_tag, "Reading settings.json for the debug view failed", e, stackTrace);
       return '{ "error": "${e.toString()}" }';
     }
   }
@@ -154,62 +205,12 @@ class DatabaseManager implements IDatabaseManager {
   // PRIVATE JSON HELPERS
   // =======================================================================
 
-  Future<File?> _initJsonFile() async {
-    Directory? documentsDir = await StorageManager.getExternalDocumentsDir();
-    if (documentsDir == null) return null;
-
-    String settingFilePath = p.join(documentsDir.path, _fileName);
-    File file = File(settingFilePath);
-    Map<String, dynamic> data = {};
-
-    if (await file.exists()) {
-      String content = await file.readAsString();
-      data = content.isNotEmpty ? jsonDecode(content) : {};
+  /// settings.json is created with defaults if it does not exist yet.
+  Future<Map<String, dynamic>> _loadSettings() async {
+    final data = await SettingsStore.load();
+    if (data == null) {
+      throw DatabaseFailedInit("Could not access the storage directory. Please check app permissions.");
     }
-
-    bool needsSave = false;
-
-    if (!data.containsKey('file_path')) {
-      String dbYear = yearToString(getCurrentYear());
-      data['file_path'] = p.join(documentsDir.path, "db_$dbYear.db");
-      needsSave = true;
-    }
-
-    if (!data.containsKey('current_year')) {
-      data['current_year'] = yearToString(getCurrentYear());
-      needsSave = true;
-    }
-
-    if (!data.containsKey('theme')) {
-      data['theme'] = 'light';
-      needsSave = true;
-    }
-
-    if (!data.containsKey('language')) {
-      data['language'] = 'en';
-      needsSave = true;
-    }
-
-    if (needsSave) {
-      await file.writeAsString(jsonEncode(data));
-    }
-
-    return file;
-  }
-
-  Future<void> _updateFile(File? file, String dbPath, String newYear) async {
-    if (file == null) return;
-    final Map<String, dynamic> data = await _getFileData(file);
-    
-    data['current_year'] = newYear;
-    data['file_path'] = dbPath;
-
-    await file.writeAsString(jsonEncode(data));
-  }
-
-  Future<Map<String, dynamic>> _getFileData(File file) async {
-    String fileString = await file.readAsString();
-    if (fileString.isEmpty) return {};
-    return jsonDecode(fileString);
+    return data;
   }
 }

@@ -4,6 +4,7 @@ import 'package:attendly/data/local/config/database_manager.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
 import 'package:attendly/data/local/config/i_database_manager.dart';
 import 'package:attendly/frontend/app_database_state.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
  
  
@@ -17,6 +18,11 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
   /// Returns true if a rollover is needed, false if not.
   Future<bool> checkForYearRollover() {
     return _manager.checkForYearRollover();
+  }
+
+  /// True on a fresh install where no database has been created yet.
+  Future<bool> needsInitialSetup() {
+    return _manager.needsInitialSetup();
   }
  
   /// Opens the default DB (path comes from settings.json inside the manager).
@@ -83,7 +89,9 @@ class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
     await _manager.closeDatabase();
   }
 
-  void reportDatabaseError(Object error) {
+  void reportDatabaseError(Object error, [StackTrace? stackTrace]) {
+    AppLogger.e('Database', 'A page reported a database error, showing the error screen '
+        '(db: ${state.currentDbPath ?? 'none'})', error, stackTrace);
     state = AppDatabaseState(dbError: error); // manager=null, isReady=false
   }
 }

@@ -121,7 +121,6 @@ class _AddPageState extends ConsumerState<AddPage>{
     //   return false;
     }
     catch (e, stackTrace) {
-      debugPrint('Unexpected error during form submission: $e');
       _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
       return;
     }

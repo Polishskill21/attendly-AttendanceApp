@@ -3,6 +3,7 @@ import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:attendly/data/repo/daily_repository.dart';
 import 'package:attendly/frontend/utils/responsive_utils.dart';
 import 'package:attendly/provider/daily_repo_provider.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/pages/directory_pages/message_helper.dart';
 import 'package:attendly/frontend/person_model/category_record.dart';
@@ -85,7 +86,7 @@ class _EditCategoryPageState extends ConsumerState<EditCategoryPage> {
         Navigator.of(context).pop(true);
       }
     } on custom_db_exceptions.DuplicateDailyEntryException {
-      debugPrint("Not adding twice to the open cat");
+      AppLogger.d("Daily", "Not adding twice to the open category");
       await _helper.showInfoMessageDialog(
           context,
           localizations.personAlreadyInCategoryOpen(widget.record.personName ?? localizations.unknown),
@@ -98,11 +99,8 @@ class _EditCategoryPageState extends ConsumerState<EditCategoryPage> {
     //     await DbConnectionValidator.handleConnectionError(context);
     //   }
     } on custom_db_exceptions.DatabaseException catch (e) {
-      debugPrint('Database error: $e');
       _helper.showErrorMessage(context, e.toString());
     } catch (e, stackTrace) {
-      debugPrint('Unexpected error during category update: $e');
-      debugPrintStack(stackTrace: stackTrace);
       _helper.showErrorMessage(context, e.toString(), stackTrace: stackTrace);
     }
   }

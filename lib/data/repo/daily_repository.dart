@@ -1,10 +1,13 @@
 import 'package:attendly/data/local/config/database.dart';
 import 'package:attendly/data/local/config/exceptions/db_exceptions.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:attendly/data/local/models/batch_result.dart';
 import 'package:attendly/data/local/tables/enums/category.dart';
 import 'package:drift/drift.dart';
 
 class DailyRepository {
+  static const String _tag = 'DailyRepository';
+
   final AppDatabase db;
 
   DailyRepository(this.db);
@@ -16,6 +19,7 @@ class DailyRepository {
     try {
       return db.readDao.watchPeopleFromCurrentDay(date);
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to watch daily logs for ${date.toIso8601String()}", e, stack);
       throw DatabaseOperationException(
         "Failed to watch daily logs",
         originalException: e is Exception ? e : Exception(e.toString()),
@@ -56,6 +60,7 @@ class DailyRepository {
     } on PersonNotFoundException {
       rethrow;
     } catch (e, stack) {
+      AppLogger.e(_tag, "Could not add daily entry (person $personId, ${date.toIso8601String()}, ${category.name}, x$multiplier)", e, stack);
       throw DatabaseOperationException(
         "Could not add daily entry",
         originalException: e is Exception ? e : Exception(e.toString()),
@@ -87,7 +92,8 @@ class DailyRepository {
         successCount++;
       } on DuplicateDailyEntryException {
         duplicateNames.add(person['name'] ?? 'Unknown');
-      } catch (e) {
+      } catch (e, stack) {
+        AppLogger.e(_tag, "Batch add failed for person ${person['id']} (${date.toIso8601String()}, ${category.name})", e, stack);
         failCount++;
         errorMessages.add("${person['name']}: ${e.toString()}");
       }
@@ -122,6 +128,7 @@ class DailyRepository {
     } on DuplicateDailyEntryException {
       rethrow;
     } catch (e, stack) {
+      AppLogger.e(_tag, "Failed to update entry (record $recordId, person $personId, ${date.toIso8601String()})", e, stack);
       throw DatabaseOperationException(
         "Failed to update entry",
         originalException: e is Exception ? e : null,
@@ -137,6 +144,7 @@ class DailyRepository {
     try {
       await db.deleteDao.deleteDailyEntry(recordId, personId, date);
     } catch (e, stack) {
+      AppLogger.e(_tag, "Deletion failed daily entry (record $recordId, person $personId, ${date.toIso8601String()})", e, stack);
       throw DatabaseOperationException(
         "Deletion failed daily entry",
         originalException: e is Exception ? e : null,
@@ -150,6 +158,7 @@ class DailyRepository {
     try {
       await db.deleteDao.deleteMultipleDailyEntries(personIds, date);
     } catch (e, stack) {
+      AppLogger.e(_tag, "Bulk deletion failed (persons $personIds, ${date.toIso8601String()})", e, stack);
       throw DatabaseOperationException(
         "Bulk deletion failed",
         originalException: e is Exception ? e : null,

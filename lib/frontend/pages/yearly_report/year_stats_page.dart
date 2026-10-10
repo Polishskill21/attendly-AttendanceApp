@@ -2,6 +2,7 @@ import 'package:attendly/data/local/config/exceptions/db_exceptions.dart' as cus
 import 'package:attendly/frontend/pages/yearly_report/year_stats_model.dart';
 import 'package:attendly/provider/database_provider.dart';
 import 'package:attendly/provider/yearly_repo_provider.dart';
+import 'package:attendly/global/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/frontend/widgets/custom_drawer.dart';
 import 'package:attendly/frontend/widgets/refreshable_app_bar.dart';
@@ -58,7 +59,7 @@ class YearStatsPageState extends ConsumerState<YearStatsPage> {
                    _isManualRefreshing, 
         onRefresh: () async {
           setState(() => _isManualRefreshing = true);
-          debugPrint("Invalidating Yearly Stream");
+          AppLogger.d("Yearly", "Invalidating yearly stream");
           fetchYearStats(); 
 
           await Future.delayed(const Duration(milliseconds: 400));
