@@ -94,7 +94,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainApp()),
+        MaterialPageRoute(builder: (_) => const AppShell()),
       );
     }
 
@@ -249,7 +249,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
       await ref.read(databaseProvider.notifier).createDatabase();
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainApp()),
+          MaterialPageRoute(builder: (_) => const AppShell()),
         );
       }
     } catch (e, stackTrace) {
@@ -279,7 +279,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   //         showBanner: showNewYearBanner,
   //       );
   //       Navigator.of(context).pushReplacement(
-  //         MaterialPageRoute(builder: (_) => const MainApp()),
+  //         MaterialPageRoute(builder: (_) => const AppShell()),
   //       );
   //     }
   //   } catch (e) {

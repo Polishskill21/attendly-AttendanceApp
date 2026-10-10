@@ -230,7 +230,7 @@ class DailyPersonState extends ConsumerState<DailyPerson> {
       drawer:
           widget.isTablet
               ? null
-              : CustomDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
+              : AppNavigationDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
         title: localizations.dailyLogs,
         showRefresh: true,

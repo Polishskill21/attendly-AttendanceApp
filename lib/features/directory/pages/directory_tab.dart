@@ -19,7 +19,7 @@ import 'package:attendly/app/shell/app_navigation_drawer.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:anchored_list/anchored_list.dart';
 
-class DirectoryPage extends ConsumerStatefulWidget {
+class DirectoryTab extends ConsumerStatefulWidget {
   final Function(List<DirectoryPeopleData>)? onPersonsSelected;
   final bool isSelectionMode;
   final List<int>? initiallySelectedIds;
@@ -27,7 +27,7 @@ class DirectoryPage extends ConsumerStatefulWidget {
   final void Function(int)? onTabChange;
   final bool isTablet;
 
-  const DirectoryPage({
+  const DirectoryTab({
     super.key,
     this.onPersonsSelected,
     this.isSelectionMode = false,
@@ -38,10 +38,10 @@ class DirectoryPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<DirectoryPage> createState() => _DirectoryPageState();
+  ConsumerState<DirectoryTab> createState() => _DirectoryTabState();
 }
 
-class _DirectoryPageState extends ConsumerState<DirectoryPage> {
+class _DirectoryTabState extends ConsumerState<DirectoryTab> {
   final TextEditingController _searchController = TextEditingController();
   final HelperAllPerson _helper = HelperAllPerson();
   int _expandedIndex = -1;
@@ -93,7 +93,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
   Future<void> _onFabPressed() async {
     try {
       await Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => AddPage(isTablet: widget.isTablet),
+        builder: (_) => AddPersonPage(isTablet: widget.isTablet),
       ));
     // } on custom_db_exceptions.DbConnectionException {
     //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
@@ -152,10 +152,10 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
   Future<void> _editPerson(DirectoryPeopleData person) async {
     try {
       await Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => EditPage(
+        builder: (_) => EditPersonPage(
             personToUpdate: person, isTablet: widget.isTablet),
       ));
-      // Stream auto-updates after the repo write inside EditPage.
+      // Stream auto-updates after the repo write inside EditPersonPage.
     // } on custom_db_exceptions.DbConnectionException {
     //   if (mounted) await DbConnectionValidator.handleConnectionError(context);
     } catch (e, stackTrace) {
@@ -215,7 +215,7 @@ class _DirectoryPageState extends ConsumerState<DirectoryPage> {
     return Scaffold(
       drawer: widget.isTablet 
           ? null
-          : CustomDrawer(
+          : AppNavigationDrawer(
               selectedTab: widget.selectedTab!,
               onTabChange: widget.onTabChange!,
             ),
@@ -480,7 +480,7 @@ class _PersonListView extends StatelessWidget {
         final person = people[index];
         final isSelected =
             isSelectionMode && selectedPersonIds.contains(person.id);
-        return CustomExpansion(
+        return PersonTile(
           allPeopleList: people,
           index: index,
           isExpanded: expandedIndex == index,

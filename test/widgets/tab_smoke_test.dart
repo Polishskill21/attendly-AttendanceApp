@@ -20,7 +20,7 @@ void main() {
     testWidgets('directory tab shows title and empty state', (tester) async {
       await pumpWithDatabase(
         tester,
-        DirectoryPage(selectedTab: 0, onTabChange: (_) {}),
+        DirectoryTab(selectedTab: 0, onTabChange: (_) {}),
         db: db,
       );
 
@@ -75,7 +75,7 @@ void main() {
 
       await pumpWithDatabase(
         tester,
-        DirectoryPage(selectedTab: 0, onTabChange: (_) {}),
+        DirectoryTab(selectedTab: 0, onTabChange: (_) {}),
         db: db,
       );
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 
-class CustomExpansion extends StatefulWidget {
+class PersonTile extends StatefulWidget {
   final List<DirectoryPeopleData> allPeopleList;
   final bool isExpanded;
   final int index;
@@ -17,7 +17,7 @@ class CustomExpansion extends StatefulWidget {
   final bool isSelectionMode;
   final bool isTablet;
 
-  const CustomExpansion({
+  const PersonTile({
     super.key,
     required this.allPeopleList,
     required this.index,
@@ -33,10 +33,10 @@ class CustomExpansion extends StatefulWidget {
   });
 
   @override
-  CustomExpansionState createState() => CustomExpansionState();
+  State<PersonTile> createState() => _PersonTileState();
 }
 
-class CustomExpansionState extends State<CustomExpansion> {
+class _PersonTileState extends State<PersonTile> {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);

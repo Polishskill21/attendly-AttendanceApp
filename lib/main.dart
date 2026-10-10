@@ -110,8 +110,8 @@ class MyApp extends ConsumerWidget {
         Locale('en', ''),
         Locale('de', ''),
       ],
-      theme:     Themebuilder.buildLightTheme(),
-      darkTheme: Themebuilder.buildDarkTheme(),
+      theme:     AppTheme.buildLightTheme(),
+      darkTheme: AppTheme.buildDarkTheme(),
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         SystemChrome.setSystemUIOverlayStyle(

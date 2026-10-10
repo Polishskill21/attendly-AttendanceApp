@@ -291,7 +291,7 @@ class _AddDailyState extends ConsumerState<AddDaily>{
                       
                       final value = await Navigator.of(context).push<List<DirectoryPeopleData>>(
                         MaterialPageRoute(
-                          builder: (context) => DirectoryPage(
+                          builder: (context) => DirectoryTab(
                             isSelectionMode: true,
                             
                             initiallySelectedIds: selectedPersons.map((p) => p['id'] as int).toList(),

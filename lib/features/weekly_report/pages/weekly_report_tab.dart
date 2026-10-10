@@ -135,7 +135,7 @@ class WeeklyReportPageState extends ConsumerState<WeeklyReportPage> {
     return Scaffold(
       drawer: widget.isTablet
           ? null
-          : CustomDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
+          : AppNavigationDrawer(selectedTab: widget.selectedTab, onTabChange: widget.onTabChange),
       appBar: RefreshableAppBar(
         title: localizations.weeklyReport,
         showRefresh: true,

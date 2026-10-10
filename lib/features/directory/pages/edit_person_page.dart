@@ -15,21 +15,21 @@ import 'package:attendly/shared/options/migration_option.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 
 
-class EditPage extends ConsumerStatefulWidget{
+class EditPersonPage extends ConsumerStatefulWidget{
   final DirectoryPeopleData personToUpdate;
   final bool isTablet;
 
-  const EditPage({
+  const EditPersonPage({
     super.key, 
     required this.personToUpdate, 
     this.isTablet = false,
   });
 
   @override
-  ConsumerState<EditPage> createState() => _EditPageState();
+  ConsumerState<EditPersonPage> createState() => _EditPersonPageState();
 }
 
-class _EditPageState extends ConsumerState<EditPage>{  
+class _EditPersonPageState extends ConsumerState<EditPersonPage>{  
   DateTime? _lastSelectedDate;
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();

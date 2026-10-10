@@ -47,7 +47,7 @@ class YearStatsPageState extends ConsumerState<YearStatsPage> {
     return Scaffold(
       drawer: widget.isTablet
           ? null
-          : CustomDrawer(
+          : AppNavigationDrawer(
               selectedTab: widget.selectedTab,
               onTabChange: widget.onTabChange,
             ),

@@ -13,19 +13,19 @@ import 'package:attendly/shared/dialogs/app_dialogs.dart';
 // import 'package:attendly/backend/db_connection_validator.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 
-class AddPage extends ConsumerStatefulWidget{
+class AddPersonPage extends ConsumerStatefulWidget{
   final bool isTablet;
 
-  const AddPage({
+  const AddPersonPage({
     super.key, 
     this.isTablet = false,
   });
 
   @override
-  ConsumerState<AddPage> createState() => _AddPageState();
+  ConsumerState<AddPersonPage> createState() => _AddPersonPageState();
 }
 
-class _AddPageState extends ConsumerState<AddPage>{  
+class _AddPersonPageState extends ConsumerState<AddPersonPage>{  
   DateTime? _lastSelectedDate;
   final TextEditingController _genderController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();

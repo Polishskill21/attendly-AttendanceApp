@@ -7,15 +7,15 @@ import 'package:attendly/app/shell/app_navigation_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class MainApp extends StatefulWidget {
+class AppShell extends StatefulWidget {
   
-  const MainApp({super.key});
+  const AppShell({super.key});
 
   @override
-  State<StatefulWidget> createState() => _MainAppState();
+  State<StatefulWidget> createState() => _AppShellState();
 }
 
-class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _selectedTab = -1;
 
   // final GlobalKey<WeeklyReportPageState> _weeklyReportKey = GlobalKey();
@@ -116,7 +116,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
 
   Widget _buildPhoneLayout() {
     return Scaffold(
-      drawer: CustomDrawer(
+      drawer: AppNavigationDrawer(
           selectedTab: _selectedTab, onTabChange: _onTabChange, isTablet: false),
       body: SafeArea(child: _animatedBody()),
     );
@@ -124,12 +124,12 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
  
   Widget _buildTabletLayout() {
     return Scaffold(
-      drawer: CustomDrawer(
+      drawer: AppNavigationDrawer(
           selectedTab: _selectedTab, onTabChange: _onTabChange, isTablet: true),
       body: SafeArea(
         child: Row(
           children: [
-            CustomDrawer(
+            AppNavigationDrawer(
                 selectedTab: _selectedTab,
                 onTabChange: _onTabChange,
                 isTablet: true,
@@ -161,7 +161,7 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
       case -1: // Add this case
         return Container(key: const ValueKey('initial_empty'));
       case 0:
-        return DirectoryPage(
+        return DirectoryTab(
           //key: const ValueKey('directory_page'),
           isSelectionMode: false,
           selectedTab: _selectedTab,

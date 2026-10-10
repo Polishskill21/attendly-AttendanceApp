@@ -34,7 +34,7 @@ class DirectoryRepository {
 
   // --- INSERT OPERATIONS ---
 
-  /// Adds a new person to the directory (Used in AddPage)
+  /// Adds a new person to the directory (Used in AddPersonPage)
   Future<void> addPerson(DirectoryPeopleCompanion person) async {
     try {
       await db.insertDao.insertDirPerson(person);
@@ -54,7 +54,7 @@ class DirectoryRepository {
 
   // --- UPDATE OPERATIONS ---
 
-  /// Updates an existing person's details, but create the companion only with new data (Used in EditPage)
+  /// Updates an existing person's details, but create the companion only with new data (Used in EditPersonPage)
   Future<void> updatePerson(int id, DirectoryPeopleCompanion companion) async {
     try {
       await db.updateDao.updateDirPerson(id, companion);
@@ -74,7 +74,7 @@ class DirectoryRepository {
 
   // --- DELETE OPERATIONS ---
 
-  /// Deletes a person and reverts all their weekly stats (Used in DirectoryPage)
+  /// Deletes a person and reverts all their weekly stats (Used in DirectoryTab)
   Future<void> deletePerson(int id) async {
     try {
       await db.deleteDao.deleteDirPerson(id);

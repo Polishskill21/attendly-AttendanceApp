@@ -9,13 +9,13 @@ import 'package:attendly/app/startup/splash_screen.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CustomDrawer extends ConsumerWidget {
+class AppNavigationDrawer extends ConsumerWidget {
   final int selectedTab;
   final Function(int) onTabChange;
   final bool isTablet;
   final bool isRailMode;
 
-  const CustomDrawer({
+  const AppNavigationDrawer({
     super.key,
     required this.selectedTab,
     required this.onTabChange,
