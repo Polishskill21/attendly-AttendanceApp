@@ -4,11 +4,10 @@ import 'package:attendly/features/weekly_report/pages/week_list_page.dart';
 import 'package:attendly/core/utils/date_utils.dart';
 import 'package:attendly/data/database/database_provider.dart';
 import 'package:attendly/features/weekly_report/providers/weekly_report_providers.dart';
-import 'package:attendly/core/logging/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
+import 'package:attendly/shared/widgets/tab_app_bar.dart';
 import 'package:attendly/shared/shell/shell_tab.dart';
 import 'package:attendly/shared/widgets/chart_dialog.dart'; 
 import 'package:attendly/l10n/app_localizations.dart';
@@ -23,15 +22,8 @@ class WeeklyReportTab extends ShellTab {
     final selectedWeekDate = ref.watch(selectedWeekProvider);
     final asyncWeekData = ref.watch(weeklyReportProvider(selectedWeekDate));
 
-    return RefreshableAppBar(
+    return TabAppBar(
       title: AppLocalizations.of(context).weeklyReport,
-      showRefresh: true,
-      isLoading: asyncWeekData.isLoading ||
-                 asyncWeekData.isReloading,
-      onRefresh: () {
-        AppLogger.d("Weekly", "Invalidating weekly stream");
-        ref.invalidate(weeklyReportProvider(selectedWeekDate));
-      },
       leading: DrawerMenuButton.forShell(context),
       actions: [_buildStatusWidget(context, asyncWeekData)],
     );
@@ -92,28 +84,18 @@ class WeeklyReportTab extends ShellTab {
 
   Future<void> _showWeeksWithData(BuildContext context, WidgetRef ref) async {
     final selectedWeekDate = ref.read(selectedWeekProvider);
-    bool statusChanged = false;
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
       MaterialPageRoute(
         builder: (context) => WeekListPage(
           currentWeekDate: selectedWeekDate,
-          onStatusChanged: (DateTime date, bool newStatus) {
-            statusChanged = true;
-          },
         ),
       ),
     );
     if (!context.mounted) return;
 
+    // A changed "countable" status needs no refresh: the week stream re-emits.
     if (result != null) {
-      final newSelectedDate = DateTime.parse(result['date']);
-      if (newSelectedDate != selectedWeekDate) {
-        ref.read(selectedWeekProvider.notifier).state = newSelectedDate;
-      } else if (statusChanged) {
-        ref.invalidate(weeklyReportProvider(selectedWeekDate));
-      }
-    } else if (statusChanged) {
-      ref.invalidate(weeklyReportProvider(selectedWeekDate));
+      ref.read(selectedWeekProvider.notifier).state = DateTime.parse(result['date']);
     }
   }
 }

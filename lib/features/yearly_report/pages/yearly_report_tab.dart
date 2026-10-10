@@ -2,10 +2,9 @@ import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
 import 'package:attendly/features/yearly_report/models/year_stats.dart';
 import 'package:attendly/data/database/database_provider.dart';
 import 'package:attendly/features/yearly_report/providers/yearly_report_providers.dart';
-import 'package:attendly/core/logging/app_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:attendly/shared/shell/shell_tab.dart';
-import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
+import 'package:attendly/shared/widgets/tab_app_bar.dart';
 import 'package:attendly/shared/widgets/chart_dialog.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/core/responsive/responsive.dart';
@@ -17,17 +16,8 @@ class YearlyReportTab extends ShellTab {
 
   @override
   PreferredSizeWidget buildAppBar(BuildContext context, WidgetRef ref) {
-    final asyncStats = ref.watch(yearlyStatsProvider);
-
-    return RefreshableAppBar(
+    return TabAppBar(
       title: AppLocalizations.of(context).yearlyStats,
-      showRefresh: true,
-      isLoading: asyncStats.isLoading ||
-                 asyncStats.isReloading,
-      onRefresh: () {
-        AppLogger.d("Yearly", "Invalidating yearly stream");
-        ref.invalidate(yearlyStatsProvider);
-      },
       leading: DrawerMenuButton.forShell(context),
     );
   }
@@ -44,10 +34,6 @@ class _YearlyReportBody extends ConsumerStatefulWidget {
 }
 
 class _YearlyReportBodyState extends ConsumerState<_YearlyReportBody> {
-  void fetchYearStats() {
-    ref.invalidate(yearlyStatsProvider);
-  }
-
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -70,44 +56,14 @@ class _YearlyReportBodyState extends ConsumerState<_YearlyReportBody> {
     );
   }
 
+  /// Database errors go to the startup gate, which shows the failed view.
   Widget _buildErrorState(Object error, StackTrace stackTrace) {
-
-    if (error is custom_db_exceptions.DatabaseNotReadyException) {
-      return const Center(child: CircularProgressIndicator());
+    if (error is! custom_db_exceptions.DatabaseNotReadyException) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(databaseProvider.notifier).reportDatabaseError(error);
+      });
     }
-    
-    String displayMessage = "An unexpected error occurred.";
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(databaseProvider.notifier).reportDatabaseError(error);
-    });
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: Responsive.of(context).iconSize(baseSize: 60),
-            color: Colors.red,
-          ),
-          SizedBox(height: Responsive.of(context).listPadding.vertical * 4),
-          
-          // Display the actual error message dynamically
-          Text(
-            displayMessage,
-            style: TextStyle(fontSize: Responsive.of(context).bodyFontSize),
-            textAlign: TextAlign.center,
-          ),
-          
-          SizedBox(height: Responsive.of(context).listPadding.vertical * 2),
-          ElevatedButton(
-            onPressed: fetchYearStats, 
-            child: Text('Retry', style: TextStyle(fontSize: Responsive.of(context).bodyFontSize)),
-          ),
-        ],
-      ),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildReportView(YearStats statsModel) {

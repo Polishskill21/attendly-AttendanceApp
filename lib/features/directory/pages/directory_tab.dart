@@ -9,7 +9,7 @@ import 'package:attendly/features/directory/widgets/person_directory_list.dart';
 import 'package:attendly/l10n/app_localizations.dart';
 import 'package:attendly/shared/dialogs/app_dialogs.dart';
 import 'package:attendly/shared/shell/shell_tab.dart';
-import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
+import 'package:attendly/shared/widgets/tab_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -21,18 +21,9 @@ class DirectoryTab extends ShellTab {
   @override
   PreferredSizeWidget buildAppBar(BuildContext context, WidgetRef ref) {
     final isAscending = ref.watch(directorySortAscendingProvider);
-    final asyncPeople = ref.watch(filteredDirectoryProvider);
 
-    return RefreshableAppBar(
+    return TabAppBar(
       title: AppLocalizations.of(context).directory,
-      showRefresh: true,
-      isLoading: asyncPeople.isLoading ||
-                 asyncPeople.isRefreshing ||
-                 asyncPeople.isReloading,
-      onRefresh: () {
-        AppLogger.d("Directory", "Invalidating dir stream");
-        ref.invalidate(directoryStreamProvider);
-      },
       leading: DrawerMenuButton.forShell(context),
       actions: [
         IconButton(

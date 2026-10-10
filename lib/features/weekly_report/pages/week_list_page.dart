@@ -11,12 +11,10 @@ import 'package:intl/intl.dart';
 
 class WeekListPage extends ConsumerStatefulWidget {
   final DateTime currentWeekDate;
-  final Function(DateTime, bool)? onStatusChanged;
 
   const WeekListPage({
     super.key,
     required this.currentWeekDate,
-    this.onStatusChanged,
   });
 
   @override
@@ -31,9 +29,6 @@ class _WeekListPageState extends ConsumerState<WeekListPage> {
 
     try {
       await repo.updateCountableStatus(week.weekDate, newValue);
-
-      widget.onStatusChanged?.call(week.weekDate, newValue);
-
     } on custom_db_exceptions.DatabaseNotReadyException {
       return;
     } catch (e, stackTrace) {

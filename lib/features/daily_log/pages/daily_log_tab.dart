@@ -1,4 +1,3 @@
-import 'package:attendly/core/logging/app_logger.dart';
 import 'package:attendly/core/responsive/responsive.dart';
 import 'package:attendly/data/database/database_provider.dart';
 import 'package:attendly/data/database/exceptions.dart' as custom_db_exceptions;
@@ -13,7 +12,7 @@ import 'package:attendly/shared/navigation/app_routes.dart';
 import 'package:attendly/shared/options/category_label.dart';
 import 'package:attendly/shared/options/category_option.dart';
 import 'package:attendly/shared/shell/shell_tab.dart';
-import 'package:attendly/shared/widgets/refreshable_app_bar.dart';
+import 'package:attendly/shared/widgets/tab_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -48,17 +47,8 @@ class DailyLogTab extends ShellTab {
     // Grab the list if available to check lengths
     final visiblePeople = asyncFilteredData.valueOrNull ?? [];
 
-    return RefreshableAppBar(
+    return TabAppBar(
       title: AppLocalizations.of(context).dailyLogs,
-      showRefresh: true,
-      isLoading:
-          asyncFilteredData.isLoading ||
-          asyncFilteredData.isRefreshing ||
-          asyncFilteredData.isReloading,
-      onRefresh: () {
-        AppLogger.d("Daily", "Invalidating daily stream");
-        ref.invalidate(dailyRawLogsProvider);
-      },
       leading:
           isEditMode
               ? IconButton(
