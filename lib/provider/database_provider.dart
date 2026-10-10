@@ -9,9 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
  
  
 class DatabaseManagerNotifier extends StateNotifier<AppDatabaseState> {
-  DatabaseManagerNotifier() : super(const AppDatabaseState());
+  /// [manager] is only passed in tests; the app always uses [DatabaseManager].
+  DatabaseManagerNotifier([IDatabaseManager? manager])
+      : _manager = manager ?? DatabaseManager(),
+        super(const AppDatabaseState());
 
-  final IDatabaseManager _manager = DatabaseManager();
+  final IDatabaseManager _manager;
  
  
   /// Normal startup: check if we need a year rollover first.
